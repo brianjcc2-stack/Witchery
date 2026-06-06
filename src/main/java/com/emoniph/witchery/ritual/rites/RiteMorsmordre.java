@@ -8,7 +8,7 @@ import java.util.ArrayList;
 
 public class RiteMorsmordre extends Rite {
     @Override
-    public void addSteps(ArrayList<RitualStep> steps, int initialStage) {
+    public void addSteps(ArrayList steps, int initialStage) {
         steps.add(new StepRiteMorsmordre(this, initialStage));
     }
 
@@ -21,7 +21,7 @@ public class RiteMorsmordre extends Rite {
         }
 
         @Override
-        public RitualStep.Result process(World world, int x, int y, int z, long ticks, BlockCircle.CircleType circleType) {
+        public RitualStep.Result process(World world, int x, int y, int z, long ticks, BlockCircle.TileEntityCircle.ActivatedRitual circleType) {
             // Custom ritual logic
             return RitualStep.Result.COMPLETED;
         }

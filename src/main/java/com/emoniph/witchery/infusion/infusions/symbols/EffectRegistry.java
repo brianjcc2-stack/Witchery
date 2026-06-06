@@ -181,7 +181,7 @@ public class EffectRegistry {
                 }
             }
         }
-    }.setColor(5322534).setSize(1.0f), new StrokeSet(1, 3, 0, 2, 2, 1), new StrokeSet(1, 3, 0, 2, 2, 2, 1), new StrokeSet(2, 3, 0, 0, 2, 2, 1, 1), new StrokeSet(2, 3, 0, 0, 2, 2, 2, 1, 1), new StrokeSet(3, 3, 0, 0, 0, 2, 2, 2, 1, 1, 1), new StrokeSet(3, 3, 0, 0, 0, 2, 2, 2, 2, 1, 1, 1));
+    }.setColor(5322534).setSize(1.0f), new StrokeSet(1, new byte[]{(byte)3,(byte)0,(byte)2,(byte)2,(byte)1}), new StrokeSet(1, new byte[]{(byte)3,(byte)0,(byte)2,(byte)2,(byte)2,(byte)1}), new StrokeSet(2, new byte[]{(byte)3,(byte)0,(byte)0,(byte)2,(byte)2,(byte)1,(byte)1}), new StrokeSet(2, new byte[]{(byte)3,(byte)0,(byte)0,(byte)2,(byte)2,(byte)2,(byte)1,(byte)1}), new StrokeSet(3, new byte[]{(byte)3,(byte)0,(byte)0,(byte)0,(byte)2,(byte)2,(byte)2,(byte)1,(byte)1,(byte)1}), new StrokeSet(3, new byte[]{(byte)3,(byte)0,(byte)0,(byte)0,(byte)2,(byte)2,(byte)2,(byte)2,(byte)1,(byte)1,(byte)1}));
     public static final SymbolEffect Aguamenti = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(2, "witchery.pott.aguamenti"){
 
         @Override
@@ -211,8 +211,8 @@ public class EffectRegistry {
                         this.setIfAir(caster, world, dx1, dy, dz - 1, (Block)Blocks.flowing_water);
                         this.setIfAir(caster, world, dx1, dy - 1, dz, (Block)Blocks.flowing_water);
                     } else {
-                        int dy;
-                        int dx1;
+                        int dy = 0;
+                        int dx1 = 0;
                         int n = mop.sideHit == 5 ? 1 : (dx1 = mop.sideHit == 4 ? -1 : 0);
                         int n2 = mop.sideHit == 0 ? -1 : (dy = mop.sideHit == 1 ? 1 : 0);
                         int dz = mop.sideHit == 3 ? 1 : (mop.sideHit == 2 ? -1 : 0);
@@ -241,8 +241,8 @@ public class EffectRegistry {
                         // empty if block
                     }
                 } else {
-                    int dz;
-                    int dy;
+                    int dz = 0;
+                    int dy = 0;
                     int n = mop.sideHit == 5 ? 1 : (dy = mop.sideHit == 4 ? -1 : 0);
                     int n3 = mop.sideHit == 0 ? -1 : (dz = mop.sideHit == 1 ? 1 : 0);
                     int x = mop.sideHit == 3 ? 1 : (mop.sideHit == 2 ? -1 : 0);
@@ -262,7 +262,7 @@ public class EffectRegistry {
                 this.setBlock(caster, world, x, y, z, block);
             }
         }
-    }.setColor(0x11F3FF).setSize(2.0f), new StrokeSet(1, 0, 0, 2, 2, 1), new StrokeSet(1, 0, 0, 2, 2, 2, 1), new StrokeSet(2, 0, 0, 0, 2, 2, 1, 1), new StrokeSet(2, 0, 0, 0, 2, 2, 2, 1, 1), new StrokeSet(3, 0, 0, 0, 0, 2, 2, 1, 1, 1), new StrokeSet(3, 0, 0, 0, 0, 2, 2, 2, 1, 1, 1));
+    }.setColor(0x11F3FF).setSize(2.0f), new StrokeSet(1, new byte[]{(byte)0,(byte)0,(byte)2,(byte)2,(byte)1}), new StrokeSet(1, new byte[]{(byte)0,(byte)0,(byte)2,(byte)2,(byte)2,(byte)1}), new StrokeSet(2, new byte[]{(byte)0,(byte)0,(byte)0,(byte)2,(byte)2,(byte)1,(byte)1}), new StrokeSet(2, new byte[]{(byte)0,(byte)0,(byte)0,(byte)2,(byte)2,(byte)2,(byte)1,(byte)1}), new StrokeSet(3, new byte[]{(byte)0,(byte)0,(byte)0,(byte)0,(byte)2,(byte)2,(byte)1,(byte)1,(byte)1}), new StrokeSet(3, new byte[]{(byte)0,(byte)0,(byte)0,(byte)0,(byte)2,(byte)2,(byte)2,(byte)1,(byte)1,(byte)1}));
     public static final SymbolEffect Alohomora = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(3, "witchery.pott.alohomora"){
 
         @Override
@@ -278,7 +278,7 @@ public class EffectRegistry {
                 }
             }
         }
-    }.setColor(5322534).setSize(0.5f), new StrokeSet(2, 0, 2, 2, 1), new StrokeSet(2, 0, 2, 2, 2, 1), new StrokeSet(2, 0, 0, 2, 2, 1, 1), new StrokeSet(2, 0, 0, 2, 2, 2, 1, 1));
+    }.setColor(5322534).setSize(0.5f), new StrokeSet(2, new byte[]{(byte)0,(byte)2,(byte)2,(byte)1}), new StrokeSet(2, new byte[]{(byte)0,(byte)2,(byte)2,(byte)2,(byte)1}), new StrokeSet(2, new byte[]{(byte)0,(byte)0,(byte)2,(byte)2,(byte)1,(byte)1}), new StrokeSet(2, new byte[]{(byte)0,(byte)0,(byte)2,(byte)2,(byte)2,(byte)1,(byte)1}));
     public static final SymbolEffect AvadaKedavra = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(4, "witchery.pott.avadakedavra", 101, true, false, null, 0, true){
 
         @Override
@@ -301,7 +301,7 @@ public class EffectRegistry {
                 }
             }
         }
-    }.setColor(65280).setSize(2.0f), new StrokeSet(1, 1, 2, 2, 0, 0, 3, 3, 3, 3, 1, 1, 2));
+    }.setColor(65280).setSize(2.0f), new StrokeSet(1, new byte[]{(byte)1,(byte)2,(byte)2,(byte)0,(byte)0,(byte)3,(byte)3,(byte)3,(byte)3,(byte)1,(byte)1,(byte)2}));
     public static final SymbolEffect CaveInimicum = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(5, "witchery.pott.caveinimicum"){
 
         @Override
@@ -347,7 +347,7 @@ public class EffectRegistry {
                 });
             }
         }
-    }.setColor(0x303030).setSize(3.0f), new StrokeSet(1, 0, 3, 0, 0, 2), new StrokeSet(1, 0, 3, 0, 0, 0, 2), new StrokeSet(1, 0, 3, 3, 0, 0, 2, 2), new StrokeSet(2, 0, 3, 3, 0, 0, 0, 2, 2), new StrokeSet(3, 0, 3, 3, 3, 0, 0, 0, 0, 2, 2, 2));
+    }.setColor(0x303030).setSize(3.0f), new StrokeSet(1, new byte[]{(byte)0,(byte)3,(byte)0,(byte)0,(byte)2}), new StrokeSet(1, new byte[]{(byte)0,(byte)3,(byte)0,(byte)0,(byte)0,(byte)2}), new StrokeSet(1, new byte[]{(byte)0,(byte)3,(byte)3,(byte)0,(byte)0,(byte)2,(byte)2}), new StrokeSet(2, new byte[]{(byte)0,(byte)3,(byte)3,(byte)0,(byte)0,(byte)0,(byte)2,(byte)2}), new StrokeSet(3, new byte[]{(byte)0,(byte)3,(byte)3,(byte)3,(byte)0,(byte)0,(byte)0,(byte)0,(byte)2,(byte)2,(byte)2}));
     public static final SymbolEffect Colloportus = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(6, "witchery.pott.colloportus"){
 
         @Override
@@ -365,7 +365,7 @@ public class EffectRegistry {
                 ItemDoor.placeDoorBlock((World)world, (int)mop.blockX, (int)y, (int)mop.blockZ, (int)pp1, (Block)Witchery.Blocks.DOOR_ROWAN);
             }
         }
-    }.setColor(5322534).setSize(1.0f), new StrokeSet(3, 3, 1, 1, 2), new StrokeSet(3, 3, 1, 1, 1, 2), new StrokeSet(3, 1, 0, 1, 1, 3), new StrokeSet(1, 1, 2, 2, 3, 3));
+    }.setColor(5322534).setSize(1.0f), new StrokeSet(3, new byte[]{(byte)3,(byte)1,(byte)1,(byte)2}), new StrokeSet(3, new byte[]{(byte)3,(byte)1,(byte)1,(byte)1,(byte)2}), new StrokeSet(3, new byte[]{(byte)1,(byte)0,(byte)1,(byte)1,(byte)3}), new StrokeSet(1, new byte[]{(byte)1,(byte)2,(byte)2,(byte)3,(byte)3}));
     public static final SymbolEffect Flipendo = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(17, "witchery.pott.flipendo"){
 
         @Override
@@ -398,7 +398,7 @@ public class EffectRegistry {
                 }
             });
         }
-    }.setColor(16771328).setSize(1.5f), new StrokeSet(1, 3, 3, 0, 0, 2), new StrokeSet(1, 3, 3, 3, 0, 0, 2, 2), new StrokeSet(2, 3, 3, 3, 0, 0, 0, 2, 2), new StrokeSet(3, 3, 3, 3, 3, 0, 0, 0, 0, 2, 2, 2));
+    }.setColor(16771328).setSize(1.5f), new StrokeSet(1, new byte[]{(byte)3,(byte)3,(byte)0,(byte)0,(byte)2}), new StrokeSet(1, new byte[]{(byte)3,(byte)3,(byte)3,(byte)0,(byte)0,(byte)2,(byte)2}), new StrokeSet(2, new byte[]{(byte)3,(byte)3,(byte)3,(byte)0,(byte)0,(byte)0,(byte)2,(byte)2}), new StrokeSet(3, new byte[]{(byte)3,(byte)3,(byte)3,(byte)3,(byte)0,(byte)0,(byte)0,(byte)0,(byte)2,(byte)2,(byte)2}));
     public static final SymbolEffect Crucio = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(9, "witchery.pott.crucio", 5, true, false, null, 0){
 
         @Override
@@ -415,7 +415,7 @@ public class EffectRegistry {
                 }
             }
         }
-    }.setColor(0x6600FF).setSize(2.0f), new StrokeSet(1, 1, 3, 1, 1, 2), new StrokeSet(1, 1, 3, 3, 1, 1, 2, 2), new StrokeSet(2, 1, 3, 1, 1, 1, 2), new StrokeSet(2, 1, 3, 3, 1, 1, 1, 2, 2), new StrokeSet(3, 1, 3, 3, 3, 1, 1, 1, 1, 2, 2, 2));
+    }.setColor(0x6600FF).setSize(2.0f), new StrokeSet(1, new byte[]{(byte)1,(byte)3,(byte)1,(byte)1,(byte)2}), new StrokeSet(1, new byte[]{(byte)1,(byte)3,(byte)3,(byte)1,(byte)1,(byte)2,(byte)2}), new StrokeSet(2, new byte[]{(byte)1,(byte)3,(byte)1,(byte)1,(byte)1,(byte)2}), new StrokeSet(2, new byte[]{(byte)1,(byte)3,(byte)3,(byte)1,(byte)1,(byte)1,(byte)2,(byte)2}), new StrokeSet(3, new byte[]{(byte)1,(byte)3,(byte)3,(byte)3,(byte)1,(byte)1,(byte)1,(byte)1,(byte)2,(byte)2,(byte)2}));
     public static final SymbolEffect Defodio = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(10, "witchery.pott.defodio", 3, false, false, null, 0){
 
         @Override
@@ -446,7 +446,7 @@ public class EffectRegistry {
                 });
             }
         }
-    }.setColor(4008220).setSize(2.5f), new StrokeSet(1, 0, 0, 3, 1), new StrokeSet(1, 0, 0, 0, 3, 1, 1), new StrokeSet(1, 0, 0, 3, 3, 1, 2), new StrokeSet(2, 0, 0, 0, 3, 3, 1, 1, 2), new StrokeSet(2, 0, 0, 0, 0, 3, 3, 1, 1, 1, 2), new StrokeSet(2, 0, 0, 0, 3, 3, 3, 1, 1, 2, 2), new StrokeSet(3, 0, 0, 0, 0, 3, 3, 3, 1, 1, 1, 2, 2));
+    }.setColor(4008220).setSize(2.5f), new StrokeSet(1, new byte[]{(byte)0,(byte)0,(byte)3,(byte)1}), new StrokeSet(1, new byte[]{(byte)0,(byte)0,(byte)0,(byte)3,(byte)1,(byte)1}), new StrokeSet(1, new byte[]{(byte)0,(byte)0,(byte)3,(byte)3,(byte)1,(byte)2}), new StrokeSet(2, new byte[]{(byte)0,(byte)0,(byte)0,(byte)3,(byte)3,(byte)1,(byte)1,(byte)2}), new StrokeSet(2, new byte[]{(byte)0,(byte)0,(byte)0,(byte)0,(byte)3,(byte)3,(byte)1,(byte)1,(byte)1,(byte)2}), new StrokeSet(2, new byte[]{(byte)0,(byte)0,(byte)0,(byte)3,(byte)3,(byte)3,(byte)1,(byte)1,(byte)2,(byte)2}), new StrokeSet(3, new byte[]{(byte)0,(byte)0,(byte)0,(byte)0,(byte)3,(byte)3,(byte)3,(byte)1,(byte)1,(byte)1,(byte)2,(byte)2}));
     public static final SymbolEffect Ennervate = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(12, "witchery.pott.ennervate", 1, false, true, null, 0){
 
         @Override
@@ -468,7 +468,7 @@ public class EffectRegistry {
                 }
             });
         }
-    }.setColor(16713595).setSize(1.5f), new StrokeSet(1, 0, 3, 0, 2, 3, 0, 2), new StrokeSet(2, 0, 3, 3, 0, 2, 2, 3, 3, 0, 2, 2), new StrokeSet(3, 0, 3, 3, 3, 0, 2, 2, 2, 3, 3, 3, 0, 2, 2, 2));
+    }.setColor(16713595).setSize(1.5f), new StrokeSet(1, new byte[]{(byte)0,(byte)3,(byte)0,(byte)2,(byte)3,(byte)0,(byte)2}), new StrokeSet(2, new byte[]{(byte)0,(byte)3,(byte)3,(byte)0,(byte)2,(byte)2,(byte)3,(byte)3,(byte)0,(byte)2,(byte)2}), new StrokeSet(3, new byte[]{(byte)0,(byte)3,(byte)3,(byte)3,(byte)0,(byte)2,(byte)2,(byte)2,(byte)3,(byte)3,(byte)3,(byte)0,(byte)2,(byte)2,(byte)2}));
     public static final SymbolEffect Episkey = EffectRegistry.instance().addEffect(new SymbolEffect(13, "witchery.pott.episkey", 1, false, false, null, 0){
 
         @Override
@@ -495,7 +495,7 @@ public class EffectRegistry {
                 }
             });
         }
-    }, new StrokeSet(1, 2, 0, 3, 1, 1, 2), new StrokeSet(2, 2, 0, 0, 3, 1, 1, 1, 1, 2), new StrokeSet(2, 2, 2, 0, 3, 3, 1, 1, 2, 2), new StrokeSet(3, 2, 2, 0, 0, 3, 3, 1, 1, 1, 1, 2, 2));
+    }, new StrokeSet(1, new byte[]{(byte)2,(byte)0,(byte)3,(byte)1,(byte)1,(byte)2}), new StrokeSet(2, new byte[]{(byte)2,(byte)0,(byte)0,(byte)3,(byte)1,(byte)1,(byte)1,(byte)1,(byte)2}), new StrokeSet(2, new byte[]{(byte)2,(byte)2,(byte)0,(byte)3,(byte)3,(byte)1,(byte)1,(byte)2,(byte)2}), new StrokeSet(3, new byte[]{(byte)2,(byte)2,(byte)0,(byte)0,(byte)3,(byte)3,(byte)1,(byte)1,(byte)1,(byte)1,(byte)2,(byte)2}));
     public static final SymbolEffect Expelliarmus = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(15, "witchery.pott.expelliarmus"){
 
         @Override
@@ -506,7 +506,7 @@ public class EffectRegistry {
                 @Override
                 public void doAction(World world, EntityLivingBase actor, double x, double y, double z, EntityLivingBase target) {
                     if (actor != target) {
-                        this.disarm(target);
+                        if(target.getHeldItem()!=null){target.entityDropItem(target.getHeldItem(),0);target.setCurrentItemOrArmor(0,null);}
                     }
                 }
             });
@@ -530,7 +530,7 @@ public class EffectRegistry {
                 target.setCurrentItemOrArmor(0, (ItemStack)null);
             }
         }
-    }.setColor(16747778).setSize(3.0f), new StrokeSet(1, 0, 0, 1), new StrokeSet(1, 0, 0, 0, 1, 1), new StrokeSet(2, 0, 0, 0, 0, 1, 1, 1), new StrokeSet(3, 0, 0, 0, 0, 0, 1, 1, 1, 1));
+    }.setColor(16747778).setSize(3.0f), new StrokeSet(1, new byte[]{(byte)0,(byte)0,(byte)1}), new StrokeSet(1, new byte[]{(byte)0,(byte)0,(byte)0,(byte)1,(byte)1}), new StrokeSet(2, new byte[]{(byte)0,(byte)0,(byte)0,(byte)0,(byte)1,(byte)1,(byte)1}), new StrokeSet(3, new byte[]{(byte)0,(byte)0,(byte)0,(byte)0,(byte)0,(byte)1,(byte)1,(byte)1,(byte)1}));
     public static final SymbolEffect Flagrate = EffectRegistry.instance().addEffect(new SymbolEffect(16, "witchery.pott.flagrate", 1, false, false, null, 0, true){
 
         @Override
@@ -546,7 +546,7 @@ public class EffectRegistry {
                 SoundEffect.NOTE_SNARE.playAtPlayer(world, player);
             }
         }
-    }, new StrokeSet(2, 0, 2, 3, 0, 2));
+    }, new StrokeSet(2, new byte[]{(byte)0,(byte)2,(byte)3,(byte)0,(byte)2}));
     public static final SymbolEffect Impedimenta = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(19, "witchery.pott.impedimenta"){
 
         @Override
@@ -564,7 +564,7 @@ public class EffectRegistry {
                 }
             });
         }
-    }.setColor(6191615).setSize(1.5f), new StrokeSet(1, 3, 3, 2), new StrokeSet(1, 3, 3, 3, 2, 2), new StrokeSet(2, 3, 3, 3, 3, 2, 2, 2), new StrokeSet(3, 3, 3, 3, 3, 3, 2, 2, 2, 2));
+    }.setColor(6191615).setSize(1.5f), new StrokeSet(1, new byte[]{(byte)3,(byte)3,(byte)2}), new StrokeSet(1, new byte[]{(byte)3,(byte)3,(byte)3,(byte)2,(byte)2}), new StrokeSet(2, new byte[]{(byte)3,(byte)3,(byte)3,(byte)3,(byte)2,(byte)2,(byte)2}), new StrokeSet(3, new byte[]{(byte)3,(byte)3,(byte)3,(byte)3,(byte)3,(byte)2,(byte)2,(byte)2,(byte)2}));
     public static final SymbolEffect Imperio = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(20, "witchery.pott.imperio", 10, true, false, null, 0){
 
         @Override
@@ -579,7 +579,7 @@ public class EffectRegistry {
                 }
             }
         }
-    }.setColor(10686463).setSize(1.5f), new StrokeSet(2, 1, 1, 1, 1));
+    }.setColor(10686463).setSize(1.5f), new StrokeSet(2, new byte[]{(byte)1,(byte)1,(byte)1,(byte)1}));
     public static final SymbolEffect Incendio = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(21, "witchery.pott.incendio"){
 
         @Override
@@ -602,8 +602,8 @@ public class EffectRegistry {
                     mop.entityHit.setFire(1);
                     mop.entityHit.attackEntityFrom(new EntityDamageSourceIndirect("onFire", (Entity)spell, (Entity)caster).setFireDamage(), 0.1f);
                 } else if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
-                    int dy;
-                    int dx;
+                    int dy = 0;
+                    int dx = 0;
                     Block side = BlockUtil.getBlock(world, mop);
                     if (side == Witchery.Blocks.WICKER_BUNDLE && BlockWickerBundle.limitToValidMetadata(world.getBlockMetadata(mop.blockX, mop.blockY, mop.blockZ)) == 1) {
                         if (BlockWickerBundle.tryIgniteMan(world, mop.blockX, mop.blockY, mop.blockZ, caster != null ? caster.rotationYaw : 0.0f)) {
@@ -635,8 +635,8 @@ public class EffectRegistry {
                         @Override
                         public void doAction(World world, EntityLivingBase actor, int x, int y, int z, Block block, int meta) {
                             if (side1 == 1) {
-                                int dy;
-                                int dx;
+                                int dy = 0;
+                                int dx = 0;
                                 int n = side1 == 5 ? 1 : (dx = side1 == 4 ? -1 : 0);
                                 int n2 = side1 == 0 ? -1 : (dy = side1 == 1 ? 1 : 0);
                                 int nX = x + dx;
@@ -652,7 +652,7 @@ public class EffectRegistry {
                 }
             }
         }
-    }.setColor(16724023).setSize(2.0f), new StrokeSet(1, 3, 0, 0, 1, 1), new StrokeSet(2, 3, 0, 0, 0, 1, 1, 1), new StrokeSet(3, 3, 0, 0, 0, 0, 1, 1, 1, 1));
+    }.setColor(16724023).setSize(2.0f), new StrokeSet(1, new byte[]{(byte)3,(byte)0,(byte)0,(byte)1,(byte)1}), new StrokeSet(2, new byte[]{(byte)3,(byte)0,(byte)0,(byte)0,(byte)1,(byte)1,(byte)1}), new StrokeSet(3, new byte[]{(byte)3,(byte)0,(byte)0,(byte)0,(byte)0,(byte)1,(byte)1,(byte)1,(byte)1}));
     public static final SymbolEffect Lumos = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(22, "witchery.pott.lumos"){
 
         @Override
@@ -669,8 +669,8 @@ public class EffectRegistry {
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect effectEntity) {
             if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
-                int dy;
-                int dx;
+                int dy = 0;
+                int dx = 0;
                 int n = mop.sideHit == 5 ? 1 : (dx = mop.sideHit == 4 ? -1 : 0);
                 int n2 = mop.sideHit == 0 ? -1 : (dy = mop.sideHit == 1 ? 1 : 0);
                 int x = mop.blockX + 1 * dx;
@@ -683,7 +683,7 @@ public class EffectRegistry {
                 }
             }
         }
-    }.setColor(0xFFFF3A).setSize(0.5f), new StrokeSet(1, 1, 1, 2));
+    }.setColor(0xFFFF3A).setSize(0.5f), new StrokeSet(1, new byte[]{(byte)1,(byte)1,(byte)2}));
     public static final SymbolEffect MeteolojinxRecanto = EffectRegistry.instance().addEffect(new SymbolEffect(23, "witchery.pott.meteolojinxrecanto", 100, false, false, null, 0){
 
         @Override
@@ -700,7 +700,7 @@ public class EffectRegistry {
                 SoundEffect.NOTE_SNARE.playAtPlayer(world, player);
             }
         }
-    }, new StrokeSet(0, 0, 0, 2, 2, 1, 0, 2, 2, 1, 1));
+    }, new StrokeSet(0, new byte[]{(byte)0,(byte)0,(byte)2,(byte)2,(byte)1,(byte)0,(byte)2,(byte)2,(byte)1,(byte)1}));
     public static final SymbolEffect Nox = EffectRegistry.instance().addEffect(new SymbolEffect(26, "witchery.pott.nox", 50, false, false, null, 0){
 
         @Override
@@ -722,7 +722,7 @@ public class EffectRegistry {
                 }
             }
         }
-    }, new StrokeSet(0, 0, 2, 1, 2, 0));
+    }, new StrokeSet(0, new byte[]{(byte)0,(byte)2,(byte)1,(byte)2,(byte)0}));
     public static final SymbolEffect Protego = EffectRegistry.instance().addEffect(new SymbolEffect(31, "witchery.pott.protego"){
 
         @Override
@@ -743,7 +743,7 @@ public class EffectRegistry {
                 SoundEffect.NOTE_SNARE.playAtPlayer(world, player);
             }
         }
-    }, new StrokeSet(1, 1, 0), new StrokeSet(1, 1, 1, 0, 0), new StrokeSet(1, 1, 1, 1, 0, 0, 0));
+    }, new StrokeSet(1, new byte[]{(byte)1,(byte)0}), new StrokeSet(1, new byte[]{(byte)1,(byte)1,(byte)0,(byte)0}), new StrokeSet(1, new byte[]{(byte)1,(byte)1,(byte)1,(byte)0,(byte)0,(byte)0}));
     public static final SymbolEffect PetrificusTotalus = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(35, "witchery.pott.petrificustotalus"){
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
@@ -754,7 +754,7 @@ public class EffectRegistry {
                         EntityPlayer pTarget = (EntityPlayer)target;
                         pTarget.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, Integer.MAX_VALUE, 10));
                         pTarget.addPotionEffect(new PotionEffect(Potion.blindness.id, Integer.MAX_VALUE, 0));
-                        pTarget.addPotionEffect(new PotionEffect(Witchery.Potions.SILENCED.id, Integer.MAX_VALUE, 0));
+                        pTarget.addPotionEffect(new PotionEffect(Witchery.Potions.PARALYSED.id, Integer.MAX_VALUE, 0));
                         pTarget.addPotionEffect(new PotionEffect(Potion.resistance.id, Integer.MAX_VALUE, 4));
                         ParticleEffect.SPELL_COLORED.send(SoundEffect.RANDOM_FIZZ, pTarget, 1.0D, 2.0D, 16);
                     }
@@ -814,7 +814,7 @@ public class EffectRegistry {
                 }
             }
         }
-    }.setColor(1279).setSize(1.5f), new StrokeSet(1, 2, 2, 0, 3, 0, 2), new StrokeSet(1, 2, 2, 2, 0, 3, 3, 0, 2, 2), new StrokeSet(2, 2, 2, 0, 0, 3, 0, 0, 2), new StrokeSet(2, 2, 2, 2, 0, 0, 3, 3, 0, 0, 2, 2));
+    }.setColor(1279).setSize(1.5f), new StrokeSet(1, new byte[]{(byte)2,(byte)2,(byte)0,(byte)3,(byte)0,(byte)2}), new StrokeSet(1, new byte[]{(byte)2,(byte)2,(byte)2,(byte)0,(byte)3,(byte)3,(byte)0,(byte)2,(byte)2}), new StrokeSet(2, new byte[]{(byte)2,(byte)2,(byte)0,(byte)0,(byte)3,(byte)0,(byte)0,(byte)2}), new StrokeSet(2, new byte[]{(byte)2,(byte)2,(byte)2,(byte)0,(byte)0,(byte)3,(byte)3,(byte)0,(byte)0,(byte)2,(byte)2}));
     public static final SymbolEffect Ignianima = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(39, "witchery.pott.ignianima", 2, true, false, "ignianima", 0){
 
         @Override
@@ -838,7 +838,7 @@ public class EffectRegistry {
                 ParticleEffect.FLAME.send(SoundEffect.FIRE_IGNITE, (Entity)hitEntity, 1.0, 2.0, 16);
             }
         }
-    }.setColor(16770912).setSize(3.0f), new StrokeSet(3, 3, 0, 1, 1), new StrokeSet(3, 3, 0, 0, 1, 1, 1, 1), new StrokeSet(3, 3, 3, 0, 1, 1), new StrokeSet(3, 3, 3, 0, 0, 1, 1, 1, 1), new StrokeSet(3, 3, 3, 3, 0, 1, 1), new StrokeSet(3, 3, 3, 3, 0, 0, 1, 1, 1, 1));
+    }.setColor(16770912).setSize(3.0f), new StrokeSet(3, new byte[]{(byte)3,(byte)0,(byte)1,(byte)1}), new StrokeSet(3, new byte[]{(byte)3,(byte)0,(byte)0,(byte)1,(byte)1,(byte)1,(byte)1}), new StrokeSet(3, new byte[]{(byte)3,(byte)3,(byte)0,(byte)1,(byte)1}), new StrokeSet(3, new byte[]{(byte)3,(byte)3,(byte)0,(byte)0,(byte)1,(byte)1,(byte)1,(byte)1}), new StrokeSet(3, new byte[]{(byte)3,(byte)3,(byte)3,(byte)0,(byte)1,(byte)1}), new StrokeSet(3, new byte[]{(byte)3,(byte)3,(byte)3,(byte)0,(byte)0,(byte)1,(byte)1,(byte)1,(byte)1}));
     public static final SymbolEffect CarnosaDiem = EffectRegistry.instance().addEffect(new SymbolEffect(40, "witchery.pott.carnosadiem", 1, true, false, "carnosadiem", 0){
 
         @Override
@@ -851,7 +851,7 @@ public class EffectRegistry {
             Infusion.setCurrentEnergy(player, Math.min(currentPower + 10, maxPower));
             Witchery.modHooks.boostBloodPowers(player, damage);
         }
-    }, new StrokeSet(2, 2, 0, 1, 1), new StrokeSet(2, 2, 0, 0, 1, 1, 1, 1), new StrokeSet(2, 2, 2, 0, 1, 1), new StrokeSet(2, 2, 2, 0, 0, 1, 1, 1, 1), new StrokeSet(2, 2, 2, 2, 0, 1, 1), new StrokeSet(2, 2, 2, 2, 0, 0, 1, 1, 1, 1));
+    }, new StrokeSet(2, new byte[]{(byte)2,(byte)0,(byte)1,(byte)1}), new StrokeSet(2, new byte[]{(byte)2,(byte)0,(byte)0,(byte)1,(byte)1,(byte)1,(byte)1}), new StrokeSet(2, new byte[]{(byte)2,(byte)2,(byte)0,(byte)1,(byte)1}), new StrokeSet(2, new byte[]{(byte)2,(byte)2,(byte)0,(byte)0,(byte)1,(byte)1,(byte)1,(byte)1}), new StrokeSet(2, new byte[]{(byte)2,(byte)2,(byte)2,(byte)0,(byte)1,(byte)1}), new StrokeSet(2, new byte[]{(byte)2,(byte)2,(byte)2,(byte)0,(byte)0,(byte)1,(byte)1,(byte)1,(byte)1}));
     public static final SymbolEffect MORSMORDRE = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(41, "witchery.pott.morsmordre", 20, true, false, "morsmordre", 0){
 
         @Override
@@ -863,7 +863,7 @@ public class EffectRegistry {
                 world.spawnEntityInWorld((Entity)entity);
             }
         }
-    }.setColor(0).setSize(3.0f).setTimeToLive(8), new StrokeSet(0, 0, 3, 2, 2), new StrokeSet(0, 0, 3, 3, 2, 2, 2, 2), new StrokeSet(0, 0, 0, 3, 2, 2), new StrokeSet(0, 0, 0, 3, 3, 2, 2, 2, 2), new StrokeSet(0, 0, 0, 0, 3, 2, 2), new StrokeSet(0, 0, 0, 0, 3, 3, 2, 2, 2, 2));
+    }.setColor(0).setSize(3.0f).setTimeToLive(8), new StrokeSet(0, new byte[]{(byte)0,(byte)3,(byte)2,(byte)2}), new StrokeSet(0, new byte[]{(byte)0,(byte)3,(byte)3,(byte)2,(byte)2,(byte)2,(byte)2}), new StrokeSet(0, new byte[]{(byte)0,(byte)0,(byte)3,(byte)2,(byte)2}), new StrokeSet(0, new byte[]{(byte)0,(byte)0,(byte)3,(byte)3,(byte)2,(byte)2,(byte)2,(byte)2}), new StrokeSet(0, new byte[]{(byte)0,(byte)0,(byte)0,(byte)3,(byte)2,(byte)2}), new StrokeSet(0, new byte[]{(byte)0,(byte)0,(byte)0,(byte)3,(byte)3,(byte)2,(byte)2,(byte)2,(byte)2}));
     public static final SymbolEffect Tormentum = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(42, "witchery.pott.tormentum", 25, true, true, "tormentum", TimeUtil.minsToTicks(30)){
 
         @Override
@@ -890,7 +890,7 @@ public class EffectRegistry {
                 }
             }
         }
-    }.setColor(0x222222).setSize(4.0f), new StrokeSet(1, 1, 3, 2, 2), new StrokeSet(1, 1, 3, 3, 2, 2, 2, 2), new StrokeSet(1, 1, 1, 3, 2, 2), new StrokeSet(1, 1, 1, 3, 3, 2, 2, 2, 2), new StrokeSet(1, 1, 1, 1, 3, 2, 2), new StrokeSet(1, 1, 1, 1, 3, 3, 2, 2, 2, 2));
+    }.setColor(0x222222).setSize(4.0f), new StrokeSet(1, new byte[]{(byte)1,(byte)3,(byte)2,(byte)2}), new StrokeSet(1, new byte[]{(byte)1,(byte)3,(byte)3,(byte)2,(byte)2,(byte)2,(byte)2}), new StrokeSet(1, new byte[]{(byte)1,(byte)1,(byte)3,(byte)2,(byte)2}), new StrokeSet(1, new byte[]{(byte)1,(byte)1,(byte)3,(byte)3,(byte)2,(byte)2,(byte)2,(byte)2}), new StrokeSet(1, new byte[]{(byte)1,(byte)1,(byte)1,(byte)3,(byte)2,(byte)2}), new StrokeSet(1, new byte[]{(byte)1,(byte)1,(byte)1,(byte)3,(byte)3,(byte)2,(byte)2,(byte)2,(byte)2}));
     public static final SymbolEffect LEONARD_1 = EffectRegistry.instance().addEffect(new SymbolEffect(43, "witchery.pott.leonard1", 5, false, false, null, 0){
 
         @Override
@@ -902,7 +902,7 @@ public class EffectRegistry {
         public int getChargeCost(World world, EntityPlayer player, int level) {
             return EffectRegistry.costOfLeonardSpell(world, player, 0);
         }
-    }, new StrokeSet(2, 0, 3, 3, 1));
+    }, new StrokeSet(2, new byte[]{(byte)0,(byte)3,(byte)3,(byte)1}));
     public static final SymbolEffect LEONARD_2 = EffectRegistry.instance().addEffect(new SymbolEffect(44, "witchery.pott.leonard2", 5, false, false, null, 0){
 
         @Override
@@ -914,7 +914,7 @@ public class EffectRegistry {
         public int getChargeCost(World world, EntityPlayer player, int level) {
             return EffectRegistry.costOfLeonardSpell(world, player, 1);
         }
-    }, new StrokeSet(3, 1, 2, 2, 0));
+    }, new StrokeSet(3, new byte[]{(byte)1,(byte)2,(byte)2,(byte)0}));
     public static final SymbolEffect LEONARD_3 = EffectRegistry.instance().addEffect(new SymbolEffect(45, "witchery.pott.leonard3", 5, false, false, null, 0){
 
         @Override
@@ -926,7 +926,7 @@ public class EffectRegistry {
         public int getChargeCost(World world, EntityPlayer player, int level) {
             return EffectRegistry.costOfLeonardSpell(world, player, 2);
         }
-    }, new StrokeSet(1, 2, 0, 0, 3));
+    }, new StrokeSet(1, new byte[]{(byte)2,(byte)0,(byte)0,(byte)3}));
     public static final SymbolEffect LEONARD_4 = EffectRegistry.instance().addEffect(new SymbolEffect(46, "witchery.pott.leonard4", 5, false, false, null, 0){
 
         @Override
@@ -938,7 +938,7 @@ public class EffectRegistry {
         public int getChargeCost(World world, EntityPlayer player, int level) {
             return EffectRegistry.costOfLeonardSpell(world, player, 3);
         }
-    }, new StrokeSet(0, 3, 1, 1, 2));
+    }, new StrokeSet(0, new byte[]{(byte)3,(byte)1,(byte)1,(byte)2}));
     public static final SymbolEffect FlagrateRitualis = EffectRegistry.instance().addEffect(new SymbolEffect(48, "witchery.pott.flagrateritualis", 1, false, false, null, 0, true){
 
         @Override
@@ -950,7 +950,7 @@ public class EffectRegistry {
                 SoundEffect.NOTE_SNARE.playAtPlayer(world, player);
             }
         }
-    }, new StrokeSet(0, 2, 1, 3, 0));
+    }, new StrokeSet(0, new byte[]{(byte)2,(byte)1,(byte)3,(byte)0}));
     public static final SymbolEffect FlagrateAureus = EffectRegistry.instance().addEffect(new SymbolEffect(49, "witchery.pott.flagrateaureus", 1, false, false, null, 0, true){
 
         @Override
@@ -962,7 +962,7 @@ public class EffectRegistry {
                 SoundEffect.NOTE_SNARE.playAtPlayer(world, player);
             }
         }
-    }, new StrokeSet(0, 2, 1, 3, 2));
+    }, new StrokeSet(0, new byte[]{(byte)2,(byte)1,(byte)3,(byte)2}));
     public static final SymbolEffect FlagrateAlibi = EffectRegistry.instance().addEffect(new SymbolEffect(50, "witchery.pott.flagratealibi", 1, false, false, null, 0, true){
 
         @Override
@@ -974,7 +974,7 @@ public class EffectRegistry {
                 SoundEffect.NOTE_SNARE.playAtPlayer(world, player);
             }
         }
-    }, new StrokeSet(0, 2, 1, 3, 1));
+    }, new StrokeSet(0, new byte[]{(byte)2,(byte)1,(byte)3,(byte)1}));
     public static final SymbolEffect RevelioPotionis = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(51, "witchery.pott.revelopotionis"){
 
         @Override
@@ -998,7 +998,7 @@ public class EffectRegistry {
                 ParticleEffect.INSTANT_SPELL.send(SoundEffect.RANDOM_FIZZ, spell, 2.0, 2.0, 16);
             }
         }
-    }, new StrokeSet(0, 1, 0, 1, 2));
+    }, new StrokeSet(0, new byte[]{(byte)1,(byte)0,(byte)1,(byte)2}));
     public static final SymbolEffect Reparo = EffectRegistry.instance().addEffect(new SymbolEffect(52, "witchery.pott.reparo", 1, false, false, null, 0, true){
 
         @Override
@@ -1028,7 +1028,7 @@ public class EffectRegistry {
                 SoundEffect.NOTE_SNARE.playAtPlayer(world, player);
             }
         }
-    }, new StrokeSet(3, 0, 3, 0, 3));
+    }, new StrokeSet(3, new byte[]{(byte)0,(byte)3,(byte)0,(byte)3}));
     public static final SymbolEffect Ictus = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(28, "witchery.pott.ictus"){
 
         @Override
@@ -1044,7 +1044,7 @@ public class EffectRegistry {
                 ParticleEffect.SPELL_COLORED.send(SoundEffect.RANDOM_ORB, (Entity)target, 1.0, 1.0, 16);
             }
         }
-    }, new StrokeSet(2, 1, 3));
+    }, new StrokeSet(2, new byte[]{(byte)1,(byte)3}));
     public static final SymbolEffect ExpectoPatronum = EffectRegistry.instance().addEffect(new SymbolEffect(53, "witchery.pott.expectopatronum", 1, false, false, null, 0, true){
 
         @Override
@@ -1059,7 +1059,7 @@ public class EffectRegistry {
             }
             ParticleEffect.INSTANT_SPELL.send(SoundEffect.MOB_WITHER_SPAWN, (Entity)player, 2.0, 2.0, 16);
         }
-    }, new StrokeSet(0, 3, 0, 3, 0));
+    }, new StrokeSet(0, new byte[]{(byte)3,(byte)0,(byte)3,(byte)0}));
     public static final SymbolEffect Sectumsempra = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(54, "witchery.pott.sectumsempra"){
 
         @Override
@@ -1071,7 +1071,7 @@ public class EffectRegistry {
                 ParticleEffect.REDDUST.send(SoundEffect.DAMAGE_HIT, (Entity)target, 1.0, 1.0, 16);
             }
         }
-    }, new StrokeSet(1, 1, 3, 1, 3, 1), new StrokeSet(2, 1, 3, 3, 1, 3, 3, 1), new StrokeSet(3, 1, 3, 3, 3, 1, 3, 3, 3, 1));
+    }, new StrokeSet(1, new byte[]{(byte)1,(byte)3,(byte)1,(byte)3,(byte)1}), new StrokeSet(2, new byte[]{(byte)1,(byte)3,(byte)3,(byte)1,(byte)3,(byte)3,(byte)1}), new StrokeSet(3, new byte[]{(byte)1,(byte)3,(byte)3,(byte)3,(byte)1,(byte)3,(byte)3,(byte)3,(byte)1}));
     public static final SymbolEffect Obliviate = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(7, "witchery.pott.obliviate"){
 
         @Override
@@ -1092,14 +1092,14 @@ public class EffectRegistry {
                 }
             }
         }
-    }, new StrokeSet(0, 2, 0, 3, 0));
+    }, new StrokeSet(0, new byte[]{(byte)2,(byte)0,(byte)3,(byte)0}));
     public static final SymbolEffect Confringo = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(11, "witchery.pott.confringo"){
 
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
             world.newExplosion((Entity)caster, spell.posX, spell.posY, spell.posZ, 3.0f, true, false);
         }
-    }, new StrokeSet(2, 2, 1, 2, 2));
+    }, new StrokeSet(2, new byte[]{(byte)2,(byte)1,(byte)2,(byte)2}));
     public static final SymbolEffect LumosMaxima = EffectRegistry.instance().addEffect(new SymbolEffect(14, "witchery.pott.lumosmaxima", 1, false, false, null, 0, true){
 
         @Override
@@ -1117,7 +1117,7 @@ public class EffectRegistry {
             }
             ParticleEffect.INSTANT_SPELL.send(SoundEffect.RANDOM_LEVELUP, (Entity)player, 2.0, 2.0, 16);
         }
-    }, new StrokeSet(2, 1, 2, 1, 2));
+    }, new StrokeSet(2, new byte[]{(byte)1,(byte)2,(byte)1,(byte)2}));
     public static final SymbolEffect WingardiumLeviosa = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(18, "witchery.pott.wingardiumleviosa"){
 
         @Override
@@ -1128,21 +1128,21 @@ public class EffectRegistry {
                 target.addPotionEffect(new PotionEffect(Potion.resistance.id, 200, 4));
             }
         }
-    }, new StrokeSet(0, 2, 0, 2, 0));
+    }, new StrokeSet(0, new byte[]{(byte)2,(byte)0,(byte)2,(byte)0}));
     public static final SymbolEffect Bombarda = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(24, "witchery.pott.bombarda"){
 
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
             world.newExplosion((Entity)caster, spell.posX, spell.posY, spell.posZ, 4.0f, false, false);
         }
-    }, new StrokeSet(3, 1, 2, 1));
+    }, new StrokeSet(3, new byte[]{(byte)1,(byte)2,(byte)1}));
     public static final SymbolEffect BombardaMaxima = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(99, "witchery.pott.bombardamaxima"){
 
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
             world.newExplosion((Entity)caster, spell.posX, spell.posY, spell.posZ, 8.0f, true, true);
         }
-    }, new StrokeSet(3, 1, 2, 0, 1));
+    }, new StrokeSet(3, new byte[]{(byte)1,(byte)2,(byte)0,(byte)1}));
     public static final SymbolEffect Avis = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(25, "witchery.pott.avis"){
 
         @Override
@@ -1160,7 +1160,7 @@ public class EffectRegistry {
                 ParticleEffect.SMOKE.send(SoundEffect.RANDOM_POP, spell, 1.0, 1.0, 16);
             }
         }
-    }, new StrokeSet(0, 3, 2, 0, 3));
+    }, new StrokeSet(0, new byte[]{(byte)3,(byte)2,(byte)0,(byte)3}));
     public static final SymbolEffect Oppugno = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(27, "witchery.pott.oppugno"){
 
         @Override
@@ -1178,7 +1178,7 @@ public class EffectRegistry {
                 ParticleEffect.SMOKE.send(SoundEffect.RANDOM_POP, spell, 1.0, 1.0, 16);
             }
         }
-    }, new StrokeSet(1, 2, 0, 3, 1));
+    }, new StrokeSet(1, new byte[]{(byte)2,(byte)0,(byte)3,(byte)1}));
     public static final SymbolEffect PiertotumLocomotor = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(29, "witchery.pott.piertotumlocomotor"){
 
         @Override
@@ -1191,7 +1191,7 @@ public class EffectRegistry {
                 ParticleEffect.SPELL.send(SoundEffect.RANDOM_FIZZ, spell, 2.0, 2.0, 16);
             }
         }
-    }, new StrokeSet(2, 0, 1, 3, 2));
+    }, new StrokeSet(2, new byte[]{(byte)0,(byte)1,(byte)3,(byte)2}));
     public static final SymbolEffect Reducto = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(30, "witchery.pott.reducto"){
 
         @Override
@@ -1227,7 +1227,7 @@ public class EffectRegistry {
                 ParticleEffect.SMOKE.send(SoundEffect.RANDOM_FIZZ, spell, 2.0, 2.0, 16);
             }
         }
-    }, new StrokeSet(2, 2, 1, 1, 2));
+    }, new StrokeSet(2, new byte[]{(byte)2,(byte)1,(byte)1,(byte)2}));
     public static final SymbolEffect AraniaExumai = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(32, "witchery.pott.araniaexumai"){
 
         @Override
@@ -1242,7 +1242,7 @@ public class EffectRegistry {
                 ParticleEffect.SPELL_COLORED.send(SoundEffect.RANDOM_ORB, (Entity)target, 1.0, 1.0, 16);
             }
         }
-    }, new StrokeSet(0, 1, 0, 1, 0));
+    }, new StrokeSet(0, new byte[]{(byte)1,(byte)0,(byte)1,(byte)0}));
     public static final SymbolEffect Silencio = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(33, "witchery.pott.silencio"){
 
         @Override
@@ -1250,14 +1250,14 @@ public class EffectRegistry {
             if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
                 EntityLivingBase target = (EntityLivingBase)mop.entityHit;
                 if (target instanceof EntityPlayer) {
-                    target.addPotionEffect(new PotionEffect(Witchery.Potions.SILENCED.id, 400, 0));
+                    target.addPotionEffect(new PotionEffect(Witchery.Potions.PARALYSED.id, 400, 0));
                 }
                 target.addPotionEffect(new PotionEffect(Potion.weakness.id, 400, 10));
                 target.addPotionEffect(new PotionEffect(Potion.digSlowdown.id, 400, 10));
                 ParticleEffect.SPELL.send(SoundEffect.RANDOM_FIZZ, (Entity)target, 1.0, 1.0, 16);
             }
         }
-    }, new StrokeSet(3, 2, 3, 2, 3));
+    }, new StrokeSet(3, new byte[]{(byte)2,(byte)3,(byte)2,(byte)3}));
     public static final SymbolEffect ProtegoMaxima = EffectRegistry.instance().addEffect(new SymbolEffect(34, "witchery.pott.protegomaxima", 1, false, false, null, 0, true){
 
         @Override
@@ -1275,7 +1275,7 @@ public class EffectRegistry {
             }
             ParticleEffect.INSTANT_SPELL.send(SoundEffect.RANDOM_LEVELUP, (Entity)player, 2.0, 2.0, 16);
         }
-    }, new StrokeSet(2, 1, 2, 3, 2));
+    }, new StrokeSet(2, new byte[]{(byte)1,(byte)2,(byte)3,(byte)2}));
     public static List<ErectoTask> erectoTasks = new ArrayList<ErectoTask>();
     public static final SymbolEffect Apparition;
     public static final SymbolEffect Fiendfyre;
@@ -1341,7 +1341,7 @@ public class EffectRegistry {
     public static <T extends Entity> void applyEntityEffect(World world, EntityLivingBase actor, MovingObjectPosition mop, double xMid, double yMid, double zMid, double radius, Class clazz, IEntityEffect<T> effect) {
         if (radius == 0.0) {
             if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit != null && clazz.isAssignableFrom(mop.entityHit.getClass())) {
-                effect.doAction(world, actor, xMid, yMid, zMid, mop.entityHit);
+                effect.doAction(world, actor, xMid, yMid, zMid, (T)mop.entityHit);
             }
         } else {
             double R_SQ = radius * radius;
@@ -1350,7 +1350,7 @@ public class EffectRegistry {
             for (Object obj : entities) {
                 Entity entity = (Entity)obj;
                 if (!(entity.getDistanceSq(xMid, yMid, zMid) <= R_SQ)) continue;
-                effect.doAction(world, actor, entity.posX, entity.posY, entity.posZ, entity);
+                effect.doAction(world, actor, entity.posX, entity.posY, entity.posZ, (T)entity);
             }
         }
     }
@@ -1400,7 +1400,7 @@ public class EffectRegistry {
     private static int costOfLeonardSpell(World world, EntityPlayer player, int spellSlot) {
         ItemStack urnStack;
         int slot = InvUtil.getSlotContainingItem(player.inventory, Witchery.Items.LEONARDS_URN);
-        if (slot >= 0 && slot < player.inventory.func_70302_i_() && (urnStack = player.inventory.getStackInSlot(slot)) != null) {
+        if (slot >= 0 && slot < player.inventory.getSizeInventory() && (urnStack = player.inventory.getStackInSlot(slot)) != null) {
             ItemStack potion;
             ItemLeonardsUrn.InventoryLeonardsUrn inv = new ItemLeonardsUrn.InventoryLeonardsUrn(player, urnStack);
             if (urnStack.getItemDamage() >= spellSlot && (potion = inv.getStackInSlot(spellSlot)) != null) {
@@ -1422,7 +1422,7 @@ public class EffectRegistry {
     private static void castLeonardSpell(World world, EntityPlayer player, int spellSlot) {
         ItemStack urnStack;
         int slot = InvUtil.getSlotContainingItem(player.inventory, Witchery.Items.LEONARDS_URN);
-        if (slot >= 0 && slot < player.inventory.func_70302_i_() && (urnStack = player.inventory.getStackInSlot(slot)) != null) {
+        if (slot >= 0 && slot < player.inventory.getSizeInventory() && (urnStack = player.inventory.getStackInSlot(slot)) != null) {
             ItemStack potion;
             ItemLeonardsUrn.InventoryLeonardsUrn inv = new ItemLeonardsUrn.InventoryLeonardsUrn(player, urnStack);
             if (urnStack.getItemDamage() >= spellSlot && (potion = inv.getStackInSlot(spellSlot)) != null) {
@@ -1455,7 +1455,7 @@ public class EffectRegistry {
                     ParticleEffect.PORTAL.send(SoundEffect.RANDOM_POP, spell, 1.0, 1.0, 16);
                 }
             }
-        }, new StrokeSet(2, 2, 1, 0, 1));
+        }, new StrokeSet(2, new byte[]{(byte)2,(byte)1,(byte)0,(byte)1}));
         Fiendfyre = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(56, "witchery.pott.fiendfyre"){
 
             @Override
@@ -1480,7 +1480,7 @@ public class EffectRegistry {
                     ParticleEffect.FLAME.send(SoundEffect.MOB_GHAST_FIREBALL, spell, 3.0, 3.0, 16);
                 }
             }
-        }, new StrokeSet(1, 2, 3, 0, 3));
+        }, new StrokeSet(1, new byte[]{(byte)2,(byte)3,(byte)0,(byte)3}));
         Expulso = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(57, "witchery.pott.expulso"){
             @Override
             public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
@@ -1503,7 +1503,7 @@ public class EffectRegistry {
                     ParticleEffect.EXPLODE.send(SoundEffect.RANDOM_EXPLODE, world, spell.posX, spell.posY, spell.posZ, 2.0D, 2.0D, 16);
                 }
             }
-        }, new StrokeSet(1, 0, 3, 0, 1));
+        }, new StrokeSet(1, new byte[]{(byte)0,(byte)3,(byte)0,(byte)1}));
         Engorgio = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(58, "witchery.pott.engorgio"){
 
             @Override
@@ -1515,7 +1515,7 @@ public class EffectRegistry {
                     ParticleEffect.SPELL.send(SoundEffect.RANDOM_LEVELUP, (Entity)target, 1.0, 1.0, 16);
                 }
             }
-        }, new StrokeSet(0, 0, 2, 0, 0));
+        }, new StrokeSet(0, new byte[]{(byte)0,(byte)2,(byte)0,(byte)0}));
         FiniteIncantatem = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(59, "witchery.pott.finiteincantatem"){
             @Override
             public void perform(World world, EntityPlayer player, int effectLevel) {
@@ -1525,7 +1525,7 @@ public class EffectRegistry {
                             Potion.moveSlowdown.id, Potion.digSlowdown.id, Potion.confusion.id,
                             Potion.blindness.id, Potion.poison.id, Potion.wither.id,
                             Potion.weakness.id, Potion.hunger.id,
-                            Witchery.Potions.SILENCED.id
+                            Witchery.Potions.PARALYSED.id
                         };
                         boolean cleansed = false;
                         for (int id : negativeEffects) {
@@ -1571,7 +1571,7 @@ public class EffectRegistry {
                     }
                 }
             }
-        }, new StrokeSet(3, 3, 3, 1, 1));
+        }, new StrokeSet(3, new byte[]{(byte)3,(byte)3,(byte)1,(byte)1}));
         Herbivicus = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(60, "witchery.pott.herbivicus"){
 
             @Override
@@ -1593,7 +1593,7 @@ public class EffectRegistry {
                     }
                 }
             }
-        }, new StrokeSet(2, 2, 0, 2, 2));
+        }, new StrokeSet(2, new byte[]{(byte)2,(byte)0,(byte)2,(byte)2}));
         Impervius = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(62, "witchery.pott.impervius"){
 
             @Override
@@ -1611,7 +1611,7 @@ public class EffectRegistry {
                     ParticleEffect.SPELL.send(SoundEffect.RANDOM_LEVELUP, (Entity)caster, 1.0, 1.0, 16);
                 }
             }
-        }, new StrokeSet(0, 1, 2, 1, 0));
+        }, new StrokeSet(0, new byte[]{(byte)1,(byte)2,(byte)1,(byte)0}));
         Erecto = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(63, "witchery.pott.erecto"){
 
             @Override
@@ -1648,7 +1648,7 @@ public class EffectRegistry {
                     ParticleEffect.INSTANT_SPELL.send(SoundEffect.RANDOM_LEVELUP, spell, 2.0, 2.0, 16);
                 }
             }
-        }, new StrokeSet(1, 0, 0, 1, 0));
+        }, new StrokeSet(1, new byte[]{(byte)0,(byte)0,(byte)1,(byte)0}));
         PortusPersonal = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(64, "witchery.pott.portuspersonal"){
 
             @Override
@@ -1678,14 +1678,14 @@ public class EffectRegistry {
                     }
                 }
             }
-        }, new StrokeSet(3, 3, 0, 3, 3));
+        }, new StrokeSet(3, new byte[]{(byte)3,(byte)0,(byte)3,(byte)3}));
         PortusTraslador = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(65, "witchery.pott.portustraslador"){
 
             @Override
             public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
                 if (!world.isRemote && caster instanceof EntityPlayer) {
                     EntityPlayer player = (EntityPlayer)caster;
-                    ItemStack stack = new ItemStack(Witchery.Blocks.PORTKEY);
+                    ItemStack stack = null; //new ItemStack(Witchery.Blocks.PORTKEY);
                     NBTTagCompound nbt = new NBTTagCompound();
                     nbt.setInteger("destX", (int)player.posX);
                     nbt.setInteger("destY", (int)player.posY);
@@ -1699,7 +1699,7 @@ public class EffectRegistry {
                     world.playSoundAtEntity((Entity)player, "random.levelup", 1.0f, 1.0f);
                 }
             }
-        }, new StrokeSet(3, 3, 1, 3, 3));
+        }, new StrokeSet(3, new byte[]{(byte)3,(byte)1,(byte)3,(byte)3}));
         TaglockHex = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(72, "witchery.pott.taglockhex"){
 
             @Override
@@ -1714,7 +1714,7 @@ public class EffectRegistry {
                     }
                 }
             }
-        }.setColor(0xFF0000).setSize(1.0f), new StrokeSet(1, 2, 1, 2));
+        }.setColor(0xFF0000).setSize(1.0f), new StrokeSet(1, new byte[]{(byte)2,(byte)1,(byte)2}));
         SmeltRay = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(73, "witchery.pott.smeltray"){
 
             @Override
@@ -1746,7 +1746,7 @@ public class EffectRegistry {
                     }
                 }
             }
-        }.setColor(0xFFAA00).setSize(1.0f), new StrokeSet(3, 1, 1, 3));
+        }.setColor(0xFFAA00).setSize(1.0f), new StrokeSet(3, new byte[]{(byte)1,(byte)1,(byte)3}));
         EarthPillar = EffectRegistry.instance().addEffect(new SymbolEffect(74, "witchery.pott.earthpillar", 1, false, false, null, 0, true){
 
             @Override
@@ -1767,14 +1767,14 @@ public class EffectRegistry {
                     ParticleEffect.EXPLODE.send(SoundEffect.RANDOM_EXPLODE, world, mop.blockX, mop.blockY, mop.blockZ, 2.0, 2.0, 16);
                 }
             }
-        }, new StrokeSet(0, 1, 2, 3, 0));
+        }, new StrokeSet(0, new byte[]{(byte)1,(byte)2,(byte)3,(byte)0}));
         Transmutation = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(75, "witchery.pott.transmutation"){
 
             @Override
             public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
                 if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && !world.isRemote) {
                     Block b = world.getBlock(mop.blockX, mop.blockY, mop.blockZ);
-                    BlockSand newBlock = null;
+                    Block newBlock = null;
                     if (b == Blocks.dirt) {
                         newBlock = Blocks.sand;
                     } else if (b == Blocks.sand) {
@@ -1792,7 +1792,7 @@ public class EffectRegistry {
                     }
                 }
             }
-        }.setColor(0x9900CC).setSize(1.5f), new StrokeSet(2, 3, 0, 1, 2));
+        }.setColor(0x9900CC).setSize(1.5f), new StrokeSet(2, new byte[]{(byte)3,(byte)0,(byte)1,(byte)2}));
         Excavation = EffectRegistry.instance().addEffect(new SymbolEffect(76, "witchery.pott.excavation", 1, false, false, null, 0, true){
 
             @Override
@@ -1812,7 +1812,7 @@ public class EffectRegistry {
                     ParticleEffect.EXPLODE.send(SoundEffect.RANDOM_EXPLODE, world, mop.blockX, mop.blockY, mop.blockZ, 2.0, 2.0, 16);
                 }
             }
-        }, new StrokeSet(1, 0, 3, 2, 1));
+        }, new StrokeSet(1, new byte[]{(byte)0,(byte)3,(byte)2,(byte)1}));
         BroomSummon = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(77, "witchery.pott.broomsummon"){
 
             @Override
@@ -1824,7 +1824,7 @@ public class EffectRegistry {
                     ParticleEffect.PORTAL.send(SoundEffect.MOB_ENDERMEN_PORTAL, world, mop.blockX, mop.blockY, mop.blockZ, 1.0, 1.0, 16);
                 }
             }
-        }.setColor(8409152).setSize(2.0f), new StrokeSet(0, 1, 0, 2, 0));
+        }.setColor(8409152).setSize(2.0f), new StrokeSet(0, new byte[]{(byte)1,(byte)0,(byte)2,(byte)0}));
         ToadLeap = EffectRegistry.instance().addEffect(new SymbolEffect(78, "witchery.pott.toadleap", 1, false, false, null, 0, true){
 
             @Override
@@ -1836,7 +1836,7 @@ public class EffectRegistry {
                     ParticleEffect.SLIME.send(SoundEffect.MOB_SLIME_BIG, (Entity)player, 1.0, 1.0, 16);
                 }
             }
-        }, new StrokeSet(3, 2, 1, 0, 3));
+        }, new StrokeSet(3, new byte[]{(byte)2,(byte)1,(byte)0,(byte)3}));
         EtherealVault = EffectRegistry.instance().addEffect(new SymbolEffect(79, "witchery.pott.etherealvault", 1, false, false, null, 0, true){
 
             @Override
@@ -1846,7 +1846,7 @@ public class EffectRegistry {
                     ParticleEffect.PORTAL.send(SoundEffect.MOB_ENDERMEN_PORTAL, (Entity)player, 1.0, 1.0, 16);
                 }
             }
-        }, new StrokeSet(0, 3, 0, 3, 3));
+        }, new StrokeSet(0, new byte[]{(byte)3,(byte)0,(byte)3,(byte)3}));
         BasicAttack = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(80, "witchery.pott.asis"){
 
             @Override
@@ -1869,7 +1869,7 @@ public class EffectRegistry {
                     ParticleEffect.MAGIC_CRIT.send(SoundEffect.DAMAGE_HIT, (Entity)target, 0.5, 1.0, 16);
                 }
             }
-        }.setColor(0xFFFFFF).setSize(1.0f), new StrokeSet(0, 1, 1));
+        }.setColor(0xFFFFFF).setSize(1.0f), new StrokeSet(0, new byte[]{(byte)1,(byte)1}));
         Orchideous = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(81, "witchery.pott.orchideous"){
 
             @Override
@@ -1889,7 +1889,7 @@ public class EffectRegistry {
                     ParticleEffect.SLIME.send(SoundEffect.MOB_SLIME_BIG, spell, 2.0, 2.0, 16);
                 }
             }
-        }, new StrokeSet(1, 2, 1, 0, 2, 0));
+        }, new StrokeSet(1, new byte[]{(byte)2,(byte)1,(byte)0,(byte)2,(byte)0}));
         Fumos = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(82, "witchery.pott.fumos"){
 
             @Override
@@ -1912,7 +1912,7 @@ public class EffectRegistry {
                     ParticleEffect.SMOKE.send(SoundEffect.RANDOM_FIZZ, spell, 4.0, 4.0, 16);
                 }
             }
-        }, new StrokeSet(1, 2, 0, 2));
+        }, new StrokeSet(1, new byte[]{(byte)2,(byte)0,(byte)2}));
         Incarcerous = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(83, "witchery.pott.incarcerous"){
 
             @Override
@@ -1933,7 +1933,7 @@ public class EffectRegistry {
                     ParticleEffect.MAGIC_CRIT.send(SoundEffect.RANDOM_POP, (Entity)target, 1.0, 1.0, 16);
                 }
             }
-        }, new StrokeSet(3, 0, 1, 2, 1, 0));
+        }, new StrokeSet(3, new byte[]{(byte)0,(byte)1,(byte)2,(byte)1,(byte)0}));
         Vermillious = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(84, "witchery.pott.vermillious"){
 
             @Override
@@ -1958,7 +1958,7 @@ public class EffectRegistry {
                     world.playSoundAtEntity((Entity)rocket, "fireworks.launch", 3.0f, 1.0f);
                 }
             }
-        }, new StrokeSet(1, 3, 0, 3, 0, 3));
+        }, new StrokeSet(1, new byte[]{(byte)3,(byte)0,(byte)3,(byte)0,(byte)3}));
     }
 
     public static interface IEntityEffect<T extends Entity> {

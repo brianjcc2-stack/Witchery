@@ -41,7 +41,7 @@ public class WitchHandAbilities {
     public static void onAttack(EntityPlayer player, EntityLivingBase target) {
         ExtendedPlayer ext = ExtendedPlayer.get(player);
         int infId = Infusion.getInfusionID(player);
-        float baseDamage = 1.0f + (float)ext.getWitchLevel() * 0.15f;
+        float baseDamage = 1.0f + (float)1 * 0.15f;
         if (infId == 1) {
             if (target.getCreatureAttribute() == EnumCreatureAttribute.UNDEAD) {
                 baseDamage *= 3.0f;
@@ -58,7 +58,7 @@ public class WitchHandAbilities {
         }
         target.attackEntityFrom(DamageSource.causePlayerDamage((EntityPlayer)player), baseDamage);
         if (!player.worldObj.isRemote) {
-            ext.increaseWitchXP(2);
+            //ext.increaseWitchXP(2);
         }
     }
 
@@ -67,14 +67,14 @@ public class WitchHandAbilities {
         ExtendedPlayer ext = ExtendedPlayer.get(player);
         int infId = Infusion.getInfusionID(player);
         if (!world.isRemote) {
-            ext.increaseWitchXP(1);
+            //ext.increaseWitchXP(1);
         }
         int baseCost = player.isSneaking() ? 20 : 5;
         List witches = world.getEntitiesWithinAABB(EntityCovenWitch.class, player.boundingBox.expand(16.0, 16.0, 16.0));
         int covenCount = 0;
         for (Object obj : witches) {
             Object witch = (EntityCovenWitch)((Object)obj);
-            if (!witch.isTamed() || !player.getUniqueID().toString().equals(witch.func_152113_b())) continue;
+            if (!((net.minecraft.entity.passive.EntityTameable)witch).isTamed() || !player.getUniqueID().toString().equals(((net.minecraft.entity.passive.EntityTameable)witch).func_152113_b())) continue;
             ++covenCount;
         }
         if (covenCount > 0) {

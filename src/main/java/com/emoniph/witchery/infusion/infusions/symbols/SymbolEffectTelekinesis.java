@@ -30,12 +30,12 @@ extends SymbolEffectProjectile {
     @Override
     public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
         double radius = spell.getEffectLevel() == 1 ? 0.0 : (spell.getEffectLevel() == 2 ? 3.0 : 6.0);
-        final boolean isSneaking = caster != null && caster.func_70093_af();
-        final double spellX = spell.field_70159_w;
-        final double spellZ = spell.field_70179_y;
-        final double casterX = caster != null ? caster.field_70165_t : spell.field_70165_t;
-        final double casterZ = caster != null ? caster.field_70161_v : spell.field_70161_v;
-        EffectRegistry.applyEntityEffect(world, caster, mop, spell.field_70165_t, spell.field_70163_u, spell.field_70161_v, radius, EntityLivingBase.class, new EffectRegistry.IEntityEffect<EntityLivingBase>(){
+        final boolean isSneaking = caster != null && caster.isSneaking();
+        final double spellX = spell.motionX;
+        final double spellZ = spell.motionZ;
+        final double casterX = caster != null ? caster.posX : spell.posX;
+        final double casterZ = caster != null ? caster.posZ : spell.posZ;
+        EffectRegistry.applyEntityEffect(world, caster, mop, spell.posX, spell.posY, spell.posZ, radius, EntityLivingBase.class, new EffectRegistry.IEntityEffect<EntityLivingBase>(){
 
             @Override
             public void doAction(World world, EntityLivingBase actor, double x, double y, double z, EntityLivingBase target) {
@@ -48,8 +48,8 @@ extends SymbolEffectProjectile {
                         motionX = spellX * acceleration;
                         motionZ = spellZ * acceleration;
                     } else {
-                        double dX = casterX - target.field_70165_t;
-                        double dZ = casterZ - target.field_70161_v;
+                        double dX = casterX - target.posX;
+                        double dZ = casterZ - target.posZ;
                         double distance = Math.sqrt(dX * dX + dZ * dZ);
                         if (distance > 0.0) {
                             motionX = dX / distance * Math.abs(acceleration);
@@ -64,9 +64,9 @@ extends SymbolEffectProjectile {
                         EntityPlayer targetPlayer = (EntityPlayer)target;
                         Witchery.packetPipeline.sendTo((IMessage)new PacketPushTarget(motionX, motionY, motionZ), targetPlayer);
                     } else {
-                        target.field_70159_w = motionX;
-                        target.field_70181_x = motionY;
-                        target.field_70179_y = motionZ;
+                        target.motionX = motionX;
+                        target.motionY = motionY;
+                        target.motionZ = motionZ;
                     }
                 }
             }

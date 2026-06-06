@@ -77,7 +77,7 @@ import com.emoniph.witchery.infusion.infusions.creature.CreaturePowerSpeed;
 import com.emoniph.witchery.infusion.infusions.creature.CreaturePowerSpider;
 import com.emoniph.witchery.infusion.infusions.creature.CreaturePowerSquid;
 import com.emoniph.witchery.infusion.infusions.creature.CreaturePowerZombie;
-import com.emoniph.witchery.item.Phase4Items;
+//import com.emoniph.witchery.item.Phase4Items;
 import com.emoniph.witchery.predictions.PredictionArrow;
 import com.emoniph.witchery.predictions.PredictionBuriedTreasure;
 import com.emoniph.witchery.predictions.PredictionFall;
@@ -111,7 +111,7 @@ import com.emoniph.witchery.ritual.rites.RiteCurseCreature;
 import com.emoniph.witchery.ritual.rites.RiteCurseOfTheWolf;
 import com.emoniph.witchery.ritual.rites.RiteCursePoppets;
 import com.emoniph.witchery.ritual.rites.RiteDementorKiss;
-import com.emoniph.witchery.ritual.rites.RiteDimensionalPocket;
+//import com.emoniph.witchery.ritual.rites.RiteDimensionalPocket;
 import com.emoniph.witchery.ritual.rites.RiteEclipse;
 import com.emoniph.witchery.ritual.rites.RiteFertility;
 import com.emoniph.witchery.ritual.rites.RiteFidelio;
@@ -125,9 +125,9 @@ import com.emoniph.witchery.ritual.rites.RiteLegilimency;
 import com.emoniph.witchery.ritual.rites.RiteMorsmordre;
 import com.emoniph.witchery.ritual.rites.RiteNaturesPower;
 import com.emoniph.witchery.ritual.rites.RitePartEarth;
-import com.emoniph.witchery.ritual.rites.RitePathDemon;
-import com.emoniph.witchery.ritual.rites.RitePathGhost;
-import com.emoniph.witchery.ritual.rites.RitePathLich;
+//import com.emoniph.witchery.ritual.rites.RitePathDemon;
+//import com.emoniph.witchery.ritual.rites.RitePathGhost;
+//import com.emoniph.witchery.ritual.rites.RitePathLich;
 import com.emoniph.witchery.ritual.rites.RitePhilosopherStone;
 import com.emoniph.witchery.ritual.rites.RitePriorIncarnation;
 import com.emoniph.witchery.ritual.rites.RitePromisedLand;
@@ -143,7 +143,7 @@ import com.emoniph.witchery.ritual.rites.RiteSetNBT;
 import com.emoniph.witchery.ritual.rites.RiteSoulThief;
 import com.emoniph.witchery.ritual.rites.RiteSphereEffect;
 import com.emoniph.witchery.ritual.rites.RiteSummonCreature;
-import com.emoniph.witchery.ritual.rites.RiteSummonEntity;
+//import com.emoniph.witchery.ritual.rites.RiteSummonEntity;
 import com.emoniph.witchery.ritual.rites.RiteSummonItem;
 import com.emoniph.witchery.ritual.rites.RiteSummonSpectralStone;
 import com.emoniph.witchery.ritual.rites.RiteTeleportEntity;
@@ -549,7 +549,7 @@ public class WitcheryRecipes {
         KettleRecipes.instance().addRecipe(Witchery.Items.GENERIC.itemBrewOfWasting.createStack(3), 1, 0, 0.0f, -12440546, 0, Witchery.Items.GENERIC.itemMellifluousHunger.createStack(), new ItemStack(Items.rotten_flesh), Witchery.Items.GENERIC.itemBelladonnaFlower.createStack(), new ItemStack(Witchery.Blocks.EMBER_MOSS), new ItemStack(Items.poisonous_potato), new ItemStack(Items.spider_eye));
         KettleRecipes.instance().addRecipe(Witchery.Items.GENERIC.itemBrewOfBats.createStack(3), 1, 0, 0.0f, -9809858, 0, Witchery.Items.GENERIC.itemBatBall.createStack(), Witchery.Items.GENERIC.itemBatWool.createStack(), new ItemStack(Items.apple), new ItemStack(Items.sugar), new ItemStack(Items.fermented_spider_eye), new ItemStack(Items.gunpowder));
         KettleRecipes.instance().addRecipe(Witchery.Items.GENERIC.itemBrewSubstitution.createStack(3), 1, 0, 0.0f, -7010720, 0, Witchery.Items.GENERIC.itemEnderDew.createStack(), Witchery.Items.GENERIC.itemEnderDew.createStack(), Witchery.Items.GENERIC.itemMutandisExtremis.createStack(), new ItemStack(Items.egg), new ItemStack(Items.magma_cream), Witchery.Items.GENERIC.itemBranchEnt.createStack());
-        KettleRecipes.instance().addRecipe(Witchery.Items.GENERIC.itemOdourOfMeditation.createStack(3), 1, 0, 0.0f, -4079167, 0, Witchery.Items.GENERIC.itemOdourOfPurity.createStack(), Witchery.Items.GENERIC.itemFocusedWill.createStack(), new ItemStack(Items.gold_nugget), new ItemStack(Items.dye, 1, 4));
+        //KettleRecipes.instance().addRecipe(Witchery.Items.GENERIC.itemOdourOfMeditation.createStack(3), 1, 0, 0.0f, -4079167, 0, Witchery.Items.GENERIC.itemOdourOfPurity.createStack(), Witchery.Items.GENERIC.itemFocusedWill.createStack(), new ItemStack(Items.gold_nugget), new ItemStack(Items.dye, 1, 4));
         KettleRecipes.instance().addRecipe(Witchery.Items.GENERIC.itemBrewRevealing.createStack(3), 1, 0, 0.0f, -4079167, 0, new ItemStack(Items.carrot), new ItemStack(Items.spider_eye), new ItemStack(Items.spider_eye), new ItemStack((Item)Items.potionitem, 1, 8198), new ItemStack((Block)Blocks.brown_mushroom), Witchery.Items.GENERIC.itemOdourOfPurity.createStack());
         KettleRecipes.instance().addRecipe(Witchery.Items.GENERIC.itemBrewOfSolidDirt.createStack(3), 1, 0, 2000.0f, -11720688, 0, true, new ItemStack(Blocks.dirt), Witchery.Items.GENERIC.itemFoulFume.createStack(), Witchery.Items.GENERIC.itemOdourOfPurity.createStack(), Witchery.Items.GENERIC.itemMutandis.createStack(), Witchery.Items.GENERIC.itemAshWood.createStack(), new ItemStack(Witchery.Blocks.SPANISH_MOSS)).setUnlocalizedName("witchery.brew.solidification");
         KettleRecipes.instance().addRecipe(Witchery.Items.GENERIC.itemBrewOfSolidRock.createStack(3), 1, 0, 2000.0f, -8355712, 0, false, new ItemStack(Blocks.stone), Witchery.Items.GENERIC.itemFoulFume.createStack(), Witchery.Items.GENERIC.itemOdourOfPurity.createStack(), Witchery.Items.GENERIC.itemMutandis.createStack(), Witchery.Items.GENERIC.itemAshWood.createStack(), new ItemStack(Witchery.Blocks.SPANISH_MOSS));
@@ -572,10 +572,10 @@ public class WitcheryRecipes {
         KettleRecipes.instance().addRecipe(Witchery.Items.GENERIC.itemInfernalAnimus.createStack(2), 0, 0, 4000.0f, -7598080, 0, false, Witchery.Items.GENERIC.itemRedstoneSoup.createStack(), new ItemStack((Item)Items.potionitem, 1, 16172), Witchery.Items.POPPET.voodooPoppet.createStack(), Witchery.Items.GENERIC.itemDemonHeart.createStack(), Witchery.Items.GENERIC.itemRefinedEvil.createStack(), new ItemStack(Items.blaze_rod));
         KettleRecipes.instance().addRecipe(Witchery.Items.GENERIC.itemInfusionBase.createStack(), 1, 0, 3000.0f, -10520657, 0, Witchery.Items.GENERIC.itemRedstoneSoup.createStack(), Witchery.Items.GENERIC.itemBrewOfFlowingSpirit.createStack(), Witchery.Items.GENERIC.itemCreeperHeart.createStack(), Witchery.Items.GENERIC.itemToeOfFrog.createStack(), Witchery.Items.GENERIC.itemOwletsWing.createStack(), Witchery.Items.GENERIC.itemDogTongue.createStack());
         KettleRecipes.instance().addRecipe(Witchery.Items.GENERIC.itemInfusionBase.createStack(2), 0, 0, 3000.0f, -10520657, 0, Witchery.Items.GENERIC.itemInfusionBase.createStack(), Witchery.Items.GENERIC.itemBrewOfFlowingSpirit.createStack(), Witchery.Items.GENERIC.itemHintOfRebirth.createStack(), Witchery.Items.GENERIC.itemMandrakeRoot.createStack(), Witchery.Items.GENERIC.itemBatWool.createStack(), new ItemStack(Witchery.Blocks.BRAMBLE, 1, 1));
-        KettleRecipes.instance().addRecipe(new ItemStack(Phase4Items.itemFlooPowder, 4), 0, 0, 100.0f, 65280, 0, new ItemStack((Item)Witchery.Items.GENERIC, 1, Witchery.Items.GENERIC.itemAshWood.damageValue), new ItemStack(Items.redstone), new ItemStack(Items.glowstone_dust)).setUnlocalizedName("witchery.book.floopowder");
-        KettleRecipes.instance().addRecipe(new ItemStack(Phase4Items.itemGillyweed), 0, 0, 500.0f, 255, 0, new ItemStack(Blocks.waterlily), new ItemStack(Items.slime_ball), new ItemStack(Blocks.vine)).setUnlocalizedName("witchery.book.gillyweed");
-        KettleRecipes.instance().addRecipe(new ItemStack(Phase4Items.itemPolyjuice), 0, 0, 1000.0f, 0x555555, 0, new ItemStack((Item)Witchery.Items.GENERIC, 1, Witchery.Items.GENERIC.itemMandrakeRoot.damageValue), new ItemStack((Item)Items.potionitem, 1, 0), new ItemStack((Item)Witchery.Items.GENERIC, 1, Witchery.Items.GENERIC.itemCreeperHeart.damageValue)).setUnlocalizedName("witchery.book.polyjuice");
-        KettleRecipes.instance().addRecipe(new ItemStack(Phase4Items.itemPortkeyCrystal), 0, 0, 2000.0f, 0xFFFFFF, 0, new ItemStack(Items.quartz), new ItemStack(Items.ender_pearl), new ItemStack(Items.gold_ingot)).setUnlocalizedName("witchery.book.portkeycrystal");
+        //KettleRecipes.instance().addRecipe(new ItemStack(Phase4Items.itemFlooPowder, 4), 0, 0, 100.0f, 65280, 0, new ItemStack((Item)Witchery.Items.GENERIC, 1, Witchery.Items.GENERIC.itemAshWood.damageValue), new ItemStack(Items.redstone), new ItemStack(Items.glowstone_dust)).setUnlocalizedName("witchery.book.floopowder");
+        //KettleRecipes.instance().addRecipe(new ItemStack(Phase4Items.itemGillyweed), 0, 0, 500.0f, 255, 0, new ItemStack(Blocks.waterlily), new ItemStack(Items.slime_ball), new ItemStack(Blocks.vine)).setUnlocalizedName("witchery.book.gillyweed");
+        //KettleRecipes.instance().addRecipe(new ItemStack(Phase4Items.itemPolyjuice), 0, 0, 1000.0f, 0x555555, 0, new ItemStack((Item)Witchery.Items.GENERIC, 1, Witchery.Items.GENERIC.itemMandrakeRoot.damageValue), new ItemStack((Item)Items.potionitem, 1, 0), new ItemStack((Item)Witchery.Items.GENERIC, 1, Witchery.Items.GENERIC.itemCreeperHeart.damageValue)).setUnlocalizedName("witchery.book.polyjuice");
+        //KettleRecipes.instance().addRecipe(new ItemStack(Phase4Items.itemPortkeyCrystal), 0, 0, 2000.0f, 0xFFFFFF, 0, new ItemStack(Items.quartz), new ItemStack(Items.ender_pearl), new ItemStack(Items.gold_ingot)).setUnlocalizedName("witchery.book.portkeycrystal");
         CreaturePower.Registry.instance().add(new CreaturePowerSpider(1, EntityCaveSpider.class));
         CreaturePower.Registry.instance().add(new CreaturePowerSpider(2, EntitySpider.class));
         CreaturePower.Registry.instance().add(new CreaturePowerCreeper(3));
@@ -716,11 +716,11 @@ public class WitcheryRecipes {
         RiteRegistry.addRecipe(105, 208, new RiteLegilimency(), new SacrificeMultiple(new SacrificeItem(new ItemStack(Items.spider_eye), new ItemStack(Items.redstone), new ItemStack((Item)Witchery.Items.TAGLOCK_KIT, 1, 1)), new SacrificePower(2000.0f, 20)), EnumSet.noneOf(RitualTraits.class), new Circle(0, 16, 0), new Circle(0, 28, 0)).setUnlocalizedName("witchery.rite.legilimency");
         RiteRegistry.addRecipe(106, 209, new RitePhilosopherStone(), new SacrificeMultiple(new SacrificeItem(new ItemStack(Blocks.dirt), new ItemStack(Blocks.stone), new ItemStack(Items.glass_bottle)), new SacrificeLiving(EntityVillager.class), new SacrificePower(15000.0f, 20)), EnumSet.noneOf(RitualTraits.class), new Circle(16, 0, 0), new Circle(28, 0, 0), new Circle(0, 28, 0)).setUnlocalizedName("witchery.rite.philosopherstone");
         RiteRegistry.addRecipe(107, 210, new RitePromisedLand(), new SacrificeMultiple(new SacrificeItem(new ItemStack(Witchery.Blocks.SAPLING, 1, 0), new ItemStack(Items.dye, 1, 15), new ItemStack(Items.water_bucket)), new SacrificePower(10000.0f, 20)), EnumSet.noneOf(RitualTraits.class), new Circle(16, 0, 0), new Circle(28, 0, 0), new Circle(40, 0, 0)).setUnlocalizedName("witchery.rite.promisedland");
-        RiteRegistry.addRecipe(108, 211, new RiteSummonEntity(), new SacrificeMultiple(new SacrificeItem(new ItemStack((Item)Witchery.Items.TAGLOCK_KIT, 1, 1), new ItemStack(Items.ender_pearl))), EnumSet.noneOf(RitualTraits.class), new Circle(0, 16, 0)).setUnlocalizedName("witchery.rite.summonentity");
-        RiteRegistry.addRecipe(109, 212, new RiteDimensionalPocket(), new SacrificeMultiple(new SacrificeItem(new ItemStack((Block)Blocks.chest), Witchery.Items.GENERIC.itemSpectralDust.createStack(), new ItemStack(Items.gold_ingot))), EnumSet.noneOf(RitualTraits.class), new Circle(0, 16, 0)).setUnlocalizedName("witchery.rite.dimensionalpocket");
-        RiteRegistry.addRecipe(110, 213, new RitePathGhost(16), new SacrificeMultiple(new SacrificeItem(Witchery.Items.GENERIC.itemSpectralDust.createStack(), Witchery.Items.GENERIC.itemWeb.createStack(), new ItemStack(Items.string)), new SacrificePower(1000.0f, 20)), EnumSet.noneOf(RitualTraits.class), new Circle(16, 0, 0)).setUnlocalizedName("witchery.rite.pathghost");
-        RiteRegistry.addRecipe(111, 214, new RitePathDemon(16), new SacrificeMultiple(new SacrificeItem(Witchery.Items.GENERIC.itemDemonHeart.createStack(), Witchery.Items.GENERIC.itemInfernalBlood.createStack(), new ItemStack(Items.blaze_powder)), new SacrificePower(1000.0f, 20)), EnumSet.noneOf(RitualTraits.class), new Circle(0, 0, 16)).setUnlocalizedName("witchery.rite.pathdemon");
-        RiteRegistry.addRecipe(112, 215, new RitePathLich(16), new SacrificeMultiple(new SacrificeItem(Witchery.Items.GENERIC.itemNecroStone.createStack(), new ItemStack(Items.bone), new ItemStack(Items.rotten_flesh)), new SacrificePower(1000.0f, 20)), EnumSet.noneOf(RitualTraits.class), new Circle(16, 0, 0)).setUnlocalizedName("witchery.rite.pathlich");
+        //RiteRegistry.addRecipe(108, 211, new RiteSummonEntity(), new SacrificeMultiple(new SacrificeItem(new ItemStack((Item)Witchery.Items.TAGLOCK_KIT, 1, 1), new ItemStack(Items.ender_pearl))), EnumSet.noneOf(RitualTraits.class), new Circle(0, 16, 0)).setUnlocalizedName("witchery.rite.summonentity");
+        //RiteRegistry.addRecipe(109, 212, new RiteDimensionalPocket(), new SacrificeMultiple(new SacrificeItem(new ItemStack((Block)Blocks.chest), Witchery.Items.GENERIC.itemSpectralDust.createStack(), new ItemStack(Items.gold_ingot))), EnumSet.noneOf(RitualTraits.class), new Circle(0, 16, 0)).setUnlocalizedName("witchery.rite.dimensionalpocket");
+        //RiteRegistry.addRecipe(110, 213, new RitePathGhost(16), new SacrificeMultiple(new SacrificeItem(Witchery.Items.GENERIC.itemSpectralDust.createStack(), Witchery.Items.GENERIC.itemWeb.createStack(), new ItemStack(Items.string)), new SacrificePower(1000.0f, 20)), EnumSet.noneOf(RitualTraits.class), new Circle(16, 0, 0)).setUnlocalizedName("witchery.rite.pathghost");
+        //RiteRegistry.addRecipe(111, 214, new RitePathDemon(16), new SacrificeMultiple(new SacrificeItem(Witchery.Items.GENERIC.itemDemonHeart.createStack(), Witchery.Items.GENERIC.itemInfernalBlood.createStack(), new ItemStack(Items.blaze_powder)), new SacrificePower(1000.0f, 20)), EnumSet.noneOf(RitualTraits.class), new Circle(0, 0, 16)).setUnlocalizedName("witchery.rite.pathdemon");
+        //RiteRegistry.addRecipe(112, 215, new RitePathLich(16), new SacrificeMultiple(new SacrificeItem(Witchery.Items.GENERIC.itemNecroStone.createStack(), new ItemStack(Items.bone), new ItemStack(Items.rotten_flesh)), new SacrificePower(1000.0f, 20)), EnumSet.noneOf(RitualTraits.class), new Circle(16, 0, 0)).setUnlocalizedName("witchery.rite.pathlich");
         PredictionManager.instance().addPrediction(new PredictionFight(1, 13, 0.05, "witchery.prediction.zombie", EntityZombie.class, false));
         PredictionManager.instance().addPrediction(new PredictionArrow(2, 13, 0.05, "witchery.prediction.arrowhit"));
         PredictionManager.instance().addPrediction(new PredictionFight(3, 3, 0.05, "witchery.prediction.ent", EntityEnt.class, false));
@@ -760,7 +760,7 @@ public class WitcheryRecipes {
 
                     public ItemStack getCraftingResult(InventoryCrafting inv) {
                         ItemStack result = this.getRecipeOutput().copy();
-                        for (int i = 0; i < inv.func_70302_i_(); ++i) {
+                        for (int i = 0; i < inv.getSizeInventory(); ++i) {
                             ItemStack material = inv.getStackInSlot(i);
                             if (material == null || !material.hasTagCompound()) continue;
                             result.setTagCompound((NBTTagCompound)material.stackTagCompound.copy());
@@ -776,8 +776,8 @@ public class WitcheryRecipes {
     public void postInit() {
         if (Config.instance().smeltAllSaplingsToWoodAsh) {
             ArrayList saplingTypes = OreDictionary.getOres((String)"treeSapling");
-            for (ItemStack stack : saplingTypes) {
-                GameRegistry.addSmelting((ItemStack)stack, (ItemStack)Witchery.Items.GENERIC.itemAshWood.createStack(), (float)0.0f);
+            for (Object obj : saplingTypes) { ItemStack stack = (ItemStack)obj;
+                if (stack == null || stack.getItem() != Item.getItemFromBlock(Blocks.sapling) || stack.getItemDamage() != 2) continue;GameRegistry.addSmelting((ItemStack)stack, (ItemStack)Witchery.Items.GENERIC.itemAshWood.createStack(), (float)0.0f);
             }
         }
     }
