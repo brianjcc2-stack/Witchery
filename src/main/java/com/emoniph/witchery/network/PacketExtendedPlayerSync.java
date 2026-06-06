@@ -63,15 +63,14 @@ public class PacketExtendedPlayerSync implements IMessage {
 
       public IMessage onMessage(PacketExtendedPlayerSync message, MessageContext ctx) {
          EntityPlayer player = Witchery.proxy.getPlayer(ctx);
+         if (player == null) {
+            return null;
+         }
          ExtendedPlayer playerEx = ExtendedPlayer.get(player);
-         playerEx.setWerewolfLevel(message.werewolfLevel);
-         playerEx.setCreatureTypeOrdinal(message.creatureOrdinal);
-         playerEx.setVampireLevel(message.vampireLevel);
-         playerEx.setSpiritLevel(message.spiritLevel);
-         playerEx.setBloodPower(message.bloodLevel);
-         playerEx.setSelectedVampirePower(ExtendedPlayer.VampirePower.values()[message.selected], false);
-         playerEx.setVampireUltimate(ExtendedPlayer.VampireUltimate.values()[message.ultimate], message.ultimateCharges);
-         playerEx.setBloodReserve(message.reserveBlood);
+         if (playerEx == null) {
+            return null;
+         }
+         playerEx.applySyncData(message.werewolfLevel, message.creatureOrdinal, message.vampireLevel, message.spiritLevel, message.bloodLevel, message.selected, message.ultimate, message.ultimateCharges, message.reserveBlood);
          return null;
       }
    }

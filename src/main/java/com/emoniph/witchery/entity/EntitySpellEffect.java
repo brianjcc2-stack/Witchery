@@ -253,8 +253,30 @@ public class EntitySpellEffect extends Entity {
                super.worldObj.spawnParticle(var21.isCurse()?ParticleEffect.FLAME.toString():ParticleEffect.SLIME.toString(), super.posX, super.posY + 0.5D, super.posZ, 0.0D, 0.0D, 0.0D);
             }
 
+            if(super.worldObj.isRemote && var21 instanceof SymbolEffectProjectile) {
+               this.spawnTrail((SymbolEffectProjectile)var21);
+            }
+
             this.setPosition(super.posX, super.posY, super.posZ);
          }
+      }
+
+   }
+
+   @SideOnly(Side.CLIENT)
+   private void spawnTrail(SymbolEffectProjectile effect) {
+      int color = effect.getColor();
+      float red = (float)(color >>> 16 & 255) / 255.0F;
+      float green = (float)(color >>> 8 & 255) / 255.0F;
+      float blue = (float)(color & 255) / 255.0F;
+      int count = effect.isCurse()?3:2;
+
+      for(int i = 0; i < count; ++i) {
+         double frac = (double)i / (double)count;
+         double tx = super.posX - super.motionX * frac + super.rand.nextGaussian() * 0.05D;
+         double ty = super.posY + 0.5D - super.motionY * frac + super.rand.nextGaussian() * 0.05D;
+         double tz = super.posZ - super.motionZ * frac + super.rand.nextGaussian() * 0.05D;
+         Witchery.proxy.generateParticle(super.worldObj, tx, ty, tz, red, green, blue, 8 + super.rand.nextInt(5), 0.0F);
       }
 
    }
@@ -267,12 +289,14 @@ public class EntitySpellEffect extends Entity {
       if(!super.worldObj.isRemote) {
          SymbolEffect effect = EffectRegistry.instance().getEffect(this.getEffectID());
          if(effect != null && effect instanceof SymbolEffectProjectile) {
+            int color = ((SymbolEffectProjectile)effect).getColor();
             if(effect.isCurse()) {
                ParticleEffect.MOB_SPELL.send(SoundEffect.MOB_ENDERDRAGON_HIT, this, 1.0D, 1.0D, 16);
             } else {
                ParticleEffect.SLIME.send(SoundEffect.MOB_SLIME_SMALL, this, 1.0D, 1.0D, 16);
             }
 
+            ParticleEffect.SPELL_COLORED.send(SoundEffect.NONE, this, 0.75D, 1.0D, 24, color);
             ((SymbolEffectProjectile)effect).onCollision(super.worldObj, this.shootingEntity, mop, this);
          }
       }

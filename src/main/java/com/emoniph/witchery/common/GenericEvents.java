@@ -298,7 +298,7 @@ public class GenericEvents {
             ChatUtil.sendTranslated(EnumChatFormatting.RED, event.entityPlayer, "witchery.nosleep.resized", new Object[0]);
             event.result = EnumStatus.OTHER_PROBLEM;
          }
-      } else if(ExtendedPlayer.get(event.entityPlayer).isVampire() && world.getBlock(event.x, event.y, event.z) == Witchery.Blocks.COFFIN) {
+      } else if(ExtendedPlayer.get(event.entityPlayer) != null && ExtendedPlayer.get(event.entityPlayer).isVampire() && world.getBlock(event.x, event.y, event.z) == Witchery.Blocks.COFFIN) {
          if(event.entityPlayer.worldObj.isDaytime()) {
             if(!world.isRemote) {
                if(player.isPlayerSleeping() || !player.isEntityAlive()) {

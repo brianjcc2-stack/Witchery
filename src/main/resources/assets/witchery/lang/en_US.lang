@@ -627,12 +627,11 @@ witchery.pott.ennervate.info=Counter Stupify.
 witchery.pott.episkey.info=Minor healing.
 witchery.pott.expelliarmus.info=Disarm the target.
 witchery.pott.flagrate.info=Draw an infernal rune.
-witchery.pott.flipendo.info=Push the target away.
 witchery.pott.impedimenta.info=Slows the target.
 witchery.pott.imperio.info={4Forbidden{0: Mind control.
 witchery.pott.incendio.info=Start a fire.
-witchery.pott.lumos.info=Create light.
-witchery.pott.nox.info=Extinguish light.
+witchery.pott.lumos.info=Place a light. Sneak to toggle a glow that follows you. Nox dispels it.
+witchery.pott.nox.info=Extinguish all light sources nearby. Also dispels Lumos follower on nearby players.
 witchery.pott.protego.info=Shield (ground target).
 witchery.pott.stupefy.info=Stun the target.
 
@@ -742,6 +741,21 @@ witchery.brazier.invisible.desc=Vanish from sight while standing near to the bra
 witchery.brazier.wilting.name=Drain Growth
 witchery.brazier.wilting.desc=Suck the life from crops to heal nearby undead.
 
+witchery.brazier.infusion.name=Aura of Infusion
+witchery.brazier.infusion.desc=Slowly restore the infused power of witches standing near the brazier.
+witchery.brazier.growth.name=Verdant Bloom
+witchery.brazier.growth.desc=Hasten the growth of nearby crops and plants while burning.
+witchery.brazier.magnet.name=Gathering Pyre
+witchery.brazier.magnet.desc=Draw nearby dropped items toward the brazier.
+witchery.brazier.storm.name=Tempest Call
+witchery.brazier.storm.desc=Summon a thunderstorm that rages while the brazier burns.
+witchery.brazier.repellent.name=Ward of Repulsion
+witchery.brazier.repellent.desc=Push nearby hostile creatures away from the brazier.
+witchery.brazier.potionaura.name=Aura of the Cauldron
+witchery.brazier.potionaura.desc=Spread the effects of a thrown potion to those near the brazier.
+witchery.brazier.poltergeist.name=Summon Poltergeist
+witchery.brazier.poltergeist.desc=Conjure a mischievous poltergeist from beyond.
+
 witchery.book.burning1={o{lWitchcraft: Conjuration & Fetishes{r{r||A witch may use a Brazier to burn materials with magical purpose, and conjure that which is no longer of this world.||Place the ingredients into the brazier and ignite with a flint and tinder.
 witchery.book.burning2={o{lFetish Binding{r{r||A witch may use the Rite of Binding to bind spectral creatures to a fetish to create permanent effects.||The following pages show which beings must be bound for which effect.
 witchery.book.burning3=Beings required:
@@ -837,8 +851,60 @@ witchery.pott.carnosadiem=Carnosa Diem
 witchery.pott.carnosadiem.info=Fleshy feast.
 witchery.pott.ignianima=Ignianima
 witchery.pott.ignianima.info=Soulfire: cause pain equivalent to your own.
-witchery.pott.morsmordre=Morsmordre\nwitchery.pott.morsmordre.info=Conjure the Dark Mark.\n\nwitchery.pott.flipendo=Flipendo\nwitchery.pott.flipendo.info=Push the target away with force.\nwitchery.pott.obliviate=Obliviate\nwitchery.pott.obliviate.info=Erase the target's memory (mobs lose target; players get confused).\nwitchery.pott.confringo=Confringo\nwitchery.pott.confringo.info=Cause a small explosion on impact.\nwitchery.pott.lumosmaxima=Lumos Maxima\nwitchery.pott.lumosmaxima.info=Illuminate a large area with glow globes.\nwitchery.pott.wingardiumleviosa=Wingardium Leviosa\nwitchery.pott.wingardiumleviosa.info=Levitate the target upward. Sneak to launch yourself.\nwitchery.pott.bombarda=Bombarda\nwitchery.pott.bombarda.info=Cause a moderate explosion.\nwitchery.pott.bombardamaxima=Bombarda Maxima\nwitchery.pott.bombardamaxima.info=Cause a massive terrain-destroying explosion.\nwitchery.pott.avis=Avis\nwitchery.pott.avis.info=Summon three owls to attack the target.\nwitchery.pott.oppugno=Oppugno\nwitchery.pott.oppugno.info=Summon three wolves to attack the target.\nwitchery.pott.piertotumlocomotor=Piertotum Locomotor\nwitchery.pott.piertotumlocomotor.info=Animate an iron golem to fight for you.\nwitchery.pott.reducto=Reducto\nwitchery.pott.reducto.info=Obliterate blocks and items in the area.\nwitchery.pott.araniaexumai=Arania Exumai\nwitchery.pott.araniaexumai.info=Blast spiders away; deals heavy damage to them.\nwitchery.pott.silencio=Silencio\nwitchery.pott.silencio.info=Silence a witch, preventing spell casting.\nwitchery.pott.protegomaxima=Protego Maxima\nwitchery.pott.protegomaxima.info=Create a full spherical force shield around you.\nwitchery.pott.revelio=Revelio\nwitchery.pott.revelio.info=Reveal invisible entities nearby and dispel cursed blocks.\nwitchery.pott.reparo=Reparo\nwitchery.pott.reparo.info=Repair all damaged items in your inventory.\nwitchery.pott.expectopatronum=Expecto Patronum\nwitchery.pott.expectopatronum.info=Drive away nearby undead and creepers with a burst of light.\nwitchery.pott.telekinesis=Telekinesis\nwitchery.pott.telekinesis.info=Pull a target toward you, or sneak to push it away.\nwitchery.pott.diffindo=Diffindo\nwitchery.pott.diffindo.info=A severing cut that wounds and bleeds the target.\nwitchery.pott.descendo=Descendo\nwitchery.pott.descendo.info=Slam the target violently into the ground and pin it there.\nwitchery.pott.geminio=Geminio\nwitchery.pott.geminio.info=Duplicate a minor item lying on the ground (such as a Waystone or Taglock Kit). Will not copy tools, armour or enchanted gear.
-<truncated 4187 bytes>=Rite of Summoning{r||Call forth an Imp. The inner area must be clear 7x7x4 blocks!
+witchery.pott.morsmordre=Morsmordre
+witchery.pott.morsmordre.info=Conjure the Dark Mark.
+witchery.pott.flipendo=Flipendo
+witchery.pott.flipendo.info=Push the target away with force.
+witchery.pott.obliviate=Obliviate
+witchery.pott.obliviate.info=Erase the target's memory (mobs lose target; players get confused).
+witchery.pott.confringo=Confringo
+witchery.pott.confringo.info=Cause a small explosion on impact.
+witchery.pott.lumosmaxima=Lumos Maxima
+witchery.pott.lumosmaxima.info=Illuminate a large area with glow globes.
+witchery.pott.wingardiumleviosa=Wingardium Leviosa
+witchery.pott.wingardiumleviosa.info=Levitate the target upward. Sneak to launch yourself.
+witchery.pott.bombarda=Bombarda
+witchery.pott.bombarda.info=Cause a moderate explosion.
+witchery.pott.bombardamaxima=Bombarda Maxima
+witchery.pott.bombardamaxima.info=Cause a massive terrain-destroying explosion.
+witchery.pott.avis=Avis
+witchery.pott.avis.info=Summon three owls to attack the target.
+witchery.pott.oppugno=Oppugno
+witchery.pott.oppugno.info=Summon three wolves to attack the target.
+witchery.pott.piertotumlocomotor=Piertotum Locomotor
+witchery.pott.piertotumlocomotor.info=Animate an iron golem to fight for you.
+witchery.pott.reducto=Reducto
+witchery.pott.reducto.info=Obliterate blocks and items in the area.
+witchery.pott.araniaexumai=Arania Exumai
+witchery.pott.araniaexumai.info=Blast spiders away; deals heavy damage to them.
+witchery.pott.silencio=Silencio
+witchery.pott.silencio.info=Silence a witch, preventing spell casting.
+witchery.pott.protegomaxima=Protego Maxima
+witchery.pott.protegomaxima.info=Create a full spherical force shield around you.
+witchery.pott.revelio=Revelio
+witchery.pott.revelio.info=Reveal invisible entities nearby and dispel cursed blocks.
+witchery.pott.reparo=Reparo
+witchery.pott.reparo.info=Repair all damaged items in your inventory.
+witchery.pott.expectopatronum=Expecto Patronum
+witchery.pott.expectopatronum.info=Drive away nearby undead and creepers with a burst of light.
+witchery.pott.telekinesis=Telekinesis
+witchery.pott.telekinesis.info=Pull a target toward you, or sneak to push it away.
+witchery.pott.diffindo=Diffindo
+witchery.pott.diffindo.info=A severing cut that wounds and bleeds the target.
+witchery.pott.descendo=Descendo
+witchery.pott.descendo.info=Slam the target violently into the ground and pin it there.
+witchery.pott.geminio=Geminio
+witchery.pott.geminio.info=Duplicate a minor item lying on the ground (such as a Waystone or Taglock Kit). Will not copy tools, armour or enchanted gear.
+witchery.pott.apparition=Apparition
+witchery.pott.apparition.info=Blink to the spot where the spell lands.
+witchery.pott.fiendfyre=Fiendfyre
+witchery.pott.fiendfyre.info=Unleash cursed flames, conjuring withering blazes and setting the area ablaze. Requires Hellfire infusion.
+witchery.pott.expulso=Expulso
+witchery.pott.expulso.info=Blast nearby entities violently away from the point of impact.
+witchery.pott.engorgio=Engorgio
+witchery.pott.engorgio.info=Empower the target with Health Boost and Strength.
+witchery.pott.meteolojinxrecanto.info=Clear the weather, ending rain and storms.
+witchery.rite.summonimp=Rite of Summoning{r||Call forth an Imp. The inner area must be clear 7x7x4 blocks!
 
 
 tile.witchery:decurseteleport.name=Statue of Occluded Summons
@@ -1177,9 +1243,13 @@ entity.witchery.leonard.name=Shade of Leonard
 entity.witchery.lostsoul.name=Lost Soul
 
 witchery.pott.leonard1=Caelum
+witchery.pott.leonard1.info=Release the brew focused in Leonard's Urn skyward (upward).
 witchery.pott.leonard2=Baratrum
+witchery.pott.leonard2.info=Release the brew focused in Leonard's Urn into the depths (downward).
 witchery.pott.leonard3=Ortus
+witchery.pott.leonard3.info=Release the brew focused in Leonard's Urn to the east.
 witchery.pott.leonard4=Occasus
+witchery.pott.leonard4.info=Release the brew focused in Leonard's Urn to the west.
 
 witchery:color.black=Black
 witchery:color.red=Red
@@ -1263,7 +1333,7 @@ witchery:cauldronbook.ritualwaystoneblooded=[h1 Ritual: Bind Blooded Waystone]To
 witchery:cauldronbook.ritualtranspose=[h1 Ritual: Transpose]To transpose to a bound waystone, draw a 5x5 purple-chalk circle:[br][img=witchery:textures/gui/circles_spurple.png|center|top|32|32][br]Stand in the circle, drop the waystone inside the circle, and wait.
 witchery:cauldronbook.ritualfind=[h1 Ritual: Find Structure]Summon a spirit that flys towards the closest village (or nether fortress). Draw a 3x3 white-chalk circle:[br][img=witchery:textures/gui/circles_tinywhite.png|center|top|32|32][br]Drop a Subdued Spirit or Attuned Stone in the center and wait.
 
-witchery:cauldronbook.capacity=[i Capacity] - [url=toc/effects Effects] each have a space requirement, add these ingredients, in order, to increase a brew's capacity.[br][br][stack=witchery:ingredient|22 +1][tab][stack=nether_wart +2][br][stack=witchery:ingredient|37 +2][tab][stack=witchery:ingredient|29 +2][br][stack=diamond +2][tab][stack=nether_star|29 +4]
+witchery:cauldronbook.capacity=[i Capacity] - [url=toc/effects Effects] each have a space requirement, add these ingredients, in order, to increase a brew's capacity.[br][br][stack=witchery:ingredient|22 +1][tab][stack=nether_wart +2][br][stack=witchery:ingredient|37 +2][tab][stack=witchery:ingredient|29 +2][br][stack=diamond +2][tab][stack=nether_star +4]
 witchery:cauldronbook.power=[i Power] - Add, in order, before an [url=toc/effects effect] to increase its power.[br][br][stack=glowstone_dust +1 (to level II)][br][stack=blaze_rod +1 (to level III)][br][stack=witchery:ingredient|11 +1 (to level IV)]
 witchery:cauldronbook.duration=[i Duration] - Add, in order, before an [url=toc/effects effect] to increase its duration.[br][br][stack=redstone +1 (to x2)][br][stack=obsidian +1 (to x4)][br][stack=witchery:seedsmindrake +1 (to x6)]
 
@@ -1286,7 +1356,7 @@ witchery:cauldronbook.level1_3=[next=level1_4][h1 Effect: Level 1][stack=dirt][u
 witchery:cauldronbook.level1_4=[h1 Effect: Level 1][stack=witchery:ingredient|156][url=wolfsbane|middle Wolfsbane][br][stack=dye|1][url=tinting|middle Tint skin *][br][br][i * can use any dye for the desired color.][br][br][stack=coal|1][url=combustion|middle Combustion *][br][br][i * cannot be combined with other effects.]
 
 witchery:cauldronbook.level2=[next=level2_2][h1 Effect: Level 2][stack=cobblestone][url=partlava|middle Part lava][br][stack=witchery:bramble][url=repel|middle Repel attacker][br][stack=gravel][url=brewgasimmunity|middle Brew gas immunity][br][stack=spider_eye][url=poison|middle Poison][br][stack=ghast_tear][url=regeneration|middle Regeneration][br][stack=fermented_spider_eye][stack=ghast_tear][url=poison|middle Poison]
-witchery:cauldronbook.level2_2=[next=level2_3][h1 Effect: Level 2][stack=sugar][url=fastmove|middle Fast movement][br][stack=fermented_spider_eye][stack=sugar][url=slowmove|middle Slow movement[br][stack=fish|3][url=waterbreathing|middle Water breathing][br][stack=magma_cream][url=resistfire|middle Resist fire][br][stack=golden_carrot][url=nightvision|middle Night vision][br][stack=fermented_spider_eye][stack=golden_carrot][url=invisible|middle Invisible]
+witchery:cauldronbook.level2_2=[next=level2_3][h1 Effect: Level 2][stack=sugar][url=fastmove|middle Fast movement][br][stack=fermented_spider_eye][stack=sugar][url=slowmove|middle Slow movement][br][stack=fish|3][url=waterbreathing|middle Water breathing][br][stack=magma_cream][url=resistfire|middle Resist fire][br][stack=golden_carrot][url=nightvision|middle Night vision][br][stack=fermented_spider_eye][stack=golden_carrot][url=invisible|middle Invisible]
 witchery:cauldronbook.level2_3=[next=level2_4][h1 Effect: Level 2][stack=blaze_powder][url=damageboost|middle Damage boost][br][stack=fermented_spider_eye][stack=blaze_powder][url=weakness|middle Weakness][br][stack=speckled_melon][url=heal|middle Heal][br][stack=fermented_spider_eye][stack=speckled_melon][url=harm|middle Harm][br][stack=reeds][url=floating|middle Floating]
 witchery:cauldronbook.level2_4=[next=level2_5][h1 Effect: Level 2][stack=leather][url=jump|middle Jump][br][stack=feather][url=slowfall|middle Slow fall][br][stack=web][url=reflectarrows Reflect arrows][br][stack=fermented_spider_eye][stack=web][url=attractarrows|middle Attract arrows][br][stack=red_mushroom][url=poisonweapon|middle Poison weapon]
 witchery:cauldronbook.level2_5=[next=level2_6][h1 Effect: Level 2][stack=witchery:ingredient|108][url=batburst|middle Bat burst][br][stack=witchery:ingredient|32][url=airhike|middle Air hike][br][stack=slime_ball][url=pull|middle Pull][br][stack=witchery:ingredient|30][url=erosion|middle Erosion][br][stack=netherrack][url=levelland|middle Level Land][br][stack=witchery:ingredient|56][url=webs|middle Webs]
@@ -1740,97 +1810,59 @@ witchery.rite.mirrormirror.bearing7=North West is where the fairest will be.
 
 witchery.rite.mirrormirror.opchatreveal=In next message, player %s is really: %s
 witchery.pott.petrificustotalus=Petrificus Totalus
-witchery.pott.petrificustotalus.info=Petrificus Totalus
+witchery.pott.petrificustotalus.info=Petrify the target, holding it immobile and blind indefinitely.
 witchery.pott.glacius=Glacius
-witchery.pott.glacius.info=Glacius
-witchery.pott.flagrateritualis=Flagrateritualis
-witchery.pott.flagrateritualis.info=Flagrateritualis
-witchery.pott.flagrateaureus=Flagrateaureus
-witchery.pott.flagrateaureus.info=Flagrateaureus
-witchery.pott.flagratealibi=Flagratealibi
-witchery.pott.flagratealibi.info=Flagratealibi
-witchery.pott.revelopotionis=Revelopotionis
-witchery.pott.revelopotionis.info=Revelopotionis
-witchery.pott.reparo=Reparo
-witchery.pott.reparo.info=Reparo
+witchery.pott.glacius.info=Freeze the target and chill the area, turning water to ice and quenching fire.
+witchery.pott.flagrateritualis=Flagrate Ritualis
+witchery.pott.flagrateritualis.info=Draw a Ritual glyph on the block you are looking at.
+witchery.pott.flagrateaureus=Flagrate Aureus
+witchery.pott.flagrateaureus.info=Draw a Golden Chalk circle on the block you are looking at.
+witchery.pott.flagratealibi=Flagrate Alibi
+witchery.pott.flagratealibi.info=Draw an Otherwhere glyph on the block you are looking at.
+witchery.pott.revelopotionis=Revelio
+witchery.pott.revelopotionis.info=Reveal invisible entities nearby and dispel cursed blocks.
 witchery.pott.ictus=Ictus
-witchery.pott.ictus.info=Ictus
-witchery.pott.expectopatronum=Expectopatronum
-witchery.pott.expectopatronum.info=Expectopatronum
+witchery.pott.ictus.info=Strike the target for damage and drain a portion of its infused power.
 witchery.pott.sectumsempra=Sectumsempra
-witchery.pott.sectumsempra.info=Sectumsempra
-witchery.pott.obliviate=Obliviate
-witchery.pott.obliviate.info=Obliviate
-witchery.pott.confringo=Confringo
-witchery.pott.confringo.info=Confringo
-witchery.pott.lumosmaxima=Lumosmaxima
-witchery.pott.lumosmaxima.info=Lumosmaxima
-witchery.pott.wingardiumleviosa=Wingardiumleviosa
-witchery.pott.wingardiumleviosa.info=Wingardiumleviosa
-witchery.pott.bombarda=Bombarda
-witchery.pott.bombarda.info=Bombarda
-witchery.pott.bombardamaxima=Bombardamaxima
-witchery.pott.bombardamaxima.info=Bombardamaxima
-witchery.pott.avis=Avis
-witchery.pott.avis.info=Avis
-witchery.pott.oppugno=Oppugno
-witchery.pott.oppugno.info=Oppugno
-witchery.pott.piertotumlocomotor=Piertotumlocomotor
-witchery.pott.piertotumlocomotor.info=Piertotumlocomotor
-witchery.pott.reducto=Reducto
-witchery.pott.reducto.info=Reducto
-witchery.pott.araniaexumai=Araniaexumai
-witchery.pott.araniaexumai.info=Araniaexumai
-witchery.pott.silencio=Silencio
-witchery.pott.silencio.info=Silencio
-witchery.pott.protegomaxima=Protegomaxima
-witchery.pott.protegomaxima.info=Protegomaxima
-witchery.pott.apparition=Apparition
-witchery.pott.apparition.info=Apparition
-witchery.pott.fiendfyre=Fiendfyre
-witchery.pott.fiendfyre.info=Fiendfyre
-witchery.pott.expulso=Expulso
-witchery.pott.expulso.info=Expulso
-witchery.pott.engorgio=Engorgio
-witchery.pott.engorgio.info=Engorgio
+witchery.pott.sectumsempra.info=A deep cutting curse that deals heavy damage and inflicts Wither.
 witchery.pott.finiteincantatem=Finite Incantatem
-witchery.pott.finiteincantatem.info=Finite Incantatem
+witchery.pott.finiteincantatem.info=Sneak to cleanse negative effects from yourself, or cast normally to end magical effects.
 witchery.pott.herbivicus=Herbivicus
-witchery.pott.herbivicus.info=Herbivicus
+witchery.pott.herbivicus.info=Instantly grow nearby crops and plants, as if bonemealed.
 witchery.pott.impervius=Impervius
-witchery.pott.impervius.info=Impervius
+witchery.pott.impervius.info=Grant fire resistance, water breathing and damage resistance to the target or yourself.
 witchery.pott.erecto=Erecto
-witchery.pott.erecto.info=Erecto
+witchery.pott.erecto.info=Conjure a temporary protective shelter of force blocks. Sneak to dismiss it.
 witchery.pott.portuspersonal=Portus Personal
-witchery.pott.portuspersonal.info=Portus Personal
+witchery.pott.portuspersonal.info=Set a personal recall point, then cast again to teleport back to it.
 witchery.pott.portustraslador=Portus Traslador
-witchery.pott.portustraslador.info=Portus Traslador
+witchery.pott.portustraslador.info=Create a Waystone Portkey bound to your current position. Right-click it to return.
 witchery.pott.taglockhex=Taglock Hex
-witchery.pott.taglockhex.info=Taglock Hex
+witchery.pott.taglockhex.info=Steal a taglock from the target, capturing their blood and identity.
 witchery.pott.smeltray=Smelt Ray
-witchery.pott.smeltray.info=Smelt Ray
+witchery.pott.smeltray.info=Smelt the block or dropped item it hits, as if cooked in a furnace.
 witchery.pott.earthpillar=Earth Pillar
-witchery.pott.earthpillar.info=Earth Pillar
+witchery.pott.earthpillar.info=Raise a pillar of earth beneath the target block, lifting you if you stand on it.
 witchery.pott.transmutation=Transmutation
-witchery.pott.transmutation.info=Transmutation
+witchery.pott.transmutation.info=Transmute a block into a related material (dirt and sand, stone and cobble, logs to planks).
 witchery.pott.excavation=Excavation
-witchery.pott.excavation.info=Excavation
+witchery.pott.excavation.info=Excavate a 3x3x3 cube of blocks, dropping them as items.
 witchery.pott.broomsummon=Broom Summon
-witchery.pott.broomsummon.info=Broom Summon
+witchery.pott.broomsummon.info=Summon a flying broom at the targeted block.
 witchery.pott.toadleap=Toad Leap
-witchery.pott.toadleap.info=Toad Leap
+witchery.pott.toadleap.info=Launch yourself high into the air and negate fall damage.
 witchery.pott.etherealvault=Ethereal Vault
-witchery.pott.etherealvault.info=Ethereal Vault
+witchery.pott.etherealvault.info=Open your Ender Chest from anywhere.
 witchery.pott.asis=Asis
-witchery.pott.asis.info=Asis
+witchery.pott.asis.info=A basic bolt of force. Hit the same target rapidly to build a damage combo.
 witchery.pott.orchideous=Orchideous
-witchery.pott.orchideous.info=Orchideous
+witchery.pott.orchideous.info=Scatter grass and flowers across the targeted ground.
 witchery.pott.fumos=Fumos
-witchery.pott.fumos.info=Fumos
+witchery.pott.fumos.info=Create a dense cloud of smoke. Sneak to release it at your own feet.
 witchery.pott.incarcerous=Incarcerous
-witchery.pott.incarcerous.info=Incarcerous
+witchery.pott.incarcerous.info=Bind the target in cobwebs, trapping it in place.
 witchery.pott.vermillious=Vermillious
-witchery.pott.vermillious.info=Vermillious
+witchery.pott.vermillious.info=Launch a bright red firework as a signal flare.
 
 witchery.rite.reparo=Rite of Reparo
 witchery.rite.identify=Rite of Identification

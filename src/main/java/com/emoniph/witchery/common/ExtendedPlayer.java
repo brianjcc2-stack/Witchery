@@ -328,7 +328,7 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
 
    public int increaseSkillPotionThrowing() {
       this.skillLevelPotionThrowing = Math.min(this.skillLevelPotionThrowing + 1, 100);
-      return this.getSkillPotionBottling();
+      return this.getSkillPotionThrowing();
    }
 
    public int getWerewolfLevel() {
@@ -522,7 +522,11 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
    }
 
    public ExtendedPlayer.VampireUltimate getVampireUltimate() {
-      return ExtendedPlayer.VampireUltimate.values()[this.vampireUltimate];
+      ExtendedPlayer.VampireUltimate[] values = ExtendedPlayer.VampireUltimate.values();
+      if(this.vampireUltimate < 0 || this.vampireUltimate >= values.length) {
+         return values[0];
+      }
+      return values[this.vampireUltimate];
    }
 
    public void setVampireUltimate(ExtendedPlayer.VampireUltimate skill) {
@@ -884,6 +888,27 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
          Witchery.packetPipeline.sendTo((IMessage)(new PacketExtendedPlayerSync(this)), this.player);
       }
 
+   }
+
+   public void applySyncData(int werewolfLevel, int creatureType, int vampireLevel, int spiritLevel, int bloodPower, int selectedPower, int ultimate, int ultimateCharges, int bloodReserve) {
+      this.werewolfLevel = MathHelper.clamp_int(werewolfLevel, 0, 10);
+      this.vampireLevel = MathHelper.clamp_int(vampireLevel, 0, 10);
+      this.spiritLevel = MathHelper.clamp_int(spiritLevel, 0, 10);
+      this.bloodPower = Math.max(0, bloodPower);
+      this.vampireUltimateCharges = Math.max(0, ultimateCharges);
+      this.bloodReserve = Math.max(0, bloodReserve);
+
+      ExtendedPlayer.VampireUltimate[] ultimates = ExtendedPlayer.VampireUltimate.values();
+      this.vampireUltimate = ultimate >= 0 && ultimate < ultimates.length ? ultimate : 0;
+
+      ExtendedPlayer.VampirePower[] powers = ExtendedPlayer.VampirePower.values();
+      this.selectedVampirePower = selectedPower >= 0 && selectedPower < powers.length ? powers[selectedPower] : ExtendedPlayer.VampirePower.NONE;
+
+      TransformCreature[] creatures = TransformCreature.values();
+      int newCreatureType = creatureType >= 0 && creatureType < creatures.length ? creatureType : 0;
+      if (newCreatureType != this.creatureType) {
+         this.setCreatureTypeOrdinal(newCreatureType);
+      }
    }
 
    public static void loadProxyData(EntityPlayer player) {

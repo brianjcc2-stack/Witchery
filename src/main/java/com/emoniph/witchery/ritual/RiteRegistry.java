@@ -46,7 +46,23 @@ public class RiteRegistry {
    }
 
    public RiteRegistry.Ritual getRitual(byte ritualID) {
-      return (RiteRegistry.Ritual)this.rituals.get(ritualID - 1);
+      int fastIndex = ritualID - 1;
+      if(fastIndex >= 0 && fastIndex < this.rituals.size()) {
+         RiteRegistry.Ritual candidate = (RiteRegistry.Ritual)this.rituals.get(fastIndex);
+         if(candidate != null && candidate.getRitualID() == ritualID) {
+            return candidate;
+         }
+      }
+
+      Iterator i$ = this.rituals.iterator();
+      while(i$.hasNext()) {
+         RiteRegistry.Ritual ritual = (RiteRegistry.Ritual)i$.next();
+         if(ritual != null && ritual.getRitualID() == ritualID) {
+            return ritual;
+         }
+      }
+
+      return null;
    }
 
    public List getSortedRituals() {
