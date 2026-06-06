@@ -348,8 +348,11 @@ witchery.pott.impedimenta=Impedimenta
 witchery.pott.imperio=Imperio
 witchery.pott.incendio=Incendio
 witchery.pott.lumos=Lumos
+witchery.pott.lumos.info=Place a light. Sneak to toggle a glow that follows you. Nox dispels it.
+witchery.pott.lumos.extinguished=Your Lumos was extinguished by Nox.
 witchery.pott.meteolojinxrecanto=Meteolojinx Recanto
 witchery.pott.nox=Nox
+witchery.pott.nox.info=Extinguish all light sources nearby. Also dispels Lumos follower on nearby players.
 witchery.pott.protego=Protego
 witchery.pott.stupefy=Stupefy
 
@@ -815,10 +818,8 @@ witchery.pott.carnosadiem=Carnosa Diem
 witchery.pott.carnosadiem.info=Fleshy feast.
 witchery.pott.ignianima=Ignianima
 witchery.pott.ignianima.info=Soulfire: cause pain equivalent to your own.
-witchery.pott.morsmordre=Morsmordre
-witchery.pott.morsmordre.info=Conjure the Dark Mark.
-
-witchery.rite.summonimp=Rite of Summoning{r||Call forth an Imp. The inner area must be clear 7x7x4 blocks!
+"witchery.pott.morsmordre=Morsmordre\nwitchery.pott.morsmordre.info=Conjure the Dark Mark.\n\nwitchery.pott.flipendo=Flipendo\nwitchery.pott.flipendo.info=Push the target away with force.\nwitchery.pott.obliviate=Obliviate\nwitchery.pott.obliviate.info=Erase the target's memory (mobs lose target; players get confused).\nwitchery.pott.confringo=Confringo\nwitchery.pott.confringo.info=Cause a small explosion on impact.\nwitchery.pott.lumosmaxima=Lumos Maxima\nwitchery.pott.lumosmaxima.info=Illuminate a large area with glow globes.\nwitchery.pott.wingardiumleviosa=Wingardium Leviosa\nwitchery.pott.wingardiumleviosa.info=Levitate the target upward. Sneak to launch yourself.\nwitchery.pott.bombarda=Bombarda\nwitchery.pott.bombarda.info=Cause a moderate explosion.\nwitchery.pott.bombardamaxima=Bombarda Maxima\nwitchery.pott.bombardamaxima.info=Cause a massive terrain-destroying explosion.\nwitchery.pott.avis=Avis\nwitchery.pott.avis.info=Summon three owls to attack the target.\nwitchery.pott.oppugno=Oppugno\nwitchery.pott.oppugno.info=Summon three wolves to attack the target.\nwitchery.pott.piertotumlocomotor=Piertotum Locomotor\nwitchery.pott.piertotumlocomotor.info=Animate an iron golem to fight for you.\nwitchery.pott.reducto=Reducto\nwitchery.pott.reducto.info=Obliterate blocks and items in the area.\nwitchery.pott.araniaexumai=Arania Exumai\nwitchery.pott.araniaexumai.info=Blast spiders away; deals heavy damage to them.\nwitchery.pott.silencio=Silencio\nwitchery.pott.silencio.info=Silence a witch, preventing spell casting.\nwitchery.pott.protegomaxima=Protego Maxima\nwitchery.pott.protegomaxima.info=Create a full spherical force shield around you.\nwitchery.pott.revelio=Revelio\nwitchery.pott.revelio.info=Reveal invisible entities nearby and dispel cursed blocks.\nwitchery.pott.reparo=Reparo\nwitchery.pott.reparo.info=Repair all damaged items in your inventory.\nwitchery.pott.expectopatronum=Expecto Patronum\nwitchery.pott.expectopatronum.info=Drive away nearby undead and creepers with a burst of light.\nwitchery.
+<truncated 4187 bytes>=Rite of Summoning{r||Call forth an Imp. The inner area must be clear 7x7x4 blocks!
 
 
 tile.witchery:decurseteleport.name=Statue of Occluded Summons

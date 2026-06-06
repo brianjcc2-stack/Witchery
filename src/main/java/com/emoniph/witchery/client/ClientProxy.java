@@ -309,6 +309,8 @@ public class ClientProxy extends CommonProxy {
       this.bindRenderer(BlockWitchesOven.TileEntityWitchesOven.class, new RenderWitchesOven(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.OVEN_IDLE)});
       this.bindRenderer(BlockDreamCatcher.TileEntityDreamCatcher.class, new RenderDreamCatcher(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.DREAM_CATCHER)});
       this.bindRenderer(BlockChalice.TileEntityChalice.class, new RenderChalice(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.CHALICE)});
+      this.bindRenderer(com.emoniph.witchery.brewing.TileEntityPortkey.class, new RenderChalice(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.PORTKEY)});
+      this.bindRenderer(com.emoniph.witchery.brewing.TileEntityPortkey.class, new RenderChalice(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.PORTKEY)});
       this.bindRenderer(BlockCandelabra.TileEntityCandelabra.class, new RenderCandelabra(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.CANDELABRA)});
       this.bindRenderer(BlockCrystalBall.TileEntityCrystalBall.class, new RenderCrystalBall(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.CRYSTAL_BALL)});
       this.bindRenderer(BlockKettle.TileEntityKettle.class, new RenderKettle(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.KETTLE)});
