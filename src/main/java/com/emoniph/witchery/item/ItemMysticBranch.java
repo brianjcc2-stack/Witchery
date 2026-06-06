@@ -8,6 +8,7 @@ import com.emoniph.witchery.infusion.infusions.symbols.SymbolEffect;
 import com.emoniph.witchery.item.ItemBase;
 import com.emoniph.witchery.network.PacketSpellPrepared;
 import com.emoniph.witchery.util.ChatUtil;
+import com.emoniph.witchery.util.ParticleEffect;
 import com.emoniph.witchery.util.SoundEffect;
 import com.emoniph.witchery.util.TimeUtil;
 import cpw.mods.fml.relauncher.Side;
@@ -87,6 +88,19 @@ public class ItemMysticBranch extends ItemBase {
    }
 
    public void onUsingTick(ItemStack stack, EntityPlayer player, int countdown) {
+      if(!player.worldObj.isRemote) {
+         NBTTagCompound nbtServer = player.getEntityData();
+         if(nbtServer != null && nbtServer.hasKey("WITCSpellEffectID") && countdown % 6 == 0) {
+            SymbolEffect prepared = EffectRegistry.instance().getEffect(nbtServer.getInteger("WITCSpellEffectID"));
+            if(prepared != null) {
+               // Continuous casting aura, visible to all nearby players while a spell is charged.
+               ParticleEffect.SPELL_COLORED.send(SoundEffect.NONE, player, 0.45D, 1.6D, 32, prepared.getDisplayColor());
+            }
+         }
+
+         return;
+      }
+
       if(player.worldObj.isRemote) {
          NBTTagCompound nbtTag = player.getEntityData();
          if(nbtTag == null) {
@@ -95,9 +109,9 @@ public class ItemMysticBranch extends ItemBase {
 
          float yawDiff = nbtTag.getFloat("startYaw") - player.rotationYawHead;
          float pitchDiff = nbtTag.getFloat("startPitch") - player.rotationPitch;
-         byte[] strokes = nbtTag.getByteArray("Strokes");
-         int strokesStart = strokes.length;
-         if(!EffectRegistry.instance().contains(strokes) && strokesStart <= 15) {
+          byte[] strokes = nbtTag.getByteArray("Strokes");
+          int strokesStart = strokes.length;
+          if((!EffectRegistry.instance().contains(strokes) || EffectRegistry.instance().hasLongerSymbol(strokes)) && strokesStart <= 15) {
             if(pitchDiff >= 7.0F) {
                strokes = this.addNewStroke(nbtTag, strokes, (byte)0);
             } else if(pitchDiff <= -7.0F) {
@@ -111,12 +125,12 @@ public class ItemMysticBranch extends ItemBase {
             if(strokes.length > strokesStart) {
                nbtTag.setFloat("startPitch", player.rotationPitch);
                nbtTag.setFloat("startYaw", player.rotationYawHead);
-            }
 
-            SymbolEffect effect = EffectRegistry.instance().getEffect(strokes);
-            if(effect != null) {
-               int level = EffectRegistry.instance().getLevel(strokes);
-               Witchery.packetPipeline.sendToServer(new PacketSpellPrepared(effect, level));
+               SymbolEffect effect = EffectRegistry.instance().getEffect(strokes);
+               if(effect != null) {
+                  int level = EffectRegistry.instance().getLevel(strokes);
+                  Witchery.packetPipeline.sendToServer(new PacketSpellPrepared(effect, level));
+               }
             }
          }
       }

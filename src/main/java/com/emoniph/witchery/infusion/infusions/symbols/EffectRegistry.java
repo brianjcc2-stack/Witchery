@@ -1395,6 +1395,27 @@ public class EffectRegistry {
         return this.getEffect(strokes) != null;
     }
 
+    public boolean hasLongerSymbol(byte[] strokes) {
+        Iterator i$ = this.effects.keySet().iterator();
+        while (i$.hasNext()) {
+            ByteBuffer key = (ByteBuffer)i$.next();
+            byte[] candidate = key.array();
+            if (candidate.length <= strokes.length) {
+                continue;
+            }
+            boolean isPrefix = true;
+            for (int n = 0; n < strokes.length; ++n) {
+                if (candidate[n] == strokes[n]) continue;
+                isPrefix = false;
+                break;
+            }
+            if (isPrefix) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public SymbolEffect getEffect(byte[] strokes) {
         return (SymbolEffect)this.effects.get(ByteBuffer.wrap(strokes));
     }
