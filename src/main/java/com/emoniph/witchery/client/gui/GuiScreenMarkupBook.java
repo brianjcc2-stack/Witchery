@@ -294,23 +294,34 @@ public class GuiScreenMarkupBook extends GuiScreen {
                this.capture = GuiScreenMarkupBook.Element.Capture.ATTRIB;
                break;
             }
+
+            this.appendChar(c);
+            break;
          case 9:
          case 32:
             if(this.capture == GuiScreenMarkupBook.Element.Capture.TAG || this.capture == GuiScreenMarkupBook.Element.Capture.ATTRIB) {
                this.capture = GuiScreenMarkupBook.Element.Capture.TEXT;
                break;
             }
+
+            this.appendChar(c);
+            break;
          case 91:
             this.capture = GuiScreenMarkupBook.Element.Capture.TAG;
             break;
          default:
-            if(this.capture == GuiScreenMarkupBook.Element.Capture.TAG) {
-               this.tag.append(c);
-            } else if(this.capture == GuiScreenMarkupBook.Element.Capture.ATTRIB) {
-               this.attribute.append(c);
-            } else {
-               this.text.append(c);
-            }
+            this.appendChar(c);
+         }
+
+      }
+
+      private void appendChar(char c) {
+         if(this.capture == GuiScreenMarkupBook.Element.Capture.TAG) {
+            this.tag.append(c);
+         } else if(this.capture == GuiScreenMarkupBook.Element.Capture.ATTRIB) {
+            this.attribute.append(c);
+         } else {
+            this.text.append(c);
          }
 
       }
