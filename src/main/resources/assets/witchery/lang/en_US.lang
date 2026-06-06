@@ -818,7 +818,7 @@ witchery.pott.carnosadiem=Carnosa Diem
 witchery.pott.carnosadiem.info=Fleshy feast.
 witchery.pott.ignianima=Ignianima
 witchery.pott.ignianima.info=Soulfire: cause pain equivalent to your own.
-"witchery.pott.morsmordre=Morsmordre\nwitchery.pott.morsmordre.info=Conjure the Dark Mark.\n\nwitchery.pott.flipendo=Flipendo\nwitchery.pott.flipendo.info=Push the target away with force.\nwitchery.pott.obliviate=Obliviate\nwitchery.pott.obliviate.info=Erase the target's memory (mobs lose target; players get confused).\nwitchery.pott.confringo=Confringo\nwitchery.pott.confringo.info=Cause a small explosion on impact.\nwitchery.pott.lumosmaxima=Lumos Maxima\nwitchery.pott.lumosmaxima.info=Illuminate a large area with glow globes.\nwitchery.pott.wingardiumleviosa=Wingardium Leviosa\nwitchery.pott.wingardiumleviosa.info=Levitate the target upward. Sneak to launch yourself.\nwitchery.pott.bombarda=Bombarda\nwitchery.pott.bombarda.info=Cause a moderate explosion.\nwitchery.pott.bombardamaxima=Bombarda Maxima\nwitchery.pott.bombardamaxima.info=Cause a massive terrain-destroying explosion.\nwitchery.pott.avis=Avis\nwitchery.pott.avis.info=Summon three owls to attack the target.\nwitchery.pott.oppugno=Oppugno\nwitchery.pott.oppugno.info=Summon three wolves to attack the target.\nwitchery.pott.piertotumlocomotor=Piertotum Locomotor\nwitchery.pott.piertotumlocomotor.info=Animate an iron golem to fight for you.\nwitchery.pott.reducto=Reducto\nwitchery.pott.reducto.info=Obliterate blocks and items in the area.\nwitchery.pott.araniaexumai=Arania Exumai\nwitchery.pott.araniaexumai.info=Blast spiders away; deals heavy damage to them.\nwitchery.pott.silencio=Silencio\nwitchery.pott.silencio.info=Silence a witch, preventing spell casting.\nwitchery.pott.protegomaxima=Protego Maxima\nwitchery.pott.protegomaxima.info=Create a full spherical force shield around you.\nwitchery.pott.revelio=Revelio\nwitchery.pott.revelio.info=Reveal invisible entities nearby and dispel cursed blocks.\nwitchery.pott.reparo=Reparo\nwitchery.pott.reparo.info=Repair all damaged items in your inventory.\nwitchery.pott.expectopatronum=Expecto Patronum\nwitchery.pott.expectopatronum.info=Drive away nearby undead and creepers with a burst of light.\nwitchery.
+witchery.pott.morsmordre=Morsmordre\nwitchery.pott.morsmordre.info=Conjure the Dark Mark.\n\nwitchery.pott.flipendo=Flipendo\nwitchery.pott.flipendo.info=Push the target away with force.\nwitchery.pott.obliviate=Obliviate\nwitchery.pott.obliviate.info=Erase the target's memory (mobs lose target; players get confused).\nwitchery.pott.confringo=Confringo\nwitchery.pott.confringo.info=Cause a small explosion on impact.\nwitchery.pott.lumosmaxima=Lumos Maxima\nwitchery.pott.lumosmaxima.info=Illuminate a large area with glow globes.\nwitchery.pott.wingardiumleviosa=Wingardium Leviosa\nwitchery.pott.wingardiumleviosa.info=Levitate the target upward. Sneak to launch yourself.\nwitchery.pott.bombarda=Bombarda\nwitchery.pott.bombarda.info=Cause a moderate explosion.\nwitchery.pott.bombardamaxima=Bombarda Maxima\nwitchery.pott.bombardamaxima.info=Cause a massive terrain-destroying explosion.\nwitchery.pott.avis=Avis\nwitchery.pott.avis.info=Summon three owls to attack the target.\nwitchery.pott.oppugno=Oppugno\nwitchery.pott.oppugno.info=Summon three wolves to attack the target.\nwitchery.pott.piertotumlocomotor=Piertotum Locomotor\nwitchery.pott.piertotumlocomotor.info=Animate an iron golem to fight for you.\nwitchery.pott.reducto=Reducto\nwitchery.pott.reducto.info=Obliterate blocks and items in the area.\nwitchery.pott.araniaexumai=Arania Exumai\nwitchery.pott.araniaexumai.info=Blast spiders away; deals heavy damage to them.\nwitchery.pott.silencio=Silencio\nwitchery.pott.silencio.info=Silence a witch, preventing spell casting.\nwitchery.pott.protegomaxima=Protego Maxima\nwitchery.pott.protegomaxima.info=Create a full spherical force shield around you.\nwitchery.pott.revelio=Revelio\nwitchery.pott.revelio.info=Reveal invisible entities nearby and dispel cursed blocks.\nwitchery.pott.reparo=Reparo\nwitchery.pott.reparo.info=Repair all damaged items in your inventory.\nwitchery.pott.expectopatronum=Expecto Patronum\nwitchery.pott.expectopatronum.info=Drive away nearby undead and creepers with a burst of light.\nwitchery.
 <truncated 4187 bytes>=Rite of Summoning{r||Call forth an Imp. The inner area must be clear 7x7x4 blocks!
 
 
@@ -1433,44 +1433,44 @@ witchery.rite.wolfcure.book=Rite of Remove Curse{r||Cleanse the taglocked being 
 
 witchery.werewolf.setlevel=Werewolf level set to %s.
 witchery.werewolf.chunkvisited=You feel as if you have already been here.
-witchery.werewolf.mooncharmcrafted=The voice rumbles, "DO NOT LOSE IT AGAIN!"
-witchery.werewolf.notworthy=A voice echoes in your head, "YOU ARE UNWORTHY!"
+witchery.werewolf.mooncharmcrafted=The voice rumbles, DO NOT LOSE IT AGAIN!
+witchery.werewolf.notworthy=A voice echoes in your head, YOU ARE UNWORTHY!
 
-witchery.werewolf.level2begin=A voice echoes, "%s INGOTS OF GOLD, GIVE THEM TO ME!"
-witchery.werewolf.level2progress=A deep voice bellows, "%s INGOTS OF GOLD ARE SOUGHT, YOU LACK %s!"
-witchery.werewolf.level2complete=The voice rumbles, "GOLD IS GIVEN, A CHARM IS MADE, LET THE BEAST WITHIN BE FREED, AND THE MOON HAVE NO SWAY!"
+witchery.werewolf.level2begin=A voice echoes, %s INGOTS OF GOLD, GIVE THEM TO ME!
+witchery.werewolf.level2progress=A deep voice bellows, %s INGOTS OF GOLD ARE SOUGHT, YOU LACK %s!
+witchery.werewolf.level2complete=The voice rumbles, GOLD IS GIVEN, A CHARM IS MADE, LET THE BEAST WITHIN BE FREED, AND THE MOON HAVE NO SWAY!
 
-witchery.werewolf.level3begin=The voice intones, "STRENGTHEN YOUR CLAWS, REND THE FLESH FROM %s OF THE WEAKEST OF PREY, PLACE THEIR MUTTON BEFORE ME!"
-witchery.werewolf.level3progress=The voice echoes, "SLAY %s AND BRING THEIR FLESH, YOU REQUIRE %s MORE!"
-witchery.werewolf.level3complete=The voice bellows, "MEAT TORN FROM THE WEAKEST, CLAWS LIKE STEEL TEMPERED, TO RIP THE EARTH AND FLESH, THE BEASTS HUNGER NEVER SATED!" 
+witchery.werewolf.level3begin=The voice intones, STRENGTHEN YOUR CLAWS, REND THE FLESH FROM %s OF THE WEAKEST OF PREY, PLACE THEIR MUTTON BEFORE ME!
+witchery.werewolf.level3progress=The voice echoes, SLAY %s AND BRING THEIR FLESH, YOU REQUIRE %s MORE!
+witchery.werewolf.level3complete=The voice bellows, MEAT TORN FROM THE WEAKEST, CLAWS LIKE STEEL TEMPERED, TO RIP THE EARTH AND FLESH, THE BEASTS HUNGER NEVER SATED! 
 
-witchery.werewolf.level4begin=The voice rumbles, "THE FANGS OF THE ALPHA MUST BE HONED, RIP THE THROAT FROM %s LESSER WOLVES AND BRING ME THEIR TONGUES!"
-witchery.werewolf.level4progress=The voice echoes, "DOMINATE %s, %s REMAIN!"
-witchery.werewolf.level4complete=The voice bellows, "THE PACK IS HUNGERING, FANGS FEAST ON THE KILL, A NEW ALPHA RISES, FROM THE SLAIN EAT YOUR FILL!" 
+witchery.werewolf.level4begin=The voice rumbles, THE FANGS OF THE ALPHA MUST BE HONED, RIP THE THROAT FROM %s LESSER WOLVES AND BRING ME THEIR TONGUES!
+witchery.werewolf.level4progress=The voice echoes, DOMINATE %s, %s REMAIN!
+witchery.werewolf.level4complete=The voice bellows, THE PACK IS HUNGERING, FANGS FEAST ON THE KILL, A NEW ALPHA RISES, FROM THE SLAIN EAT YOUR FILL! 
 
-witchery.werewolf.level5begin=The voice rumbles, "THE WOLF AND THE MAN MUST BECOME ONE, SLAY THE HORNED LORD OF THE WILD HUNT! CALL HIM FORTH WITH THIS HORN AND LAND THE KILLING BLOW!"
-witchery.werewolf.level5progress=The voice echoes, "THE HUNTSMAN LIES UNDEFEATED! SUMMON HIM WITH THE HORN AND LAND THE KILLING BLOW!"
-witchery.werewolf.level5complete=The voice bellows, "A MIGHTY CHAMPION DEFEATED, STANDING TALL THE VICTOR, THE BEAST IS FULLY AWOKEN, HUNT NOW ON TWO LEGS OR FOUR!" 
+witchery.werewolf.level5begin=The voice rumbles, THE WOLF AND THE MAN MUST BECOME ONE, SLAY THE HORNED LORD OF THE WILD HUNT! CALL HIM FORTH WITH THIS HORN AND LAND THE KILLING BLOW!
+witchery.werewolf.level5progress=The voice echoes, THE HUNTSMAN LIES UNDEFEATED! SUMMON HIM WITH THE HORN AND LAND THE KILLING BLOW!
+witchery.werewolf.level5complete=The voice bellows, A MIGHTY CHAMPION DEFEATED, STANDING TALL THE VICTOR, THE BEAST IS FULLY AWOKEN, HUNT NOW ON TWO LEGS OR FOUR! 
 
-witchery.werewolf.level6begin=The voice growls, "BUILD POWERFUL MUSCLES TO SMASH YOUR PREY, LEAP AT %s MONSTERS, AND FROM THE AIR SLAY!"
-witchery.werewolf.level6progress=The voice rumbles, "SLAY %s FROM THE AIR WAS BIDDEN, %s REMAIN!"
-witchery.werewolf.level6complete=The voice proclaims, "DEATH FROM ABOVE, LIKE LIGHTNING YOU STRIKE, SPRINT NOW WHEN YOU HIT, TO QUICKLY END THE FIGHT!"
+witchery.werewolf.level6begin=The voice growls, BUILD POWERFUL MUSCLES TO SMASH YOUR PREY, LEAP AT %s MONSTERS, AND FROM THE AIR SLAY!
+witchery.werewolf.level6progress=The voice rumbles, SLAY %s FROM THE AIR WAS BIDDEN, %s REMAIN!
+witchery.werewolf.level6complete=The voice proclaims, DEATH FROM ABOVE, LIKE LIGHTNING YOU STRIKE, SPRINT NOW WHEN YOU HIT, TO QUICKLY END THE FIGHT!
 
-witchery.werewolf.level7begin=The voice bellows, "OTHERS MUST LEARN TO FEAR YOU, TRAVEL THE LAND AT NIGHT, IN %s PLACES LOOK TO THE SKY AND LET YOUR WOLFS VOICE BE HEARD!"
-witchery.werewolf.level7progress=The voice intones, "HOWL AT THE NIGHT SKY IN %s PLACES, %s REMAIN!"
-witchery.werewolf.level7complete=The voice growls, "YOUR VOICE IS HEARD, YOUR COMING NOT CHEERED, AS WOLFMAN CRY OUT, LET YOUR FOES FREEZE IN FEAR!"
+witchery.werewolf.level7begin=The voice bellows, OTHERS MUST LEARN TO FEAR YOU, TRAVEL THE LAND AT NIGHT, IN %s PLACES LOOK TO THE SKY AND LET YOUR WOLFS VOICE BE HEARD!
+witchery.werewolf.level7progress=The voice intones, HOWL AT THE NIGHT SKY IN %s PLACES, %s REMAIN!
+witchery.werewolf.level7complete=The voice growls, YOUR VOICE IS HEARD, YOUR COMING NOT CHEERED, AS WOLFMAN CRY OUT, LET YOUR FOES FREEZE IN FEAR!
 
-witchery.werewolf.level8begin=The voice echoes, "MASTER THE PACK! AS A WOLF, FIND AND BEND %s WOLVES TO YOUR WILL!"
-witchery.werewolf.level8progress=The voice intones, "FORM A PACK OF %s WOLVES. YOU HAVE YET TO MASTER %s!"
-witchery.werewolf.level8complete=The voice rumbles, "THE ALPHA OF THE PACK, MASTERY IS ACHIEVED, HOWL AT THE SKY, TO CALL YOUR SERVANTS AT NEED."
+witchery.werewolf.level8begin=The voice echoes, MASTER THE PACK! AS A WOLF, FIND AND BEND %s WOLVES TO YOUR WILL!
+witchery.werewolf.level8progress=The voice intones, FORM A PACK OF %s WOLVES. YOU HAVE YET TO MASTER %s!
+witchery.werewolf.level8complete=The voice rumbles, THE ALPHA OF THE PACK, MASTERY IS ACHIEVED, HOWL AT THE SKY, TO CALL YOUR SERVANTS AT NEED.
 
-witchery.werewolf.level9begin=The voice bellows, "CLAWS AS KNIVES, AS WOLFMAN YOU MUST HUNT, SLAY %s OF THE PIGS THAT IN THE NETHER GRUNT!"
-witchery.werewolf.level9progress=The voice intones, "AS WOLFMAN, HUNT %s NETHER PIGS, %s MUST BE FOUND!"
-witchery.werewolf.level9complete=The voice proclaims, "INFERNAL FOES ARE DEFEATED, CLAWS HONED TO AN EDGE, ARMOR LIKE PAPER, YOU WILL NOW RIP TO SHREADS!"
+witchery.werewolf.level9begin=The voice bellows, CLAWS AS KNIVES, AS WOLFMAN YOU MUST HUNT, SLAY %s OF THE PIGS THAT IN THE NETHER GRUNT!
+witchery.werewolf.level9progress=The voice intones, AS WOLFMAN, HUNT %s NETHER PIGS, %s MUST BE FOUND!
+witchery.werewolf.level9complete=The voice proclaims, INFERNAL FOES ARE DEFEATED, CLAWS HONED TO AN EDGE, ARMOR LIKE PAPER, YOU WILL NOW RIP TO SHREADS!
 
-witchery.werewolf.level10begin=The voice bellows, "TAKE THE LIFE OF ANOTHER, FROM VILLAGE OR FRIEND, THEN YOU'LL BE GRANTED THE FAVOUR, MY BLESSING TO SPREAD!"
-witchery.werewolf.level10progress=The voice echoes, "SLAY ONE FROM A VILLAGE, OR ONE SUCH AS YOU!"
-witchery.werewolf.level10complete=The voice exclaims, "YOU HAVE MASTERED MY PATH, NOW SPREAD MY BLESSING!"
+witchery.werewolf.level10begin=The voice bellows, TAKE THE LIFE OF ANOTHER, FROM VILLAGE OR FRIEND, THEN YOU'LL BE GRANTED THE FAVOUR, MY BLESSING TO SPREAD!
+witchery.werewolf.level10progress=The voice echoes, SLAY ONE FROM A VILLAGE, OR ONE SUCH AS YOU!
+witchery.werewolf.level10complete=The voice exclaims, YOU HAVE MASTERED MY PATH, NOW SPREAD MY BLESSING!
 
 item.witchery:hunterhatsilvered.name=Witch Hunter Hat (Silvered)
 item.witchery:hunterhatsilvered.tip={9Werewolf protection.{0|{9Set bonuses: Protection from curses.{0|{9Enables draining bolts.{0|{9Cannot use poppets.{0
@@ -1539,7 +1539,7 @@ item.witchery:glassgoblet.notenoughblood=Half a droplet of blood is needed to fi
 item.witchery:glassgoblet.nothighenoughlevel=Your blood is not yet strong enough for this task
 item.witchery:glassgoblet.nothinghappens=Nothing happens
 item.witchery:glassgoblet.seemswrong=This does not seem correct
-item.witchery:glassgoblet.lilithquest=A voice sings, "Bring my daughter to the lakes of fire in the netherworld"
+item.witchery:glassgoblet.lilithquest=A voice sings, Bring my daughter to the lakes of fire in the netherworld
 item.witchery:glassgoblet.lilithquestsummon=Are you worthy of my mistress?
 item.witchery:glassgoblet.lilithquestsummon2=My mistress is here...
 item.witchery:glassgoblet.lilithquestcomplete=You are worthy... this time... do you desire magic, or death?
@@ -1597,7 +1597,7 @@ witchery.vampirepower.ustorm=Call Storm (%d)
 
 witchery:vampirebook.toc=[next=ritual1][h1 Observations of an Immortal][br][br][br][darkred A doomed scholar's account of discourse with the undead]
 witchery:vampirebook.ritual1=[next=ritual2]It is with some reluctance I commit these observations to paper, for what I have witnessed is not for the weak of mind. Instead, take my words as a warning...
-witchery:vampirebook.ritual2=[next=ritual3][br]...he was reminiscing over dinner this evening about his "birth", a demonic pact of sorts...[br][br]...butchering a chicken over a skull with a boline and holding a glass goblet to collect the blood is barbaric," I told him...
+witchery:vampirebook.ritual2=[next=ritual3][br]...he was reminiscing over dinner this evening about his birth, a demonic pact of sorts...[br][br]...butchering a chicken over a skull with a boline and holding a glass goblet to collect the blood is barbaric, I told him...
 witchery:vampirebook.ritual3=[next=ritual4][br]...apparently start of a long forgotten rite (I made a sketch...[br][img=witchery:textures/gui/vritual.png|center|middle|64|64][br]...night, open to the moon, string, red dust, torches and skull...
 witchery:vampirebook.ritual4=[next=ritual5][br][br]...pouring the blood onto the skull...[br][br]...mumbling about taking her to the lakes of lava...   ...underworld...
 witchery:vampirebook.ritual5=[next=transfix|1][br]...proving his worth to Her...[br][br][br]...that glass goblet again, could someone really drink such a thing? ...
@@ -1610,7 +1610,7 @@ witchery:vampirebook.bats=[next=mesmerize|7]...he could smash solid stone, but b
 witchery:vampirebook.mesmerize=[next=maker|8]...he smiled, a rare event, when he told me of his first flight...[br][br]...he flew from village to village, untill he knew the full extent of his domain, there was now nowhere he could not go... 
 witchery:vampirebook.maker=[next=maker2|8]...the weak minded would now not only let him drink his fill, but would also follow like faithful hounds...[br][br]...horror of all horrors, he lured five of them to specially prepared iron cages, topped with wood and with a gap at the front. He sealed them inside...
 witchery:vampirebook.maker2=[next=finalpowers|9][img=witchery:textures/gui/vcage.png|center|middle|64|64][br][br]...he began feeding from each of them; mezmerising them first, then carefully he drank all he could, without damaging any...
-witchery:vampirebook.finalpowers=At last he knew his blood was strong enough to replicate what She had done for him... ...left me weak, close to oblivion, but I watched him fill a glass goblet and hand it to me... ...we both sat next to a coffin, far from the sun's gaze, "drink!" is all he said...
+witchery:vampirebook.finalpowers=At last he knew his blood was strong enough to replicate what She had done for him... ...left me weak, close to oblivion, but I watched him fill a glass goblet and hand it to me... ...we both sat next to a coffin, far from the sun's gaze, drink! is all he said...
 
 witchery.vampire.setlevel=Vampire level set to %s.
 witchery:death.attack.sun=%1$s burnt to a crisp in the sun
@@ -1683,4 +1683,4 @@ witchery.rite.mirrormirror.bearing5=South West is where the fairest will be.
 witchery.rite.mirrormirror.bearing6=West is where the fairest will be.
 witchery.rite.mirrormirror.bearing7=North West is where the fairest will be.
 
-witchery.rite.mirrormirror.opchatreveal=In next message, player "%s" is really: "%s"
+witchery.rite.mirrormirror.opchatreveal=In next message, player %s is really: %s

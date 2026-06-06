@@ -366,6 +366,23 @@ public class EffectRegistry {
             }
         }
     }.setColor(5322534).setSize(1.0f), new StrokeSet(3, 3, 1, 1, 2), new StrokeSet(3, 3, 1, 1, 1, 2), new StrokeSet(3, 1, 0, 1, 1, 3), new StrokeSet(1, 1, 2, 2, 3, 3));
+    public static final SymbolEffect Flipendo = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(17, "witchery.pott.flipendo"){
+
+        @Override
+        public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
+            if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
+                EntityLivingBase target = (EntityLivingBase)mop.entityHit;
+                double dX = target.posX - (caster != null ? caster.posX : spell.posX);
+                double dZ = target.posZ - (caster != null ? caster.posZ : spell.posZ);
+                double len = Math.sqrt(dX * dX + dZ * dZ);
+                if (len > 0.001) { dX /= len; dZ /= len; }
+                target.addVelocity(dX * 2.5, 0.6, dZ * 2.5);
+                target.attackEntityFrom(DamageSource.causeIndirectMagicDamage(spell, caster), 2.0F);
+                target.velocityChanged = true;
+                ParticleEffect.SPELL_COLORED.send(SoundEffect.RANDOM_POP, target, 1.0D, 1.0D, 16);
+            }
+        }
+    }.setColor(16777215).setSize(1.5F), new StrokeSet[]{new StrokeSet(new byte[]{(byte)0, (byte)1, (byte)2})});
     public static final SymbolEffect Confundus = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(8, "witchery.pott.confundus"){
 
         @Override
@@ -727,6 +744,60 @@ public class EffectRegistry {
             }
         }
     }, new StrokeSet(1, 1, 0), new StrokeSet(1, 1, 1, 0, 0), new StrokeSet(1, 1, 1, 1, 0, 0, 0));
+    public static final SymbolEffect PetrificusTotalus = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(35, "witchery.pott.petrificustotalus"){
+        @Override
+        public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
+            if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
+                EntityLivingBase target = (EntityLivingBase)mop.entityHit;
+                if (target instanceof EntityPlayer) {
+                    if (!world.isRemote && (!(caster instanceof EntityPlayer) || MinecraftServer.getServer().isPVPEnabled())) {
+                        EntityPlayer pTarget = (EntityPlayer)target;
+                        pTarget.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, Integer.MAX_VALUE, 10));
+                        pTarget.addPotionEffect(new PotionEffect(Potion.blindness.id, Integer.MAX_VALUE, 0));
+                        pTarget.addPotionEffect(new PotionEffect(Witchery.Potions.SILENCED.id, Integer.MAX_VALUE, 0));
+                        pTarget.addPotionEffect(new PotionEffect(Potion.resistance.id, Integer.MAX_VALUE, 4));
+                        ParticleEffect.SPELL_COLORED.send(SoundEffect.RANDOM_FIZZ, pTarget, 1.0D, 2.0D, 16);
+                    }
+                } else if (target instanceof EntityLiving) {
+                    target.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, Integer.MAX_VALUE, 10));
+                    target.addPotionEffect(new PotionEffect(Potion.blindness.id, Integer.MAX_VALUE, 0));
+                    target.addPotionEffect(new PotionEffect(Potion.resistance.id, Integer.MAX_VALUE, 4));
+                    ParticleEffect.SPELL_COLORED.send(SoundEffect.RANDOM_FIZZ, target, 1.0D, 2.0D, 16);
+                }
+            }
+        }
+    }.setColor(16755200).setSize(1.5F), new StrokeSet[]{new StrokeSet(new byte[]{(byte)3, (byte)1, (byte)3, (byte)1, (byte)3})});
+    public static final SymbolEffect Glacius = EffectRegistry.instance().addEffect((new SymbolEffectProjectile(37, "witchery.pott.glacius") {
+        @Override
+        public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
+            if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
+                EntityLivingBase target = (EntityLivingBase)mop.entityHit;
+                target.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, 300, 3));
+                target.addPotionEffect(new PotionEffect(Potion.digSlowdown.id, 300, 2));
+                target.extinguish();
+                ParticleEffect.SPELL_COLORED.send(SoundEffect.RANDOM_FIZZ, target, 1.0D, 1.0D, 16);
+            }
+            if (!world.isRemote) {
+                int px = (int)spell.posX;
+                int py = (int)spell.posY;
+                int pz = (int)spell.posZ;
+                for (int x = -5; x <= 5; ++x) {
+                    for (int y = -5; y <= 5; ++y) {
+                        for (int z = -5; z <= 5; ++z) {
+                            Block b = world.getBlock(px + x, py + y, pz + z);
+                            if (b == net.minecraft.init.Blocks.water || b == net.minecraft.init.Blocks.flowing_water) {
+                                world.setBlock(px + x, py + y, pz + z, net.minecraft.init.Blocks.ice);
+                            } else if (b == net.minecraft.init.Blocks.lava || b == net.minecraft.init.Blocks.flowing_lava) {
+                                world.setBlock(px + x, py + y, pz + z, net.minecraft.init.Blocks.cobblestone);
+                            } else if (b == net.minecraft.init.Blocks.fire) {
+                                world.setBlockToAir(px + x, py + y, pz + z);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }).setColor(0x88CCFF).setSize(1.5F), new StrokeSet[]{new StrokeSet(new byte[]{(byte)2, (byte)0, (byte)2, (byte)0})});
     public static final SymbolEffect Stupefy = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(36, "witchery.pott.stupefy", 5, false, true, null, 0){
 
         @Override
@@ -958,7 +1029,7 @@ public class EffectRegistry {
             }
         }
     }, new StrokeSet(3, 0, 3, 0, 3));
-    public static final SymbolEffect Ictus = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(81, "witchery.pott.ictus"){
+    public static final SymbolEffect Ictus = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(28, "witchery.pott.ictus"){
 
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
@@ -1005,11 +1076,20 @@ public class EffectRegistry {
 
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
-            if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLiving) {
-                EntityLiving target = (EntityLiving)mop.entityHit;
-                target.setAttackTarget(null);
-                target.setRevengeTarget(null);
-                ParticleEffect.SPELL.send(SoundEffect.RANDOM_FIZZ, (Entity)target, 1.0, 1.0, 16);
+            if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
+                EntityLivingBase target = (EntityLivingBase)mop.entityHit;
+                if (target instanceof EntityPlayer) {
+                    if (!world.isRemote && (!(caster instanceof EntityPlayer) || MinecraftServer.getServer().isPVPEnabled())) {
+                        target.clearActivePotions();
+                        target.addPotionEffect(new PotionEffect(Potion.confusion.id, 200, 1));
+                        ParticleEffect.SPELL.send(SoundEffect.RANDOM_FIZZ, (Entity)target, 1.0, 1.0, 16);
+                    }
+                } else if (target instanceof EntityLiving) {
+                    EntityLiving mobTarget = (EntityLiving)target;
+                    mobTarget.setAttackTarget(null);
+                    mobTarget.setRevengeTarget(null);
+                    ParticleEffect.SPELL.send(SoundEffect.RANDOM_FIZZ, (Entity)target, 1.0, 1.0, 16);
+                }
             }
         }
     }, new StrokeSet(0, 2, 0, 3, 0));
@@ -1169,6 +1249,9 @@ public class EffectRegistry {
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
             if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
                 EntityLivingBase target = (EntityLivingBase)mop.entityHit;
+                if (target instanceof EntityPlayer) {
+                    target.addPotionEffect(new PotionEffect(Witchery.Potions.SILENCED.id, 400, 0));
+                }
                 target.addPotionEffect(new PotionEffect(Potion.weakness.id, 400, 10));
                 target.addPotionEffect(new PotionEffect(Potion.digSlowdown.id, 400, 10));
                 ParticleEffect.SPELL.send(SoundEffect.RANDOM_FIZZ, (Entity)target, 1.0, 1.0, 16);
@@ -1399,15 +1482,25 @@ public class EffectRegistry {
             }
         }, new StrokeSet(1, 2, 3, 0, 3));
         Expulso = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(57, "witchery.pott.expulso"){
-
             @Override
             public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
-                if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
-                    EntityLivingBase target = (EntityLivingBase)mop.entityHit;
-                    double dX = target.posX - spell.posX;
-                    double dZ = target.posZ - spell.posZ;
-                    target.addVelocity(dX * 2.0, 1.5, dZ * 2.0);
-                    ParticleEffect.EXPLODE.send(SoundEffect.RANDOM_EXPLODE, (Entity)target, 1.0, 1.0, 16);
+                double radius = 8.0D;
+                List list = world.getEntitiesWithinAABB(EntityLivingBase.class, spell.boundingBox.expand(radius, radius, radius));
+                boolean hit = false;
+                for (Object obj : list) {
+                    EntityLivingBase target = (EntityLivingBase)obj;
+                    if (target != caster && target.getDistanceToEntity(spell) <= radius) {
+                        double dX = target.posX - spell.posX;
+                        double dZ = target.posZ - spell.posZ;
+                        double len = Math.sqrt(dX * dX + dZ * dZ);
+                        if (len > 0.001D) { dX /= len; dZ /= len; }
+                        target.addVelocity(dX * 2.0D, 1.5D, dZ * 2.0D);
+                        target.velocityChanged = true;
+                        hit = true;
+                    }
+                }
+                if (hit) {
+                    ParticleEffect.EXPLODE.send(SoundEffect.RANDOM_EXPLODE, world, spell.posX, spell.posY, spell.posZ, 2.0D, 2.0D, 16);
                 }
             }
         }, new StrokeSet(1, 0, 3, 0, 1));
@@ -1424,13 +1517,30 @@ public class EffectRegistry {
             }
         }, new StrokeSet(0, 0, 2, 0, 0));
         FiniteIncantatem = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(59, "witchery.pott.finiteincantatem"){
-
             @Override
             public void perform(World world, EntityPlayer player, int effectLevel) {
                 if (player.isSneaking()) {
-                    EntitySpellEffect dummy = new EntitySpellEffect(world, (EntityLivingBase)player, 0.0, 0.0, 0.0, this, effectLevel);
-                    dummy.setPosition(player.posX, player.posY, player.posZ);
-                    this.onCollision(world, (EntityLivingBase)player, new MovingObjectPosition((Entity)player), dummy);
+                    if (!world.isRemote) {
+                        int[] negativeEffects = {
+                            Potion.moveSlowdown.id, Potion.digSlowdown.id, Potion.confusion.id,
+                            Potion.blindness.id, Potion.poison.id, Potion.wither.id,
+                            Potion.weakness.id, Potion.hunger.id,
+                            Witchery.Potions.SILENCED.id
+                        };
+                        boolean cleansed = false;
+                        for (int id : negativeEffects) {
+                            if (player.isPotionActive(id)) {
+                                player.removePotionEffect(id);
+                                cleansed = true;
+                            }
+                        }
+                        if (cleansed) {
+                            ParticleEffect.INSTANT_SPELL.send(SoundEffect.RANDOM_FIZZ, player, 1.0D, 1.5D, 16);
+                            com.emoniph.witchery.util.ChatUtil.sendTranslated(net.minecraft.util.EnumChatFormatting.GREEN, player, "witchery.pott.finiteincantatem.cleanse");
+                        } else {
+                            SoundEffect.NOTE_SNARE.playAtPlayer(world, player);
+                        }
+                    }
                 } else {
                     super.perform(world, player, effectLevel);
                 }
@@ -1438,7 +1548,7 @@ public class EffectRegistry {
 
             @Override
             public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
-                List list = world.getEntitiesWithinAABB(EntityLivingBase.class, spell.boundingBox.expand(10.0, 10.0, 10.0));
+                List list = world.getEntitiesWithinAABB(EntityLivingBase.class, spell.boundingBox.expand(15.0D, 15.0D, 15.0D));
                 for (Object obj : list) {
                     EntityLivingBase target = (EntityLivingBase)obj;
                     target.clearActivePotions();
@@ -1448,12 +1558,14 @@ public class EffectRegistry {
                     int px = (int)spell.posX;
                     int py = (int)spell.posY;
                     int pz = (int)spell.posZ;
-                    for (int x = -10; x <= 10; ++x) {
-                        for (int y = -10; y <= 10; ++y) {
-                            for (int z = -10; z <= 10; ++z) {
-                                if (world.getBlock(px + x, py + y, pz + z) != Witchery.Blocks.FORCE) continue;
-                                world.setBlockToAir(px + x, py + y, pz + z);
-                                ParticleEffect.SMOKE.send(SoundEffect.RANDOM_FIZZ, world, px + x, py + y, pz + z, 0.5, 0.5, 16);
+                    for (int x = -15; x <= 15; ++x) {
+                        for (int y = -15; y <= 15; ++y) {
+                            for (int z = -15; z <= 15; ++z) {
+                                Block _finB = world.getBlock(px + x, py + y, pz + z);
+                                if (_finB == Witchery.Blocks.FORCE || _finB == Witchery.Blocks.BARRIER || _finB == Witchery.Blocks.GLOW_GLOBE) {
+                                    world.setBlockToAir(px + x, py + y, pz + z);
+                                    ParticleEffect.SMOKE.send(SoundEffect.RANDOM_FIZZ, world, px + x, py + y, pz + z, 0.5D, 0.5D, 16);
+                                }
                             }
                         }
                     }
