@@ -10,8 +10,6 @@ import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.EnumChatFormatting;
 
 public class PacketSpellPrepared implements IMessage {
 
@@ -50,11 +48,6 @@ public class PacketSpellPrepared implements IMessage {
                int color = effect.getDisplayColor();
                // Telegraph visible to all nearby players: a colored aura around the caster.
                ParticleEffect.SPELL_COLORED.send(SoundEffect.NONE, player, 0.6D, 1.8D, 32, color);
-
-               // Show the selected spell name to the caster.
-               EnumChatFormatting nameColor = effect.isCurse()?EnumChatFormatting.DARK_PURPLE:EnumChatFormatting.AQUA;
-               ChatComponentText nameMessage = new ChatComponentText(nameColor + effect.getLocalizedName());
-               player.addChatMessage(nameMessage);
             }
          }
 

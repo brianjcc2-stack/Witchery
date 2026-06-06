@@ -21,7 +21,11 @@ import net.minecraft.item.EnumRarity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.potion.PotionEffect;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.IChatComponent;
 import net.minecraft.world.World;
 
 public class ItemMysticBranch extends ItemBase {
@@ -187,6 +191,7 @@ public class ItemMysticBranch extends ItemBase {
                            SoundEffect.NOTE_SNARE.playAtPlayer(world, player);
                         } else {
                            effect.perform(world, player, level);
+                           this.announceCastSpell(player, effect);
                            if(!player.capabilities.isCreativeMode) {
                               Infusion.setCurrentEnergy(player, nbtPerm.getInteger("witcheryInfusionCharges") - effect.getChargeCost(world, player, level));
                            }
@@ -204,11 +209,22 @@ public class ItemMysticBranch extends ItemBase {
                ChatUtil.sendTranslated(EnumChatFormatting.RED, player, "witchery.infuse.branch.unknownsymbol", new Object[0]);
                SoundEffect.NOTE_SNARE.playAtPlayer(world, player);
             }
-         } else {
+          } else {
             nbtTag.removeTag("Strokes");
             nbtTag.removeTag("startYaw");
             nbtTag.removeTag("startPitch");
          }
+      }
+
+   }
+
+   private void announceCastSpell(EntityPlayer player, SymbolEffect effect) {
+      MinecraftServer server = MinecraftServer.getServer();
+      if(server != null) {
+         EnumChatFormatting nameColor = effect.isCurse()?EnumChatFormatting.DARK_PURPLE:EnumChatFormatting.LIGHT_PURPLE;
+         IChatComponent spoken = new ChatComponentText(nameColor + effect.getLocalizedName() + "!" + EnumChatFormatting.RESET);
+         IChatComponent chatLine = new ChatComponentTranslation("chat.type.text", new Object[]{player.getDisplayName(), spoken});
+         server.getConfigurationManager().sendChatMsg(chatLine);
       }
 
    }
