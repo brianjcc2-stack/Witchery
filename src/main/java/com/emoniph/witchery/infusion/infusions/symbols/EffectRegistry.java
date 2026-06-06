@@ -565,21 +565,7 @@ public class EffectRegistry {
             });
         }
     }.setColor(6191615).setSize(1.5f), new StrokeSet(1, new byte[]{(byte)3,(byte)3,(byte)2}), new StrokeSet(1, new byte[]{(byte)3,(byte)3,(byte)3,(byte)2,(byte)2}), new StrokeSet(2, new byte[]{(byte)3,(byte)3,(byte)3,(byte)3,(byte)2,(byte)2,(byte)2}), new StrokeSet(3, new byte[]{(byte)3,(byte)3,(byte)3,(byte)3,(byte)3,(byte)2,(byte)2,(byte)2,(byte)2}));
-    public static final SymbolEffect Imperio = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(20, "witchery.pott.imperio", 10, true, false, null, 0){
-
-        @Override
-        public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect effectEntity) {
-            EntityLivingBase entityLiving;
-            if (mop != null && caster != null && caster instanceof EntityPlayer && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase && PotionEnslaved.canCreatureBeEnslaved(entityLiving = (EntityLivingBase)mop.entityHit)) {
-                EntityPlayer player = (EntityPlayer)caster;
-                EntityLiving creature = (EntityLiving)entityLiving;
-                NBTTagCompound nbt = entityLiving.getEntityData();
-                if (PotionEnslaved.setEnslaverForMob(creature, player)) {
-                    ParticleEffect.SPELL.send(SoundEffect.MOB_ZOMBIE_INFECT, (Entity)creature, 1.0, 2.0, 8);
-                }
-            }
-        }
-    }.setColor(10686463).setSize(1.5f), new StrokeSet(2, new byte[]{(byte)1,(byte)1,(byte)1,(byte)1}));
+    public static final SymbolEffect Imperio = EffectRegistry.instance().addEffect(new SymbolEffectImperio(20, "witchery.pott.imperio").setColor(10686463).setSize(1.5f), new StrokeSet(2, new byte[]{(byte)1,(byte)1,(byte)1,(byte)1}));
     public static final SymbolEffect Incendio = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(21, "witchery.pott.incendio"){
 
         @Override
@@ -1143,6 +1129,72 @@ public class EffectRegistry {
             world.newExplosion((Entity)caster, spell.posX, spell.posY, spell.posZ, 8.0f, true, true);
         }
     }, new StrokeSet(3, new byte[]{(byte)1,(byte)2,(byte)0,(byte)1}));
+    public static final SymbolEffect Telekinesis = EffectRegistry.instance().addEffect(new SymbolEffectTelekinesis(100, "witchery.pott.telekinesis"), new StrokeSet(1, new byte[]{(byte)2,(byte)0,(byte)2,(byte)1}), new StrokeSet(2, new byte[]{(byte)3,(byte)2,(byte)3,(byte)1}), new StrokeSet(3, new byte[]{(byte)1,(byte)3,(byte)1,(byte)0}));
+    public static final SymbolEffect Diffindo = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(101, "witchery.pott.diffindo"){
+
+        @Override
+        public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
+            if (!world.isRemote && mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
+                EntityLivingBase target = (EntityLivingBase)mop.entityHit;
+                float damage = 5.0f + 3.0f * (float)(spell.getEffectLevel() - 1);
+                target.attackEntityFrom(DamageSource.causeIndirectMagicDamage((Entity)spell, (Entity)caster), damage);
+                // A severing cut that bleeds the target.
+                target.addPotionEffect(new PotionEffect(Potion.wither.id, 100 * spell.getEffectLevel(), 0));
+                ParticleEffect.REDDUST.send(SoundEffect.DAMAGE_HIT, (Entity)target, 1.0, 1.0, 16);
+            }
+        }
+    }.setColor(0xCC0000).setSize(1.0f), new StrokeSet(1, new byte[]{(byte)2,(byte)1,(byte)3}), new StrokeSet(2, new byte[]{(byte)2,(byte)1,(byte)1,(byte)3}), new StrokeSet(3, new byte[]{(byte)2,(byte)3,(byte)1,(byte)3,(byte)1}));
+    public static final SymbolEffect Descendo = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(102, "witchery.pott.descendo"){
+
+        @Override
+        public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
+            if (!world.isRemote && mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
+                EntityLivingBase target = (EntityLivingBase)mop.entityHit;
+                // Slam the target violently into the ground and pin it.
+                target.addVelocity(0.0, -2.0, 0.0);
+                target.velocityChanged = true;
+                target.fallDistance += 4.0f;
+                target.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, 60 * spell.getEffectLevel(), 3));
+                target.attackEntityFrom(DamageSource.causeIndirectMagicDamage((Entity)spell, (Entity)caster), 2.0f);
+                ParticleEffect.SMOKE.send(SoundEffect.RANDOM_POP, (Entity)target, 1.0, 0.5, 16);
+            }
+        }
+    }.setColor(0x6688AA).setSize(1.0f), new StrokeSet(1, new byte[]{(byte)2,(byte)2,(byte)1}), new StrokeSet(2, new byte[]{(byte)2,(byte)2,(byte)1,(byte)1}), new StrokeSet(3, new byte[]{(byte)2,(byte)2,(byte)1,(byte)1,(byte)1}));
+    public static final SymbolEffect Geminio = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(103, "witchery.pott.geminio"){
+
+        @Override
+        public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
+            if (!world.isRemote) {
+                double R = 3.0 + 1.0 * (double)(spell.getEffectLevel() - 1);
+                double R_SQ = R * R;
+                AxisAlignedBB bb = AxisAlignedBB.getBoundingBox((double)(spell.posX - R), (double)(spell.posY - R), (double)(spell.posZ - R), (double)(spell.posX + R), (double)(spell.posY + R), (double)(spell.posZ + R));
+                List entities = world.getEntitiesWithinAABB(EntityItem.class, bb);
+                boolean duplicated = false;
+                for (Object obj : entities) {
+                    EntityItem item = (EntityItem)obj;
+                    if (item.getDistanceSqToEntity((Entity)spell) > R_SQ) continue;
+                    ItemStack stack = item.getEntityItem();
+                    if (stack == null || stack.stackSize <= 0) continue;
+                    if (!EffectRegistry.canDuplicate(stack)) continue;
+                    ItemStack copy = stack.copy();
+                    copy.stackSize = 1;
+                    EntityItem dupe = new EntityItem(world, item.posX, item.posY + 0.2, item.posZ, copy);
+                    dupe.delayBeforeCanPickup = 10;
+                    dupe.motionX = (world.rand.nextDouble() - 0.5) * 0.1;
+                    dupe.motionY = 0.2;
+                    dupe.motionZ = (world.rand.nextDouble() - 0.5) * 0.1;
+                    world.spawnEntityInWorld(dupe);
+                    ParticleEffect.SPELL.send(SoundEffect.RANDOM_ORB, item, 0.5, 0.5, 16);
+                    duplicated = true;
+                    break;
+                }
+
+                if (!duplicated && caster != null) {
+                    SoundEffect.NOTE_SNARE.playAt(world, caster.posX, caster.posY, caster.posZ);
+                }
+            }
+        }
+    }.setColor(0xC0FFC0).setSize(1.0f), new StrokeSet(1, new byte[]{(byte)0,(byte)2,(byte)1}), new StrokeSet(2, new byte[]{(byte)0,(byte)2,(byte)2,(byte)1}), new StrokeSet(3, new byte[]{(byte)0,(byte)2,(byte)2,(byte)1,(byte)1}));
     public static final SymbolEffect Avis = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(25, "witchery.pott.avis"){
 
         @Override
@@ -1316,6 +1368,27 @@ public class EffectRegistry {
         strokeSets[0].setDefaultFor(effect);
         this.allEffects.add(effect);
         return effect;
+    }
+
+    public static boolean canDuplicate(ItemStack stack) {
+        if (stack == null || stack.getItem() == null) {
+            return false;
+        }
+        // The Geminio charm only copies minor, non-precious items - never tools, armour,
+        // enchanted gear or anything stacked beyond a single duplicate target.
+        if (stack.isItemEnchanted() || stack.isItemStackDamageable()) {
+            return false;
+        }
+        Item item = stack.getItem();
+        if (item == Witchery.Items.GENERIC) {
+            int dmg = stack.getItemDamage();
+            return dmg == Witchery.Items.GENERIC.itemWaystone.damageValue || dmg == Witchery.Items.GENERIC.itemWaystoneBound.damageValue;
+        }
+        if (item == Witchery.Items.TAGLOCK_KIT) {
+            return true;
+        }
+        // A small whitelist of cheap, common materials.
+        return item == Items.string || item == Items.feather || item == Items.bone || item == Items.gunpowder || item == Items.paper || item == Items.stick || item == Items.clay_ball || item == Item.getItemFromBlock(Blocks.dirt) || item == Item.getItemFromBlock(Blocks.cobblestone) || item == Item.getItemFromBlock(Blocks.sand) || item == Items.wheat_seeds;
     }
 
     public boolean contains(byte[] strokes) {
@@ -1685,17 +1758,17 @@ public class EffectRegistry {
             public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
                 if (!world.isRemote && caster instanceof EntityPlayer) {
                     EntityPlayer player = (EntityPlayer)caster;
-                    ItemStack stack = null; //new ItemStack(Witchery.Blocks.PORTKEY);
+                    ItemStack stack = Witchery.Items.GENERIC.itemWaystone.createStack();
                     NBTTagCompound nbt = new NBTTagCompound();
-                    nbt.setInteger("destX", (int)player.posX);
-                    nbt.setInteger("destY", (int)player.posY);
-                    nbt.setInteger("destZ", (int)player.posZ);
-                    nbt.setInteger("destDim", player.dimension);
+                    nbt.setInteger("PosX", (int)player.posX);
+                    nbt.setInteger("PosY", (int)player.posY);
+                    nbt.setInteger("PosZ", (int)player.posZ);
+                    nbt.setInteger("PosD", player.dimension);
                     stack.setTagCompound(nbt);
                     if (!player.inventory.addItemStackToInventory(stack)) {
                         player.dropPlayerItemWithRandomChoice(stack, false);
                     }
-                    player.addChatMessage((IChatComponent)new ChatComponentText("\u00a7aSe ha creado un Traslador (Bloque) vinculado a tu posici\u00f3n actual. Col\u00f3calo en el suelo para usarlo.\u00a7r"));
+                    player.addChatMessage((IChatComponent)new ChatComponentText("\u00a7aSe ha creado un Traslador vinculado a tu posici\u00f3n actual. Haz clic derecho sosteni\u00e9ndolo para regresar aqu\u00ed.\u00a7r"));
                     world.playSoundAtEntity((Entity)player, "random.levelup", 1.0f, 1.0f);
                 }
             }

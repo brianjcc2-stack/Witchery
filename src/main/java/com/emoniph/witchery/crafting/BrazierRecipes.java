@@ -19,6 +19,7 @@ import java.util.List;
 import net.minecraft.block.Block;
 import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
@@ -207,6 +208,138 @@ public class BrazierRecipes {
          return false;
       }
    };
+   public static final BrazierRecipes.BrazierRecipe INFUSION = new BrazierRecipes.BrazierRecipe("witchery.brazier.infusion", true, TimeUtil.minsToTicks(1), new ItemStack[]{Witchery.Items.GENERIC.itemAttunedStoneCharged.createStack(), new ItemStack(Items.ghast_tear), Witchery.Items.GENERIC.itemGraveyardDust.createStack()}, null) {
+      public int onBurning(World world, int x, int y, int z, long ticks, BlockBrazier.TileEntityBrazier tile) {
+         if(ticks % 20L == 0L) {
+            AxisAlignedBB bb = AxisAlignedBB.getBoundingBox((double)(x - 4), (double)(y - 4), (double)(z - 4), (double)(x + 4), (double)(y + 4), (double)(z + 4));
+            List entities = world.getEntitiesWithinAABB(EntityPlayer.class, bb);
+            Iterator i$ = entities.iterator();
+
+            while(i$.hasNext()) {
+               Object obj = i$.next();
+               EntityPlayer player = (EntityPlayer)obj;
+               if(Infusion.getInfusionID(player) > 0) {
+                  int currentEnergy = Infusion.getCurrentEnergy(player);
+                  int maxEnergy = Infusion.getMaxEnergy(player);
+                  if(currentEnergy < maxEnergy) {
+                     Infusion.setCurrentEnergy(player, Math.min(currentEnergy + 10, maxEnergy));
+                     ParticleEffect.SPELL.send(SoundEffect.NONE, player, 0.5D, 1.0D, 8);
+                  }
+               }
+            }
+         }
+         return 0;
+      }
+   };
+   public static final BrazierRecipes.BrazierRecipe GROWTH = new BrazierRecipes.BrazierRecipe("witchery.brazier.growth", true, TimeUtil.minsToTicks(2), new ItemStack[]{Witchery.Items.GENERIC.itemWormwood.createStack(), new ItemStack(Items.dye, 1, 15), new ItemStack(Items.apple)}, null) {
+      public int onBurning(World world, int x, int y, int z, long ticks, BlockBrazier.TileEntityBrazier tile) {
+         if(ticks % 10L == 0L) {
+            int px = x - 5 + world.rand.nextInt(11);
+            int pz = z - 5 + world.rand.nextInt(11);
+            int py = y - 2 + world.rand.nextInt(5);
+            Block block = world.getBlock(px, py, pz);
+            if(block != null && block instanceof net.minecraft.block.IGrowable) {
+               net.minecraft.block.IGrowable growable = (net.minecraft.block.IGrowable)block;
+               if(growable.func_149851_a(world, px, py, pz, world.isRemote)) {
+                  growable.func_149853_b(world, world.rand, px, py, pz);
+                  world.playAuxSFX(2005, px, py, pz, 0);
+               }
+            }
+         }
+         return 0;
+      }
+   };
+   public static final BrazierRecipes.BrazierRecipe MAGNET = new BrazierRecipes.BrazierRecipe("witchery.brazier.magnet", true, TimeUtil.minsToTicks(2), new ItemStack[]{Witchery.Items.GENERIC.itemWormwood.createStack(), new ItemStack(Items.iron_ingot), new ItemStack(Items.redstone)}, null) {
+      public int onBurning(World world, int x, int y, int z, long ticks, BlockBrazier.TileEntityBrazier tile) {
+         AxisAlignedBB bb = AxisAlignedBB.getBoundingBox((double)(x - 8), (double)(y - 8), (double)(z - 8), (double)(x + 8), (double)(y + 8), (double)(z + 8));
+         List entities = world.getEntitiesWithinAABB(net.minecraft.entity.item.EntityItem.class, bb);
+         for(Object obj : entities) {
+            net.minecraft.entity.item.EntityItem item = (net.minecraft.entity.item.EntityItem)obj;
+            double dx = ((double)x + 0.5D) - item.posX;
+            double dy = ((double)y + 0.5D) - item.posY;
+            double dz = ((double)z + 0.5D) - item.posZ;
+            double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+            if(dist > 1.0D && dist < 8.0D) {
+               item.motionX += dx / dist * 0.05D;
+               item.motionY += dy / dist * 0.05D;
+               item.motionZ += dz / dist * 0.05D;
+            }
+         }
+         return 0;
+      }
+   };
+   public static final BrazierRecipes.BrazierRecipe STORM = new BrazierRecipes.BrazierRecipe("witchery.brazier.storm", true, TimeUtil.minsToTicks(2), new ItemStack[]{Witchery.Items.GENERIC.itemWormwood.createStack(), new ItemStack(Items.ghast_tear), new ItemStack(Items.water_bucket)}, null) {
+      public int onBurning(World world, int x, int y, int z, long ticks, BlockBrazier.TileEntityBrazier tile) {
+         if(!world.isRemote && ticks % 100L == 0L) {
+             net.minecraft.world.storage.WorldInfo info = world.getWorldInfo();
+             info.setRaining(true);
+             info.setThundering(true);
+             info.setRainTime(1200);
+             info.setThunderTime(1200);
+         }
+         return 0;
+      }
+   };
+   public static final BrazierRecipes.BrazierRecipe REPELLENT = new BrazierRecipes.BrazierRecipe("witchery.brazier.repellent", true, TimeUtil.minsToTicks(2), new ItemStack[]{Witchery.Items.GENERIC.itemWormwood.createStack(), new ItemStack(Items.rotten_flesh), new ItemStack(Items.bone)}, null) {
+      public int onBurning(World world, int x, int y, int z, long ticks, BlockBrazier.TileEntityBrazier tile) {
+         AxisAlignedBB bb = AxisAlignedBB.getBoundingBox((double)(x - 8), (double)(y - 8), (double)(z - 8), (double)(x + 8), (double)(y + 8), (double)(z + 8));
+         List entities = world.getEntitiesWithinAABB(net.minecraft.entity.monster.IMob.class, bb);
+         for(Object obj : entities) {
+            EntityLivingBase mob = (EntityLivingBase)obj;
+            double dx = mob.posX - ((double)x + 0.5D);
+            double dz = mob.posZ - ((double)z + 0.5D);
+            double dist = Math.sqrt(dx * dx + dz * dz);
+            if(dist < 8.0D && dist > 0.1D) {
+               mob.motionX += dx / dist * 0.1D;
+               mob.motionZ += dz / dist * 0.1D;
+            }
+         }
+         return 0;
+      }
+   };
+   public static final BrazierRecipes.BrazierRecipe POTION_AURA = new BrazierRecipes.BrazierRecipe("witchery.brazier.potionaura", true, TimeUtil.minsToTicks(2), new ItemStack[]{Witchery.Items.GENERIC.itemWormwood.createStack(), Witchery.Items.GENERIC.itemGraveyardDust.createStack(), new ItemStack(Items.potionitem)}, null) {
+      @Override
+      protected boolean isMatch(ItemStack[] availableItems) {
+         boolean hasWormwood = false;
+         boolean hasDust = false;
+         boolean hasPotion = false;
+         for (ItemStack item : availableItems) {
+             if (item != null) {
+                 if (item.isItemEqual(Witchery.Items.GENERIC.itemWormwood.createStack())) hasWormwood = true;
+                 else if (item.isItemEqual(Witchery.Items.GENERIC.itemGraveyardDust.createStack())) hasDust = true;
+                 else if (item.getItem() == Items.potionitem && item.getItemDamage() > 0) hasPotion = true;
+             }
+         }
+         return hasWormwood && hasDust && hasPotion;
+      }
+
+      @Override
+      public int onBurning(World world, int x, int y, int z, long ticks, BlockBrazier.TileEntityBrazier tile) {
+         if (ticks % 60L == 0L) {
+             ItemStack potionStack = null;
+             for (int i = 0; i < 3; i++) {
+                 ItemStack stack = tile.getStackInSlot(i);
+                 if (stack != null && stack.getItem() == Items.potionitem) {
+                     potionStack = stack;
+                     break;
+                 }
+             }
+             if (potionStack != null) {
+                 List effects = Items.potionitem.getEffects(potionStack);
+                 if (effects != null && !effects.isEmpty()) {
+                     PotionEffect effect = (PotionEffect)effects.get(0);
+                     AxisAlignedBB bb = AxisAlignedBB.getBoundingBox((double)(x - 6), (double)(y - 6), (double)(z - 6), (double)(x + 6), (double)(y + 6), (double)(z + 6));
+                     List entities = world.getEntitiesWithinAABB(EntityLivingBase.class, bb);
+                     for (Object obj : entities) {
+                         EntityLivingBase entity = (EntityLivingBase)obj;
+                         entity.addPotionEffect(new PotionEffect(effect.getPotionID(), TimeUtil.secsToTicks(10), effect.getAmplifier()));
+                     }
+                 }
+             }
+         }
+         return 0;
+      }
+   };
 
 
    public static BrazierRecipes instance() {
@@ -264,7 +397,7 @@ public class BrazierRecipes {
          return available;
       }
 
-      private boolean isMatch(ItemStack[] availableItems) {
+      protected boolean isMatch(ItemStack[] availableItems) {
          ArrayList availableItemList = new ArrayList();
          ItemStack[] arr$ = availableItems;
          int len$ = availableItems.length;

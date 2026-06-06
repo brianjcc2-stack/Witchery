@@ -3,6 +3,7 @@ package com.emoniph.witchery.common;
 import com.emoniph.witchery.Witchery;
 import com.emoniph.witchery.brewing.potions.PotionResizing;
 import com.emoniph.witchery.common.ExtendedPlayer;
+import com.emoniph.witchery.dimension.WorldProviderDreamWorld;
 import com.emoniph.witchery.entity.EntityWolfman;
 import com.emoniph.witchery.infusion.infusions.InfusionInfernal;
 import com.emoniph.witchery.item.ItemHunterClothes;
@@ -82,8 +83,10 @@ public class Shapeshift {
             this.removeModifier(SharedMonsterAttributes.maxHealth, HEALTH_MODIFIER, playerAttributes);
          }
 
+         boolean isGhostWithFlight = WorldProviderDreamWorld.getPlayerIsGhost(player) && playerEx.getSpiritLevel() >= 1;
+
          if(!player.capabilities.isCreativeMode) {
-            player.capabilities.allowFlying = boost != null && boost.flying;
+            player.capabilities.allowFlying = (boost != null && boost.flying) || isGhostWithFlight;
             if(!player.capabilities.allowFlying && player.capabilities.isFlying) {
                player.capabilities.isFlying = false;
             } else if(player.capabilities.allowFlying) {
@@ -100,7 +103,8 @@ public class Shapeshift {
    }
 
    public void updatePlayerState(EntityPlayer player, ExtendedPlayer playerEx) {
-      if(playerEx.getCreatureType() == TransformCreature.BAT) {
+      boolean isGhost = WorldProviderDreamWorld.getPlayerIsGhost(player);
+      if(playerEx.getCreatureType() == TransformCreature.BAT || (isGhost && playerEx.getSpiritLevel() >= 1)) {
          if(player.capabilities.isFlying) {
             player.fallDistance = 0.0F;
          }
@@ -109,6 +113,12 @@ public class Shapeshift {
             player.capabilities.allowFlying = true;
             player.sendPlayerAbilities();
          }
+      }
+
+      if (isGhost && playerEx.getSpiritLevel() >= 4) {
+         player.noClip = true;
+      } else if (!player.capabilities.isCreativeMode) {
+         player.noClip = false;
       }
 
    }

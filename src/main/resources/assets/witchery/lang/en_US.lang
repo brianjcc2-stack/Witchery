@@ -246,6 +246,25 @@ witchery.rite.summonwitch=Rite of Summoning{r||Summon a witch. The inner area mu
 witchery.rite.bindwaystoneportable=Rite of Binding{r||Binds the Waystone to the location of the ritual.
 witchery.rite.bindwaystonecopyportable=Rite of Binding{r||Binds the Waystone location on one waystone to another waystone.
 
+witchery.rite.morsmordre=Rite of the Dark Mark{r||Conjure the Dark Mark high above the circle as an omen of dread.
+witchery.rite.horrocrux=Rite of the Horrocrux{r||Split your soul. The next time you would die, you are restored to life instead and the horrocrux is spent.
+witchery.rite.horrocrux.created=You feel a sliver of your soul tear away and anchor itself. Death will not claim you... once.
+witchery.rite.horrocrux.exists=Your soul is already split; it cannot be divided again until the horrocrux is spent.
+witchery.rite.horrocrux.saved=Your horrocrux shatters as your soul is dragged back into your body!
+witchery.rite.dementorkiss=Rite of the Dementor's Kiss{r||Devour the soul of a creature bound by a taglock, leaving it withered, blind and hollow.
+witchery.rite.dementorkiss.victim=An icy dread engulfs you as something feeds upon your very soul!
+witchery.rite.soulthief=Rite of the Soul Thief{r||Tear a fragment of soul from a bound creature, harvesting it as a subdued spirit.
+witchery.rite.annihilation=Rite of Annihilation{r||Erase all unprotected blocks above the circle in a great dome.
+witchery.rite.fidelio=Rite of Fidelius{r||Conceal the secret-keeper from the world, cleansing and hiding them for a time.
+witchery.rite.fidelio.hidden=The Fidelius charm settles over you; you fade from sight, hidden from the world.
+witchery.rite.unbreakablevow=Rite of the Unbreakable Vow{r||Bind a lasting boon of protection upon all who stand within the circle.
+witchery.rite.unbreakablevow.blessed=An unbreakable vow shields you from harm.
+witchery.rite.secretguardian=Rite of the Secret Guardian{r||Raise a protective dome of barriers around the circle.
+witchery.rite.legilimency=Rite of Legilimency{r||Probe the mind of a bound creature to reveal where it is and what it holds.
+witchery.rite.legilimency.read=Legilimency reveals %s: in %s at (%s, %s, %s), %s health, wielding %s.
+witchery.rite.philosopherstone=Rite of the Philosopher's Stone{r||Perform the Great Work: transmute base metals to gold and yield a priceless reward.
+witchery.rite.promisedland=Rite of the Promised Land{r||Bless the surrounding land into a lush, flowering paradise.
+
 witchery.infuse.cansetrecall=Release mouse button to set Recall Point.
 witchery.infuse.setrecall=- Recall Point set to %s (%s, %s, %s).
 witchery.infuse.canteleport=Teleport charged, release mouse button to teleport.
@@ -818,7 +837,7 @@ witchery.pott.carnosadiem=Carnosa Diem
 witchery.pott.carnosadiem.info=Fleshy feast.
 witchery.pott.ignianima=Ignianima
 witchery.pott.ignianima.info=Soulfire: cause pain equivalent to your own.
-witchery.pott.morsmordre=Morsmordre\nwitchery.pott.morsmordre.info=Conjure the Dark Mark.\n\nwitchery.pott.flipendo=Flipendo\nwitchery.pott.flipendo.info=Push the target away with force.\nwitchery.pott.obliviate=Obliviate\nwitchery.pott.obliviate.info=Erase the target's memory (mobs lose target; players get confused).\nwitchery.pott.confringo=Confringo\nwitchery.pott.confringo.info=Cause a small explosion on impact.\nwitchery.pott.lumosmaxima=Lumos Maxima\nwitchery.pott.lumosmaxima.info=Illuminate a large area with glow globes.\nwitchery.pott.wingardiumleviosa=Wingardium Leviosa\nwitchery.pott.wingardiumleviosa.info=Levitate the target upward. Sneak to launch yourself.\nwitchery.pott.bombarda=Bombarda\nwitchery.pott.bombarda.info=Cause a moderate explosion.\nwitchery.pott.bombardamaxima=Bombarda Maxima\nwitchery.pott.bombardamaxima.info=Cause a massive terrain-destroying explosion.\nwitchery.pott.avis=Avis\nwitchery.pott.avis.info=Summon three owls to attack the target.\nwitchery.pott.oppugno=Oppugno\nwitchery.pott.oppugno.info=Summon three wolves to attack the target.\nwitchery.pott.piertotumlocomotor=Piertotum Locomotor\nwitchery.pott.piertotumlocomotor.info=Animate an iron golem to fight for you.\nwitchery.pott.reducto=Reducto\nwitchery.pott.reducto.info=Obliterate blocks and items in the area.\nwitchery.pott.araniaexumai=Arania Exumai\nwitchery.pott.araniaexumai.info=Blast spiders away; deals heavy damage to them.\nwitchery.pott.silencio=Silencio\nwitchery.pott.silencio.info=Silence a witch, preventing spell casting.\nwitchery.pott.protegomaxima=Protego Maxima\nwitchery.pott.protegomaxima.info=Create a full spherical force shield around you.\nwitchery.pott.revelio=Revelio\nwitchery.pott.revelio.info=Reveal invisible entities nearby and dispel cursed blocks.\nwitchery.pott.reparo=Reparo\nwitchery.pott.reparo.info=Repair all damaged items in your inventory.\nwitchery.pott.expectopatronum=Expecto Patronum\nwitchery.pott.expectopatronum.info=Drive away nearby undead and creepers with a burst of light.\nwitchery.
+witchery.pott.morsmordre=Morsmordre\nwitchery.pott.morsmordre.info=Conjure the Dark Mark.\n\nwitchery.pott.flipendo=Flipendo\nwitchery.pott.flipendo.info=Push the target away with force.\nwitchery.pott.obliviate=Obliviate\nwitchery.pott.obliviate.info=Erase the target's memory (mobs lose target; players get confused).\nwitchery.pott.confringo=Confringo\nwitchery.pott.confringo.info=Cause a small explosion on impact.\nwitchery.pott.lumosmaxima=Lumos Maxima\nwitchery.pott.lumosmaxima.info=Illuminate a large area with glow globes.\nwitchery.pott.wingardiumleviosa=Wingardium Leviosa\nwitchery.pott.wingardiumleviosa.info=Levitate the target upward. Sneak to launch yourself.\nwitchery.pott.bombarda=Bombarda\nwitchery.pott.bombarda.info=Cause a moderate explosion.\nwitchery.pott.bombardamaxima=Bombarda Maxima\nwitchery.pott.bombardamaxima.info=Cause a massive terrain-destroying explosion.\nwitchery.pott.avis=Avis\nwitchery.pott.avis.info=Summon three owls to attack the target.\nwitchery.pott.oppugno=Oppugno\nwitchery.pott.oppugno.info=Summon three wolves to attack the target.\nwitchery.pott.piertotumlocomotor=Piertotum Locomotor\nwitchery.pott.piertotumlocomotor.info=Animate an iron golem to fight for you.\nwitchery.pott.reducto=Reducto\nwitchery.pott.reducto.info=Obliterate blocks and items in the area.\nwitchery.pott.araniaexumai=Arania Exumai\nwitchery.pott.araniaexumai.info=Blast spiders away; deals heavy damage to them.\nwitchery.pott.silencio=Silencio\nwitchery.pott.silencio.info=Silence a witch, preventing spell casting.\nwitchery.pott.protegomaxima=Protego Maxima\nwitchery.pott.protegomaxima.info=Create a full spherical force shield around you.\nwitchery.pott.revelio=Revelio\nwitchery.pott.revelio.info=Reveal invisible entities nearby and dispel cursed blocks.\nwitchery.pott.reparo=Reparo\nwitchery.pott.reparo.info=Repair all damaged items in your inventory.\nwitchery.pott.expectopatronum=Expecto Patronum\nwitchery.pott.expectopatronum.info=Drive away nearby undead and creepers with a burst of light.\nwitchery.pott.telekinesis=Telekinesis\nwitchery.pott.telekinesis.info=Pull a target toward you, or sneak to push it away.\nwitchery.pott.diffindo=Diffindo\nwitchery.pott.diffindo.info=A severing cut that wounds and bleeds the target.\nwitchery.pott.descendo=Descendo\nwitchery.pott.descendo.info=Slam the target violently into the ground and pin it there.\nwitchery.pott.geminio=Geminio\nwitchery.pott.geminio.info=Duplicate a minor item lying on the ground (such as a Waystone or Taglock Kit). Will not copy tools, armour or enchanted gear.
 <truncated 4187 bytes>=Rite of Summoning{r||Call forth an Imp. The inner area must be clear 7x7x4 blocks!
 
 
@@ -916,9 +935,20 @@ witchery:potion.feelnopain=Feel No Pain
 witchery:potion.floating=Floating
 witchery:potion.gasmask=Gas Mask
 witchery:potion.diseased=Disease
+witchery:potion.brittle=Brittle
 witchery:potion.fortune=Luck
 witchery:potion.worship=Worship
 witchery:potion.keepeffects=Sticky Potion Effects
+witchery:potion.phasewalk=Phase Walk
+witchery:potion.rooted=Rooted
+witchery:potion.lifesteal=Lifesteal
+witchery:potion.frailty=Frailty
+witchery:potion.berserk=Berserk
+witchery:potion.pacified=Pacified
+witchery:potion.manasiphon=Mana Siphon
+witchery:potion.comprehension=Comprehension
+witchery:potion.provoke=Provoke
+witchery:potion.spectralsight=Spectral Sight
 
 witchery:potion.colorful=Tinting
 witchery:potion.colorful.black=Tinting Black
@@ -1032,6 +1062,8 @@ witchery:brew.overheating=Overheating
 witchery:brew.wakingnightmare=Waking Nightmare
 witchery:brew.drainmagic=Drain Magic
 witchery:brew.lilify=Lilify
+witchery:brew.regrowth=Regrowth
+witchery:brew.brittle=Brittleness
 witchery:brew.hellgate=Inferno
 witchery:brew.harmdemons=Demonbane
 witchery:brew.harmundead=Undeadbane
@@ -1046,6 +1078,20 @@ witchery:brew.transpose=Transpose
 witchery:brew.stealbuffs=Steal Buffs
 witchery:brew.spreaddebuffs=Spread Debuffs
 witchery:brew.iceworld=Ice World
+witchery:brew.phasewalk=Phase Walk
+witchery:brew.rooted=Rooting
+witchery:brew.lifesteal=Lifesteal
+witchery:brew.frailty=Frailty
+witchery:brew.berserk=Berserk
+witchery:brew.pacified=Pacify
+witchery:brew.manasiphon=Mana Siphon
+witchery:brew.comprehension=Comprehension
+witchery:brew.provoke=Provoke
+witchery:brew.spectralsight=Spectral Sight
+witchery:brew.petrify=Petrify
+witchery:brew.glaciate=Glaciate
+witchery:brew.glasswork=Vitrify
+witchery:brew.soultether=Soul Tether
 
 witchery:brew.skillincrease=You feel more skilled at brewing, perhaps less brew will be wasted from now on.
 
@@ -1161,7 +1207,13 @@ witchery:cauldronbook.tbench=[i Crafting Bench][br][br][stack=%s][stack=%s][stac
 witchery:cauldronbook.tcraft=%s[br][img=witchery:textures/gui/cauldron.png|left|top|30|29] [img=witchery:textures/gui/arrowrightresult.png|left|middle|22|15] [stack=%s|left|middle]
 witchery:cauldronbook.tritual=%s[br][img=witchery:textures/gui/cauldron.png|center|top|30|29]
 
-witchery:cauldronbook.toc=[h1 Witches' Brews]> [url Introduction][br]> [url Brewing][br]> [url=rituals Cauldron Rituals][br]> [url Crafting][br]> [url Other rituals][br]> [url Capacity][br]> [url Power][br]> [url Duration][br]> [url Modifiers][br]> [url Dispersal][br]> [url=toc/effects Effects]
+witchery:cauldronbook.toc=[h1 Witches' Brews]> [url Introduction][br]> [url Brewing][br]> [url=rituals Cauldron Rituals][br]> [url Crafting][br]> [url Other rituals][br]> [url Capacity][br]> [url Power][br]> [url Duration][br]> [url Modifiers][br]> [url Dispersal][br]> [url=toc/effects Effects][br]> [url=toc/additions New Additions]
+
+witchery:cauldronbook.toc/additions=[h1 New Additions]Recent secrets uncovered by the coven:[br][br]> [url=floopowder Floo Powder][br]> [url=floofire Floo Fire][br]> [url=geminio Geminio Charm][br]> [url=glyphbrew Impregnated Glyphs]
+witchery:cauldronbook.floopowder=[next=floofire][h1 Floo Powder]Brewed in the kettle from Ash Wood, redstone and glowstone dust. Cast a pinch onto an open flame and the fire turns an eerie green - this is [url=floofire Floo Fire]. The powder is spent, but the journey it opens is well worth it.[br][br][stack=witchery:ingredient|166 Floo Powder]
+witchery:cauldronbook.floofire=[next=geminio][h1 Floo Fire]An open fire dusted with [url=floopowder Floo Powder] burns green. While [b holding a Waystone bound] to a location, simply step into the green flames to be whisked there at once.[br][br][i The Waystone is the destination key, not fuel - it is never consumed.]
+witchery:cauldronbook.geminio=[next=glyphbrew][h1 Geminio Charm]A Mystic Branch gesture that copies a [b minor] item lying on the ground - such as a Waystone or a Taglock Kit - producing a single duplicate where it lands.[br][br][i It will not copy tools, armour or enchanted gear.]
+witchery:cauldronbook.glyphbrew=[h1 Impregnated Glyphs]Just as a thrown [url dispersal] Triggered brew can curse a lever or button, it can also be cast upon a chalk [b glyph]. Items resting on that glyph drink in the brew, carrying its blessing or curse until used.
 
 witchery:cauldronbook.introduction=[next=cauldron][h1 Introduction]Fill a [url cauldron] to the brim with water and light a fire beneath. When the water boils, throw in your ingredients for either:[br][br]> [url Brewing][br]> [url Rituals][br]> [url Crafting]
 witchery:cauldronbook.cauldron=[next=cauldron2][h1 Cauldron: Recipe]A witch's cauldron is made by placing a normal [i Cauldron] in the world and using [i Anointing Paste] on it:[br][br][template=tbench 6=witchery:ingredient|153 0=witchery:seedsbelladonna 1=witchery:seedsmandrake 2=empty 3=witchery:seedsartichoke 4=witchery:seedssnowbell 5=empty 7=empty 8=empty 9=empty]
@@ -1657,6 +1709,9 @@ item.witchery:mirror.tip.bridgeplus={5Hollow (%s: %d, %d, %d){0
 item.witchery:mirror.tip.inhabited={3Inhabited{0
 entity.witchery.reflection.name=Reflection
 item.witchery:ingredient.heartofgold.name=Heart of Gold
+item.witchery:ingredient.floopowder.name=Floo Powder
+tile.witchery:floofire.name=Floo Fire
+witchery.book.floopowder=[h1 Floo Powder]Brewed in the kettle from Ash Wood, redstone and glowstone dust. Cast a pinch onto a burning fire and the flames turn an eerie green. While holding a Waystone bound to a location, step into the green Floo Fire to be whisked there at once. The Waystone is the key, not fuel - it is never consumed.
 
 witchery.rite.infusionmirror=Rite of Infusion{r||Trap a Demon into a mirror.
 witchery:brew.animalattraction=Animal Attraction
@@ -1776,3 +1831,15 @@ witchery.pott.incarcerous=Incarcerous
 witchery.pott.incarcerous.info=Incarcerous
 witchery.pott.vermillious=Vermillious
 witchery.pott.vermillious.info=Vermillious
+
+witchery.rite.reparo=Rite of Reparo
+witchery.rite.identify=Rite of Identification
+witchery.rite.aparecium=Rite of Aparecium
+witchery.rite.vociferador=Rite of the Howler
+witchery.rite.lumosmaxima=Rite of Lumos Maxima
+witchery.rite.dimensionalanchor=Rite of Dimensional Anchor
+witchery.rite.empaticlink=Rite of Empathic Link
+witchery.rite.herbivicus=Rite of Herbivicus
+witchery.rite.identify.result=Identification reveals: %s
+witchery.rite.identify.enchanted=This item is enchanted!
+witchery.rite.magicalprison=Magical Prison

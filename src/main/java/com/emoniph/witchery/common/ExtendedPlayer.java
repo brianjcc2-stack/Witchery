@@ -73,6 +73,7 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
    private int creatureType;
    private int werewolfLevel;
    private int vampireLevel;
+   private int spiritLevel;
    private int bloodPower;
    private int bloodReserve;
    private int vampireUltimate;
@@ -134,6 +135,7 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
       props.setInteger("PotionThrowing", this.skillLevelPotionThrowing);
       props.setInteger("CreatureType", this.creatureType);
       props.setInteger("WerewolfLevel", this.werewolfLevel);
+      props.setInteger("SpiritLevel", this.spiritLevel);
       props.setInteger("WolfmanQuestState", this.wolfmanQuestState);
       props.setInteger("WolfmanQuestCounter", this.wolfmanQuestCounter);
       props.setLong("LastBoneFind", this.lastBoneFind);
@@ -194,6 +196,7 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
          this.skillLevelPotionThrowing = MathHelper.clamp_int(props.getInteger("PotionThrowing"), 0, 100);
          this.creatureType = MathHelper.clamp_int(props.getInteger("CreatureType"), 0, 5);
          this.werewolfLevel = MathHelper.clamp_int(props.getInteger("WerewolfLevel"), 0, 10);
+         this.spiritLevel = MathHelper.clamp_int(props.getInteger("SpiritLevel"), 0, 10);
          this.wolfmanQuestState = MathHelper.clamp_int(props.getInteger("WolfmanQuestState"), 0, ExtendedPlayer.QuestState.values().length - 1);
          this.wolfmanQuestCounter = MathHelper.clamp_int(props.getInteger("WolfmanQuestCounter"), 0, 100);
          this.visitedChunks.clear();
@@ -353,6 +356,23 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
          Shapeshift.INSTANCE.initCurrentShift(this.player);
       }
 
+   }
+
+   public int getSpiritLevel() {
+      return this.spiritLevel;
+   }
+
+   public void setSpiritLevel(int level) {
+      if(this.spiritLevel != level && level >= 0 && level <= 10) {
+         this.spiritLevel = level;
+         this.sync();
+      }
+   }
+
+   public void increaseSpiritLevel() {
+      if(this.spiritLevel < 10) {
+         this.setSpiritLevel(this.spiritLevel + 1);
+      }
    }
 
    public int getHumanBlood() {

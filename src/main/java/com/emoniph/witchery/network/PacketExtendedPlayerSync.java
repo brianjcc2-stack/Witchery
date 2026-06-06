@@ -12,6 +12,7 @@ public class PacketExtendedPlayerSync implements IMessage {
 
    private int werewolfLevel;
    private int vampireLevel;
+   private int spiritLevel;
    private int bloodLevel;
    private int ultimate;
    private int creatureOrdinal;
@@ -26,6 +27,7 @@ public class PacketExtendedPlayerSync implements IMessage {
       this.werewolfLevel = extendedPlayer.getWerewolfLevel();
       this.creatureOrdinal = extendedPlayer.getCreatureTypeOrdinal();
       this.vampireLevel = extendedPlayer.getVampireLevel();
+      this.spiritLevel = extendedPlayer.getSpiritLevel();
       this.bloodLevel = extendedPlayer.getBloodPower();
       this.selected = extendedPlayer.getSelectedVampirePower().ordinal();
       this.ultimate = extendedPlayer.getVampireUltimate().ordinal();
@@ -37,6 +39,7 @@ public class PacketExtendedPlayerSync implements IMessage {
       buffer.writeInt(this.werewolfLevel);
       buffer.writeInt(this.creatureOrdinal);
       buffer.writeInt(this.vampireLevel);
+      buffer.writeInt(this.spiritLevel);
       buffer.writeInt(this.bloodLevel);
       buffer.writeInt(this.selected);
       buffer.writeInt(this.ultimate);
@@ -48,6 +51,7 @@ public class PacketExtendedPlayerSync implements IMessage {
       this.werewolfLevel = buffer.readInt();
       this.creatureOrdinal = buffer.readInt();
       this.vampireLevel = buffer.readInt();
+      this.spiritLevel = buffer.readInt();
       this.bloodLevel = buffer.readInt();
       this.selected = buffer.readInt();
       this.ultimate = buffer.readInt();
@@ -63,6 +67,7 @@ public class PacketExtendedPlayerSync implements IMessage {
          playerEx.setWerewolfLevel(message.werewolfLevel);
          playerEx.setCreatureTypeOrdinal(message.creatureOrdinal);
          playerEx.setVampireLevel(message.vampireLevel);
+         playerEx.setSpiritLevel(message.spiritLevel);
          playerEx.setBloodPower(message.bloodLevel);
          playerEx.setSelectedVampirePower(ExtendedPlayer.VampirePower.values()[message.selected], false);
          playerEx.setVampireUltimate(ExtendedPlayer.VampireUltimate.values()[message.ultimate], message.ultimateCharges);

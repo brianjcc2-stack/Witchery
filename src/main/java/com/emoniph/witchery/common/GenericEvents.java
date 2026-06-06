@@ -470,6 +470,17 @@ public class GenericEvents {
       priority = EventPriority.HIGH
    )
    public void onEntityInteract(EntityInteractEvent event) {
+      if (com.emoniph.witchery.dimension.WorldProviderDreamWorld.getPlayerIsGhost(event.entityPlayer)) {
+         ExtendedPlayer playerEx = ExtendedPlayer.get(event.entityPlayer);
+         if (playerEx.getSpiritLevel() >= 6 && event.entityPlayer.getHeldItem() == null && event.entityPlayer.isSneaking() && event.target instanceof EntityLivingBase) {
+            if(!event.entityPlayer.worldObj.isRemote) {
+               event.entityPlayer.mountEntity(event.target);
+            }
+            event.setCanceled(true);
+            return;
+         }
+      }
+
       PotionEffect effect = event.entityPlayer.getActivePotionEffect(Witchery.Potions.PARALYSED);
       if(effect != null && effect.getAmplifier() >= 4) {
          event.setCanceled(true);
@@ -827,8 +838,41 @@ public class GenericEvents {
 
    @SubscribeEvent
    public void onLivingUpdate(LivingUpdateEvent event) {
+      if (event.entity instanceof EntityLivingBase && event.entity.riddenByEntity instanceof EntityPlayer) {
+         EntityPlayer rider = (EntityPlayer)event.entity.riddenByEntity;
+         if (com.emoniph.witchery.dimension.WorldProviderDreamWorld.getPlayerIsGhost(rider) && ExtendedPlayer.get(rider).getSpiritLevel() >= 6) {
+             EntityLivingBase mount = (EntityLivingBase)event.entity;
+             mount.rotationYaw = rider.rotationYaw;
+             mount.rotationYawHead = rider.rotationYawHead;
+             mount.rotationPitch = rider.rotationPitch;
+             mount.moveForward = rider.moveForward * 1.5f; 
+             mount.moveStrafing = rider.moveStrafing * 1.5f;
+             boolean isJumping = false;
+             try {
+                 isJumping = ((Boolean) cpw.mods.fml.relauncher.ReflectionHelper.getPrivateValue(net.minecraft.entity.EntityLivingBase.class, rider, "isJumping", "field_70703_bu")).booleanValue();
+             } catch (Exception e) {}
+             if (isJumping && mount instanceof net.minecraft.entity.EntityLiving) {
+                 ((net.minecraft.entity.EntityLiving)mount).getJumpHelper().setJumping();
+             }
+         }
+      }
+
       if(!event.entity.worldObj.isRemote && event.entity instanceof EntityPlayer) {
          EntityPlayer player = (EntityPlayer)event.entity;
+         
+         EntityLivingBase imperioTarget = com.emoniph.witchery.infusion.infusions.symbols.SymbolEffectImperio.IMPERIO_TARGETS.get(player);
+         if (imperioTarget != null) {
+             if (player.openContainer == player.inventoryContainer) {
+                 com.emoniph.witchery.infusion.infusions.symbols.SymbolEffectImperio.IMPERIO_TARGETS.remove(player);
+                 player.removePotionEffect(Witchery.Potions.PARALYSED.id);
+                 imperioTarget.removePotionEffect(Witchery.Potions.PARALYSED.id);
+             } else if (!imperioTarget.isEntityAlive()) {
+                 player.closeScreen();
+                 com.emoniph.witchery.infusion.infusions.symbols.SymbolEffectImperio.IMPERIO_TARGETS.remove(player);
+                 player.removePotionEffect(Witchery.Potions.PARALYSED.id);
+             }
+         }
+         
          ExtendedPlayer playerEx = ExtendedPlayer.get(player);
          Shapeshift.INSTANCE.updatePlayerState(player, playerEx);
          playerEx.tick();
@@ -1481,6 +1525,18 @@ public class GenericEvents {
                   playerEx1.increaseVampireLevel();
                } else {
                   playerEx1.increaseVampireQuestCounter();
+               }
+            }
+
+            if(player1.dimension == Config.instance().dimensionDreamID && com.emoniph.witchery.dimension.WorldProviderDreamWorld.getPlayerIsGhost(player1)) {
+               if (event.entityLiving != null && event.entityLiving.getClass().getSimpleName().contains("Nightmare")) {
+                  if (player1.worldObj.rand.nextInt(3) == 0 && playerEx1.getSpiritLevel() < 10) {
+                     playerEx1.increaseSpiritLevel();
+                     if (!player1.worldObj.isRemote) {
+                        com.emoniph.witchery.util.ChatUtil.sendTranslated(net.minecraft.util.EnumChatFormatting.DARK_PURPLE, player1, "Tu poder espiritual aumenta.", new Object[0]);
+                        com.emoniph.witchery.util.SoundEffect.RANDOM_LEVELUP.playOnlyTo(player1);
+                     }
+                  }
                }
             }
 

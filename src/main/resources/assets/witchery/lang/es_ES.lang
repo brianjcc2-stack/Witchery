@@ -958,3 +958,15 @@ witchery.pott.incarcerous=Incarcerous
 witchery.pott.incarcerous.info=Incarcerous
 witchery.pott.vermillious=Vermillious
 witchery.pott.vermillious.info=Vermillious
+
+witchery.rite.reparo=Ritual de Reparación
+witchery.rite.identify=Ritual de Identificación
+witchery.rite.aparecium=Ritual de Aparecium
+witchery.rite.vociferador=Ritual del Vociferador
+witchery.rite.lumosmaxima=Ritual de Luz Eterna (Lumos Maxima)
+witchery.rite.dimensionalanchor=Ritual de Anclaje Dimensional
+witchery.rite.empaticlink=Ritual de Vínculo Empático
+witchery.rite.herbivicus=Ritual de Crecimiento Fenfocalizado (Herbivicus)
+witchery.rite.identify.result=La identificación revela: %s
+witchery.rite.identify.enchanted=¡Este ítem está encantado!
+witchery.rite.magicalprison=Prisión Mágica
