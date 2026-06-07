@@ -183,6 +183,10 @@ public class WitcheryPotions {
    public final Potion VOODOO_LINK = this.register("witchery:potion.voodoolink", PotionVoodooLink.class);
    public final Potion POLYMORPH = this.register("witchery:potion.polymorph", PotionPolymorph.class);
    public final Potion FRENZY = this.register("witchery:potion.frenzy", PotionFrenzy.class);
+   public final Potion ETHEREAL_CHAINS = this.register("witchery:potion.etherealchains", PotionEtherealChains.class);
+   public final Potion MARIONETTE = this.register("witchery:potion.marionette", PotionMarionette.class);
+   public final Potion SIREN_SONG = this.register("witchery:potion.sirensong", PotionSirenSong.class);
+   public final Potion SILENCE = this.register("witchery:potion.silence", PotionSilence.class);
 
 
    private Potion register(String unlocalisedName, Class clazz) {

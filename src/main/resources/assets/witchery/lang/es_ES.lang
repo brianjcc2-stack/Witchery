@@ -970,3 +970,37 @@ witchery.rite.herbivicus=Ritual de Crecimiento Fenfocalizado (Herbivicus)
 witchery.rite.identify.result=La identificaciÃ³n revela: %s
 witchery.rite.identify.enchanted=Â¡Este Ã­tem estÃ¡ encantado!
 witchery.rite.magicalprison=PrisiÃ³n MÃ¡gica
+
+witchery:brew.soulswap=Intercambio de Almas
+witchery:brew.astralprojection=ProyecciÃ³n Astral
+witchery:brew.banishment=Destierro
+witchery:brew.voodoolink=VÃ­nculo VudÃº
+witchery:brew.polymorph=Polimorfia
+witchery:brew.frenzy=FrenesÃ­
+witchery:brew.covencall=Llamado del Aquelarre
+witchery:potion.banishment=Desterrado
+witchery:potion.astralprojection=Forma Astral
+witchery:potion.voodoolink=VudÃº Vinculado
+witchery:potion.polymorph=Polimorfado
+witchery:potion.frenzy=FrenÃ©tico
+
+witchery:cauldronbook.soulswap=[h1 Effect: Intercambio de Almas]Intercambia la ubicaciÃ³n fÃ­sica del lanzador y el objetivo.
+witchery:cauldronbook.astralprojection=[h1 Effect: ProyecciÃ³n Astral]Otorga la habilidad de dejar tu cuerpo fÃ­sico atrÃ¡s y volar libremente como un espÃ­ritu.
+witchery:cauldronbook.banishment=[h1 Effect: Destierro]Teletransporta forzosamente al objetivo al Nether durante el efecto.
+witchery:cauldronbook.voodoolink=[h1 Effect: VÃ­nculo VudÃº]Vincula al objetivo con el lanzador. El daÃ±o que reciba el objetivo es redirigido al lanzador.
+witchery:cauldronbook.polymorph=[h1 Effect: Polimorfia]Transforma visualmente al objetivo en un cerdo inofensivo.
+witchery:cauldronbook.frenzy=[h1 Effect: FrenesÃ­]Causa que el monstruo objetivo pierda la cabeza y ataque cualquier cosa cercana.
+witchery:cauldronbook.covencall=[h1 Effect: Llamado del Aquelarre]Invoca a miembros de tu aquelarre a tu lado para asistirte.
+
+witchery:cauldronbook.amnesia=[h1 Effect: Amnesia]Hace que la víctima olvide cómo organizar su inventario, desordenando todos los objetos que lleva.
+witchery:cauldronbook.spectralthief=[h1 Effect: Ladrón Espectral]Arrebata el objeto que la víctima tiene en la mano y lo transfiere a tu propio inventario.
+witchery:cauldronbook.doppelganger=[h1 Effect: Doppelgänger]Invoca una réplica exacta de ti con tu equipamiento actual mientras te vuelve invisible.
+witchery:cauldronbook.etherealchains=[h1 Effect: Cadenas Etéreas]Ancla a la víctima a su ubicación actual. Si se aleja demasiado, es arrastrada de vuelta forzosamente.
+witchery:cauldronbook.marionette=[h1 Effect: Marioneta]Vincula la mente de la víctima a la tuya, forzándola a caminar y mirar exactamente a donde tú lo hagas.
+witchery:cauldronbook.sirensong=[h1 Effect: Canto de Sirena]Emite un aura que hipnotiza a las criaturas hostiles cercanas, haciendo que caminen pacíficamente hacia ti.
+witchery:cauldronbook.silence=[h1 Effect: Silencio]Una poderosa guardia antimagia que obliga a la víctima a soltar cualquier rama mística o brebaje que intente sostener.
+
+witchery:potion.etherealchains=Cadenas Etéreas
+witchery:potion.marionette=Controlado
+witchery:potion.sirensong=Canto de Sirena
+witchery:potion.silence=Silenciado

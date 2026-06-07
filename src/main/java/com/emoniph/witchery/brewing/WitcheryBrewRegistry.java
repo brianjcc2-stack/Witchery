@@ -1923,6 +1923,15 @@ public class WitcheryBrewRegistry {
       this.register(new BrewPotionEffect(new BrewItemKey(Items.saddle), new BrewNamePart("witchery:brew.polymorph"), new AltarPower(1500), new Probability(1.0D), Witchery.Potions.POLYMORPH, (long)com.emoniph.witchery.util.TimeUtil.secsToTicks(60), new EffectLevel(6)));
       this.register(new BrewPotionEffect(new BrewItemKey(Items.iron_sword), new BrewNamePart("witchery:brew.frenzy"), new AltarPower(1500), new Probability(1.0D), Witchery.Potions.FRENZY, (long)com.emoniph.witchery.util.TimeUtil.secsToTicks(30), new EffectLevel(5)));
       this.register(new com.emoniph.witchery.brewing.action.effect.BrewActionCovenCall(new BrewItemKey(Items.book), new BrewNamePart("witchery:brew.covencall"), new AltarPower(4000), new Probability(1.0D), new EffectLevel(6)));
+      
+      // NEW CUSTOM BREWS (Batch 2)
+      this.register(new com.emoniph.witchery.brewing.action.effect.BrewActionAmnesia(new BrewItemKey(Items.map), new BrewNamePart("witchery:brew.amnesia"), new AltarPower(1000), new Probability(1.0D), new EffectLevel(4)));
+      this.register(new com.emoniph.witchery.brewing.action.effect.BrewActionSpectralThief(new BrewItemKey(Items.shears), new BrewNamePart("witchery:brew.spectralthief"), new AltarPower(1500), new Probability(1.0D), new EffectLevel(5)));
+      this.register(new com.emoniph.witchery.brewing.action.effect.BrewActionDoppelganger(new BrewItemKey(Items.name_tag), new BrewNamePart("witchery:brew.doppelganger"), new AltarPower(2500), new Probability(1.0D), new EffectLevel(8)));
+      this.register(new BrewPotionEffect(new BrewItemKey(Items.fishing_rod), new BrewNamePart("witchery:brew.etherealchains"), new AltarPower(2000), new Probability(1.0D), Witchery.Potions.ETHEREAL_CHAINS, (long)com.emoniph.witchery.util.TimeUtil.secsToTicks(30), new EffectLevel(6)));
+      this.register(new com.emoniph.witchery.brewing.action.effect.BrewActionMarionette(new BrewItemKey(Items.string), new BrewNamePart("witchery:brew.marionette"), new AltarPower(3000), new Probability(1.0D), new EffectLevel(8)));
+      this.register(new BrewPotionEffect(new BrewItemKey(Items.reeds), new BrewNamePart("witchery:brew.sirensong"), new AltarPower(2000), new Probability(1.0D), Witchery.Potions.SIREN_SONG, (long)com.emoniph.witchery.util.TimeUtil.secsToTicks(30), new EffectLevel(6)));
+      this.register(new BrewPotionEffect(new BrewItemKey(Blocks.sponge), new BrewNamePart("witchery:brew.silence"), new AltarPower(3000), new Probability(1.0D), Witchery.Potions.SILENCE, (long)com.emoniph.witchery.util.TimeUtil.secsToTicks(15), new EffectLevel(8)));
    }
 
    public List getRecipes() {

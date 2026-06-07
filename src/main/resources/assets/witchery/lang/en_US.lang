@@ -1276,9 +1276,7 @@ item.witchery:cauldronbook.tip=The definitive guide to cauldrons and potion brew
 witchery:cauldronbook.tbench=[i Crafting Bench][br][br][stack=%s][stack=%s][stack=%s][br][stack=%s][stack=%s][stack=%s] [img=witchery:textures/gui/arrowrightresult.png|left|middle|22|15] [stack=%s|left|middle][br] [stack=%s][stack=%s][stack=%s]
 witchery:cauldronbook.tcraft=%s[br][img=witchery:textures/gui/cauldron.png|left|top|30|29] [img=witchery:textures/gui/arrowrightresult.png|left|middle|22|15] [stack=%s|left|middle]
 witchery:cauldronbook.tritual=%s[br][img=witchery:textures/gui/cauldron.png|center|top|30|29]
-
 witchery:cauldronbook.toc=[h1 Witches' Brews]> [url Introduction][br]> [url Brewing][br]> [url=rituals Cauldron Rituals][br]> [url Crafting][br]> [url Other rituals][br]> [url Capacity][br]> [url Power][br]> [url Duration][br]> [url Modifiers][br]> [url Dispersal][br]> [url=toc/effects Effects][br]> [url=toc/additions New Additions]
-
 witchery:cauldronbook.toc/additions=[h1 New Additions]Recent secrets uncovered by the coven:[br][br]> [url=floopowder Floo Powder][br]> [url=floofire Floo Fire][br]> [url=geminio Geminio Charm][br]> [url=glyphbrew Impregnated Glyphs]
 witchery:cauldronbook.floopowder=[next=floofire][h1 Floo Powder]Brewed in the kettle from Ash Wood, redstone and glowstone dust. Cast a pinch onto an open flame and the fire turns an eerie green - this is [url=floofire Floo Fire]. The powder is spent, but the journey it opens is well worth it.[br][br][stack=witchery:ingredient|166 Floo Powder]
 witchery:cauldronbook.floofire=[next=geminio][h1 Floo Fire]An open fire dusted with [url=floopowder Floo Powder] burns green. While [b holding a Waystone bound] to a location, simply step into the green flames to be whisked there at once.[br][br][i The Waystone is the destination key, not fuel - it is never consumed.]
@@ -1370,15 +1368,18 @@ witchery:cauldronbook.level4_2=[next=level4_3][h1 Effect: Level 4][stack=witcher
 witchery:cauldronbook.level4_3=[next=level4_4][h1 Effect: Level 4][stack=golden_apple][url=absorbtion|middle Absorption][br][stack=golden_apple|1][url=healthboost|middle Health boost][br][stack=witchery:ingredient|112][url=wasting|middle Wasting][br][stack=fermented_spider_eye][stack=witchery:ingredient|112][url=fullness|middle Fullness][br][stack=witchery:ingredient|36][url=revealing|middle Revealing][br][stack=tallgrass|0][url=volatility|middle Volatility]
 witchery:cauldronbook.level4_4=[next=level4_5][h1 Effect: Level 4][stack=witchery:ingredient|28][url=stoutbelly|middle Stout belly][br][stack=poisonous_potato][url=blight|middle Blight][br][stack=ender_pearl][url=transpose|middle Transpose][br][stack=iron_ingot][url=transposeore|middle Transpose ore][br][stack=bone][url=raisedead|middle Raise dead][br][stack=quartz][url=raiseland|middle Raise land]
 witchery:cauldronbook.level4_5=[next=level4_6][h1 Effect: Level 4][stack=soul_sand][url=gruesprey|middle Grue's Prey][br][stack=witchery:ingredient|34][url=absorbmagic|middle Absorb magic][br][stack=skull|1][url=wither|middle Wither][br][stack=witchery:ingredient|157][url=harmwerewolves|middle Harm Werewolves][br][stack=witchery:garlic][url=weakenvampires|middle Weaken Vampires]
-witchery:cauldronbook.level4_6=[h1 Effect: Level 4][stack=witchery:ingredient|165][url=animalattraction|middle Animal attraction][br][stack=fermented_spider_eye][stack=witchery:ingredient|165][url=animalrepulsion|middle Animal replusion][br][stack=name_tag][url=comprehension|middle Comprehension][br][stack=packed_ice][url=glaciate|middle Glaciate][br][stack=sandstone][url=glasswork|middle Glasswork]
+witchery:cauldronbook.level4_6=[next=level4_7][h1 Effect: Level 4][stack=witchery:ingredient|165][url=animalattraction|middle Animal attraction][br][stack=fermented_spider_eye][stack=witchery:ingredient|165][url=animalrepulsion|middle Animal replusion][br][stack=name_tag][url=comprehension|middle Comprehension][br][stack=packed_ice][url=glaciate|middle Glaciate][br][stack=sandstone][url=glasswork|middle Glasswork]
+witchery:cauldronbook.level4_7=[h1 Effect: Level 4][stack=lead][url=soulswap|middle Soul Swap][br][stack=map][url=amnesia|middle Amnesia]
 
 witchery:cauldronbook.level5=[next=level5_2][h1 Effect: Level 5][stack=witchery:ingredient|38][url=inferno|middle Inferno][br][stack=gold_ingot][url=blast|middle Blast][br][stack=double_plant][url=poisontoad|middle Poison Toad][br][stack=ender_eye][url=iceworld|middle Ice World][br][stack=witchery:ingredient|79][url=iceshell|middle Ice shell][br][stack=witchery:ingredient|66][url=reflectdamage|middle Reflect damage]
-witchery:cauldronbook.level5_2=[h1 Effect: Level 5][stack=ice][url=demonbane|middle Demonbane][br][stack=melon][url=lifesteal|middle Lifesteal][br][stack=fire_charge][url=berserk|middle Berserk]
+witchery:cauldronbook.level5_2=[h1 Effect: Level 5][stack=ice][url=demonbane|middle Demonbane][br][stack=melon][url=lifesteal|middle Lifesteal][br][stack=fire_charge][url=berserk|middle Berserk][br][stack=iron_sword][url=frenzy|middle Frenzy][br][stack=shears][url=spectralthief|middle Spectral Thief]
 
 witchery:cauldronbook.level6=[next=level6_2][h1 Effect: Level 6][stack=fish|1][url=undeadscurse|middle Undead's Curse][br][stack=witchery:bramble|1][url=illfitting|middle Ill Fitting][br][stack=witchery:ingredient|33][url=reincarnate|middle Reincarnate][br][stack=witchery:ingredient|74][url=durationboost|middle Duration Boost][br][stack=emerald][url=resizing|middle Resizing][br][stack=skull|0][url=stealbuffs|middle Steal buffs]
-witchery:cauldronbook.level6_2=[stack=clay_ball][url=fortune|middle Fortune][br][stack=witchery:ingredient|114][url=drainmagic|middle Drain magic][br][stack=glass_pane][url=phasewalk|middle Phasewalk][br][stack=experience_bottle][url=manasiphon|middle Mana Siphon][br][stack=stonebrick][url=petrify|middle Petrify]
+witchery:cauldronbook.level6_2=[next=level6_3][h1 Effect: Level 6][stack=clay_ball][url=fortune|middle Fortune][br][stack=witchery:ingredient|114][url=drainmagic|middle Drain magic][br][stack=glass_pane][url=phasewalk|middle Phasewalk][br][stack=experience_bottle][url=manasiphon|middle Mana Siphon][br][stack=stonebrick][url=petrify|middle Petrify]
+witchery:cauldronbook.level6_3=[h1 Effect: Level 6][stack=bed][url=astralprojection|middle Astral Projection][br][stack=paper][url=voodoolink|middle Voodoo Link][br][stack=saddle][url=polymorph|middle Polymorph][br][stack=fishing_rod][url=etherealchains|middle Ethereal Chains][br][stack=reeds][url=sirensong|middle Siren's Song][br][stack=book][url=covencall|middle Coven's Call]
 
-witchery:cauldronbook.level8=[h1 Effect: Level 8][stack=witchery:ingredient|113][url=keepinventory|middle Keep inventory][br][stack=witchery:biomenote][url=shiftingseasons|middle Shifting seasons][br][stack=skull|4][url=spreaddebuffs|middle Spread debuffs][br][stack=witchery:ingredient|40][url=keepeffects|middle Keep effects][br][stack=clock][url=soultether|middle Soul Tether]
+witchery:cauldronbook.level8=[next=level8_2][h1 Effect: Level 8][stack=witchery:ingredient|113][url=keepinventory|middle Keep inventory][br][stack=witchery:biomenote][url=shiftingseasons|middle Shifting seasons][br][stack=skull|4][url=spreaddebuffs|middle Spread debuffs][br][stack=witchery:ingredient|40][url=keepeffects|middle Keep effects][br][stack=clock][url=soultether|middle Soul Tether]
+witchery:cauldronbook.level8_2=[h1 Effect: Level 8][stack=iron_door][url=banishment|middle Banishment][br][stack=name_tag][url=doppelganger|middle Doppelganger][br][stack=string][url=marionette|middle Marionette][br][stack=sponge][url=silence|middle Silence]
 
 witchery:cauldronbook.level12=[h1 Effect: Level 12][stack=witchery:witchhat][url=leonard|middle Summon Leonard]
 
@@ -1886,3 +1887,36 @@ witchery:cauldronbook.phasewalk=[h1 Effect: Phasewalk]Allows the imbiber to pass
 witchery:cauldronbook.manasiphon=[h1 Effect: Mana Siphon]Drains magical energy from targets to restore the caster's.
 witchery:cauldronbook.petrify=[h1 Effect: Petrify]Roots the target to the spot and turns their skin to stone.
 witchery:cauldronbook.soultether=[h1 Effect: Soul Tether]Tethers the target's soul to yours, pulling them to you across dimensions.
+
+witchery:brew.soulswap=Soul Swap
+witchery:brew.astralprojection=Astral Projection
+witchery:brew.banishment=Banishment
+witchery:brew.voodoolink=Voodoo Link
+witchery:brew.polymorph=Polymorph
+witchery:brew.frenzy=Frenzy
+witchery:brew.covencall=Coven's Call
+witchery:potion.banishment=Banished
+witchery:potion.astralprojection=Astral Form
+witchery:potion.voodoolink=Voodoo Bound
+witchery:potion.polymorph=Polymorphed
+witchery:potion.frenzy=Frenzied
+
+witchery:cauldronbook.soulswap=[h1 Effect: Soul Swap]Swaps the physical location of the caster and the target.
+witchery:cauldronbook.astralprojection=[h1 Effect: Astral Projection]Grants the ability to leave your physical body behind and fly freely as a spirit.
+witchery:cauldronbook.banishment=[h1 Effect: Banishment]Forcefully teleports the target to the Nether for the duration of the effect.
+witchery:cauldronbook.voodoolink=[h1 Effect: Voodoo Link]Links the target to the caster. Any damage the target receives is redirected to the caster instead.
+witchery:cauldronbook.polymorph=[h1 Effect: Polymorph]Visually transforms the target into a harmless pig.
+witchery:cauldronbook.frenzy=[h1 Effect: Frenzy]Causes the targeted monster to lose its mind and attack anything nearby.
+witchery:cauldronbook.covencall=[h1 Effect: Coven's Call]Summons members of your coven to your side to assist you.
+witchery:cauldronbook.amnesia=[h1 Effect: Amnesia]Causes the victim to forget how to organize their inventory, completely scrambling the items they hold.
+witchery:cauldronbook.spectralthief=[h1 Effect: Spectral Thief]Steals the item currently held by the target and places it in your own inventory.
+witchery:cauldronbook.doppelganger=[h1 Effect: Doppelganger]Spawns an exact replica of yourself holding your current equipment while turning you invisible.
+witchery:cauldronbook.etherealchains=[h1 Effect: Ethereal Chains]Anchors the victim to their current location. If they move too far, they are forcefully pulled back.
+witchery:cauldronbook.marionette=[h1 Effect: Marionette]Links the victim's mind to yours, forcing them to walk and look exactly where you do.
+witchery:cauldronbook.sirensong=[h1 Effect: Siren's Song]Emits an aura that mesmerizes nearby hostile creatures, causing them to walk peacefully towards you.
+witchery:cauldronbook.silence=[h1 Effect: Silence]A powerful anti-magic ward that forces the victim to drop any Witchery wands or brews they try to hold.
+
+witchery:potion.etherealchains=Ethereally Chained
+witchery:potion.marionette=Marionetted
+witchery:potion.sirensong=Siren's Aura
+witchery:potion.silence=Silenced
