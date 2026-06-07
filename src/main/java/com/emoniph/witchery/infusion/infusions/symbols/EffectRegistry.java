@@ -1656,7 +1656,10 @@ public class EffectRegistry {
                         for (int y = -15; y <= 15; ++y) {
                             for (int z = -15; z <= 15; ++z) {
                                 Block _finB = world.getBlock(px + x, py + y, pz + z);
-                                if (_finB == Witchery.Blocks.FORCE || _finB == Witchery.Blocks.BARRIER || _finB == Witchery.Blocks.GLOW_GLOBE) {
+                                if (_finB == Witchery.Blocks.FORCE || _finB == Witchery.Blocks.BARRIER || _finB == Witchery.Blocks.GLOW_GLOBE
+                                    || _finB == Witchery.Blocks.CIRCLE || _finB == Witchery.Blocks.BRAMBLE || _finB == Witchery.Blocks.VOID_BRAMBLE
+                                    || _finB == Witchery.Blocks.PIT_DIRT || _finB == Witchery.Blocks.PIT_GRASS || _finB == net.minecraft.init.Blocks.web 
+                                    || _finB == net.minecraft.init.Blocks.fire) {
                                     world.setBlockToAir(px + x, py + y, pz + z);
                                     ParticleEffect.SMOKE.send(SoundEffect.RANDOM_FIZZ, world, px + x, py + y, pz + z, 0.5D, 0.5D, 16);
                                 }
@@ -1977,10 +1980,20 @@ public class EffectRegistry {
             @Override
             public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
                 if (!world.isRemote) {
-                    for (int i = 0; i < 40; ++i) {
-                        world.spawnParticle("largesmoke", spell.posX + world.rand.nextGaussian() * 3.0, spell.posY + world.rand.nextGaussian() * 3.0, spell.posZ + world.rand.nextGaussian() * 3.0, 0.0, 0.0, 0.0);
+                    for (int i = 0; i < 300; ++i) {
+                        world.spawnParticle("largesmoke", spell.posX + world.rand.nextGaussian() * 4.0, spell.posY + world.rand.nextGaussian() * 4.0, spell.posZ + world.rand.nextGaussian() * 4.0, 0.0, 0.0, 0.0);
                     }
-                    ParticleEffect.SMOKE.send(SoundEffect.RANDOM_FIZZ, spell, 4.0, 4.0, 16);
+                    ParticleEffect.SMOKE.send(SoundEffect.RANDOM_FIZZ, spell, 8.0, 8.0, 16);
+                    
+                    List list = world.getEntitiesWithinAABB(EntityLivingBase.class, spell.boundingBox.expand(5.0D, 5.0D, 5.0D));
+                    for (Object obj : list) {
+                        EntityLivingBase target = (EntityLivingBase)obj;
+                        if (target == caster || (caster instanceof EntityPlayer && target instanceof EntityPlayer && !MinecraftServer.getServer().isPVPEnabled())) {
+                            target.addPotionEffect(new PotionEffect(Potion.invisibility.id, 200, 0));
+                        } else {
+                            target.addPotionEffect(new PotionEffect(Potion.blindness.id, 100, 0));
+                        }
+                    }
                 }
             }
         }, new StrokeSet(1, new byte[]{(byte)1,(byte)2,(byte)2,(byte)2}));
