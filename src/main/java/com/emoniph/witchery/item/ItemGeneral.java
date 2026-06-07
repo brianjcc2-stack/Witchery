@@ -1124,25 +1124,17 @@ public class ItemGeneral extends ItemBase {
 
    public boolean onItemUseFirst(ItemStack stack, EntityPlayer player, World world, int x, int y, int z, int side, float hitX, float hitY, float hitZ) {
       Block block = BlockUtil.getBlock(world, x, y, z);
-      if(this.itemWaystoneBound.isMatch(stack) && block == Witchery.Blocks.CRYSTAL_BALL) {
-         if(!world.isRemote && BlockCrystalBall.tryConsumePower(world, player, x, y, z)) {
-            NBTTagCompound tag = stack.getTagCompound();
-            if(tag != null && tag.hasKey("PosX") && tag.hasKey("PosY") && tag.hasKey("PosZ") && tag.hasKey("PosD")) {
-               int newX = tag.getInteger("PosX");
-               int newY = tag.getInteger("PosY");
-               int newZ = tag.getInteger("PosZ");
-               int newD = tag.getInteger("PosD");
-               double MAX_DISTANCE = 22500.0D;
-               if(newD == player.dimension && player.getDistanceSq((double)newX, (double)newY, (double)newZ) <= 22500.0D) {
-                  player.setItemInUse(stack, this.getMaxItemUseDuration(stack));
-               } else {
-                  SoundEffect.NOTE_SNARE.playAtPlayer(world, player);
+      if(this.itemWaystoneBound.isMatch(stack) && block == Witchery.Blocks.CHALICE) {
+         if(!world.isRemote) {
+            if(this.teleportToLocation(world, stack, player, 0, true)) {
+               --stack.stackSize;
+               if(stack.stackSize <= 0) {
+                  player.inventory.setInventorySlotContents(player.inventory.currentItem, (ItemStack)null);
                }
+               world.playSoundAtEntity(player, "mob.endermen.portal", 1.0F, 1.0F);
             } else {
                SoundEffect.NOTE_SNARE.playAtPlayer(world, player);
             }
-         } else if(world.isRemote) {
-            player.setItemInUse(stack, this.getMaxItemUseDuration(stack));
          }
 
          return !world.isRemote;
@@ -1219,7 +1211,7 @@ public class ItemGeneral extends ItemBase {
             this.setThrowableHeading(var7, var7.motionX, var7.motionY, var7.motionZ, 1.0F, 1.0F);
             world.spawnEntityInWorld(var7);
          }
-      } else if(this.itemWaystone.isMatch(itemstack) && isWaystoneBound(itemstack)) {
+      } else if((this.itemWaystone.isMatch(itemstack) || this.itemChaliceEmpty.isMatch(itemstack) || this.itemChaliceFull.isMatch(itemstack)) && isWaystoneBound(itemstack)) {
          if(!world.isRemote) {
             if(this.teleportToLocation(world, itemstack, player, 0, true)) {
                --itemstack.stackSize;

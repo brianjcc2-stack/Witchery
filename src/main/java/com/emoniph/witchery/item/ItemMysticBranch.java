@@ -115,7 +115,7 @@ public class ItemMysticBranch extends ItemBase {
          float pitchDiff = nbtTag.getFloat("startPitch") - player.rotationPitch;
           byte[] strokes = nbtTag.getByteArray("Strokes");
           int strokesStart = strokes.length;
-          if((!EffectRegistry.instance().contains(strokes) || EffectRegistry.instance().hasLongerSymbol(strokes)) && strokesStart <= 15) {
+          if(!EffectRegistry.instance().contains(strokes) && strokesStart <= 15) {
             if(pitchDiff >= 7.0F) {
                strokes = this.addNewStroke(nbtTag, strokes, (byte)0);
             } else if(pitchDiff <= -7.0F) {
