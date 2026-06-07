@@ -1914,6 +1914,15 @@ public class WitcheryBrewRegistry {
 
          }
       });
+      
+      // CUSTOM BREWS
+      this.register(new com.emoniph.witchery.brewing.action.effect.BrewActionSoulSwap(new BrewItemKey(Items.lead), new BrewNamePart("witchery:brew.soulswap"), new AltarPower(1000), new Probability(1.0D), new EffectLevel(4)));
+      this.register(new BrewPotionEffect(new BrewItemKey(Items.bed), new BrewNamePart("witchery:brew.astralprojection"), new AltarPower(2000), new Probability(1.0D), Witchery.Potions.ASTRAL_PROJECTION, (long)com.emoniph.witchery.util.TimeUtil.secsToTicks(60), new EffectLevel(6)));
+      this.register(new BrewPotionEffect(new BrewItemKey(Items.iron_door), new BrewNamePart("witchery:brew.banishment"), new AltarPower(3000), new Probability(1.0D), Witchery.Potions.BANISHMENT, (long)com.emoniph.witchery.util.TimeUtil.secsToTicks(30), new EffectLevel(8)));
+      this.register(new com.emoniph.witchery.brewing.action.effect.BrewActionVoodooLink(new BrewItemKey(Items.paper), new BrewNamePart("witchery:brew.voodoolink"), new AltarPower(2000), new Probability(1.0D), new EffectLevel(6)));
+      this.register(new BrewPotionEffect(new BrewItemKey(Items.saddle), new BrewNamePart("witchery:brew.polymorph"), new AltarPower(1500), new Probability(1.0D), Witchery.Potions.POLYMORPH, (long)com.emoniph.witchery.util.TimeUtil.secsToTicks(60), new EffectLevel(6)));
+      this.register(new BrewPotionEffect(new BrewItemKey(Items.iron_sword), new BrewNamePart("witchery:brew.frenzy"), new AltarPower(1500), new Probability(1.0D), Witchery.Potions.FRENZY, (long)com.emoniph.witchery.util.TimeUtil.secsToTicks(30), new EffectLevel(5)));
+      this.register(new com.emoniph.witchery.brewing.action.effect.BrewActionCovenCall(new BrewItemKey(Items.book), new BrewNamePart("witchery:brew.covencall"), new AltarPower(4000), new Probability(1.0D), new EffectLevel(6)));
    }
 
    public List getRecipes() {

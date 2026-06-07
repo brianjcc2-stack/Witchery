@@ -178,6 +178,12 @@ public class WitcheryPotions {
    public final Potion PROVOKE = this.register("witchery:potion.provoke", PotionProvoke.class);
    public final Potion SPECTRAL_SIGHT = this.register("witchery:potion.spectralsight", PotionSpectralSight.class);
 
+   public final Potion BANISHMENT = this.register("witchery:potion.banishment", PotionBanishment.class);
+   public final Potion ASTRAL_PROJECTION = this.register("witchery:potion.astralprojection", PotionAstralProjection.class);
+   public final Potion VOODOO_LINK = this.register("witchery:potion.voodoolink", PotionVoodooLink.class);
+   public final Potion POLYMORPH = this.register("witchery:potion.polymorph", PotionPolymorph.class);
+   public final Potion FRENZY = this.register("witchery:potion.frenzy", PotionFrenzy.class);
+
 
    private Potion register(String unlocalisedName, Class clazz) {
       int potionID = -1;

@@ -199,7 +199,7 @@ public class EffectRegistry {
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, final EntitySpellEffect spell) {
             if (!(spell.getEffectLevel() == 1 && !world.provider.isHellWorld || world.provider.isHellWorld && spell.getEffectLevel() == 3)) {
                 if (!world.provider.isHellWorld) {
-                    if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY) {
+                    if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY) {
                         int dx1 = MathHelper.floor_double((double)mop.entityHit.posX);
                         int dy = MathHelper.floor_double((double)mop.entityHit.posY);
                         int dz = MathHelper.floor_double((double)mop.entityHit.posZ);
@@ -228,9 +228,9 @@ public class EffectRegistry {
                         this.setIfAir(caster, world, x, y - 1, z, (Block)Blocks.flowing_water);
                     }
                 }
-            } else if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY) {
+            } else if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY) {
                 this.setBlock(caster, world, MathHelper.floor_double((double)mop.entityHit.posX), MathHelper.floor_double((double)mop.entityHit.posY), MathHelper.floor_double((double)mop.entityHit.posZ), (Block)Blocks.flowing_water);
-            } else if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+            } else if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
                 Block dx = world.getBlock(mop.blockX, mop.blockY, mop.blockZ);
                 if (dx == Witchery.Blocks.CAULDRON) {
                     if (Witchery.Blocks.CAULDRON.tryFillWith(world, mop.blockX, mop.blockY, mop.blockZ, new FluidStack(FluidRegistry.WATER, 3000))) {
@@ -267,7 +267,7 @@ public class EffectRegistry {
 
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect effectEntity) {
-            if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+            if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
                 Block blockID = world.getBlock(mop.blockX, mop.blockY, mop.blockZ);
                 if (blockID != Witchery.Blocks.DOOR_ALDER && blockID != Witchery.Blocks.DOOR_ROWAN) {
                     if (blockID instanceof BlockDoor) {
@@ -306,7 +306,7 @@ public class EffectRegistry {
 
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect effectEntity) {
-            if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+            if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
                 EffectRegistry.applyBlockEffect(world, caster, mop.blockX, mop.blockY, mop.blockZ, mop.sideHit, effectEntity.getEffectLevel(), new IBlockEffect(){
 
                     @Override
@@ -354,7 +354,7 @@ public class EffectRegistry {
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect effectEntity) {
             int y;
             Block blockID;
-            if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && caster != null && (blockID = world.getBlock(mop.blockX, y = mop.blockY, mop.blockZ)) instanceof BlockDoor) {
+            if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && caster != null && (blockID = world.getBlock(mop.blockX, y = mop.blockY, mop.blockZ)) instanceof BlockDoor) {
                 int i1 = ((BlockDoor)blockID).func_150012_g((IBlockAccess)world, mop.blockX, y, mop.blockZ);
                 if ((i1 & 8) != 0) {
                     --y;
@@ -446,7 +446,7 @@ public class EffectRegistry {
 
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect effectEntity) {
-            if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+            if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
                 EffectRegistry.applyBlockEffect(world, caster, mop.blockX, mop.blockY, mop.blockZ, mop.sideHit, effectEntity.getEffectLevel(), new IBlockEffect(){
 
                     @Override
@@ -563,7 +563,7 @@ public class EffectRegistry {
         public void perform(World world, EntityPlayer player, int effectLevel) {
             MovingObjectPosition mop = InfusionOtherwhere.doCustomRayTrace(world, player, true, 4.0);
             if (mop != null) {
-                if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+                if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
                     ItemChalk.drawGlyph(world, mop.blockX, mop.blockY, mop.blockZ, mop.sideHit, Witchery.Blocks.GLYPH_INFERNAL, player);
                 } else {
                     SoundEffect.NOTE_SNARE.playAtPlayer(world, player);
@@ -610,10 +610,10 @@ public class EffectRegistry {
             double radius = spell.getEffectLevel() == 1 ? 0.0 : (spell.getEffectLevel() == 2 ? 3.0 : 6.0);
             final int level = spell.getEffectLevel();
             if (radius == 0.0) {
-                if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY) {
+                if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY) {
                     mop.entityHit.setFire(1);
                     mop.entityHit.attackEntityFrom(new EntityDamageSourceIndirect("onFire", (Entity)spell, (Entity)caster).setFireDamage(), 0.1f);
-                } else if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+                } else if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
                     int dy = 0;
                     int dx = 0;
                     Block side = BlockUtil.getBlock(world, mop);
@@ -680,7 +680,7 @@ public class EffectRegistry {
 
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect effectEntity) {
-            if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+            if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
                 int dy = 0;
                 int dx = 0;
                 int n = mop.sideHit == 5 ? 1 : (dx = mop.sideHit == 4 ? -1 : 0);
@@ -762,7 +762,7 @@ public class EffectRegistry {
             }
             MovingObjectPosition mop = InfusionOtherwhere.doCustomRayTrace(world, player, true, 4.0);
             if (mop != null) {
-                if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+                if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
                     InfusionLight.placeBarrierShield(world, player, mop);
                 } else {
                     SoundEffect.NOTE_SNARE.playAtPlayer(world, player);
@@ -798,7 +798,7 @@ public class EffectRegistry {
     public static final SymbolEffect Glacius = EffectRegistry.instance().addEffect((new SymbolEffectProjectile(37, "witchery.pott.glacius") {
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
-            if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
+            if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
                 EntityLivingBase target = (EntityLivingBase)mop.entityHit;
                 target.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, 300, 3));
                 target.addPotionEffect(new PotionEffect(Potion.digSlowdown.id, 300, 2));
@@ -1007,7 +1007,7 @@ public class EffectRegistry {
 
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
-            if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+            if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
                 Block block = world.getBlock(mop.blockX, mop.blockY, mop.blockZ);
                 TileEntity tile = world.getTileEntity(mop.blockX, mop.blockY, mop.blockZ);
                 if (tile instanceof TileEntityCursedBlock) {
@@ -1077,7 +1077,7 @@ public class EffectRegistry {
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
             // Unified single-target damage spell (absorbs Ictus / Diffindo / basic attack).
-            if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
+            if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
                 EntityLivingBase target = (EntityLivingBase)mop.entityHit;
                 int level = spell.getEffectLevel();
                 float damage = level == 1 ? 5.0f : (level == 2 ? 8.0f : 12.0f);
@@ -1097,7 +1097,7 @@ public class EffectRegistry {
 
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
-            if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
+            if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
                 EntityLivingBase target = (EntityLivingBase)mop.entityHit;
                 if (target instanceof EntityPlayer) {
                     if (!world.isRemote && (!(caster instanceof EntityPlayer) || MinecraftServer.getServer().isPVPEnabled())) {
@@ -1130,7 +1130,7 @@ public class EffectRegistry {
 
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
-            if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
+            if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
                 EntityLivingBase target = (EntityLivingBase)mop.entityHit;
                 target.motionY = 2.0;
                 target.addPotionEffect(new PotionEffect(Potion.resistance.id, 200, 4));
@@ -1251,6 +1251,7 @@ public class EffectRegistry {
                 for (Object obj : listXp) {
                     ((EntityXPOrb)obj).setDead();
                 }
+                if (mop == null) return;
                 int cx = mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK ? mop.blockX : (int)spell.posX;
                 int cy = mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK ? mop.blockY : (int)spell.posY;
                 int cz = mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK ? mop.blockZ : (int)spell.posZ;
@@ -1277,7 +1278,7 @@ public class EffectRegistry {
 
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
-            if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
+            if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
                 EntityLivingBase target = (EntityLivingBase)mop.entityHit;
                 if (target instanceof EntitySpider) {
                     target.attackEntityFrom(DamageSource.causeIndirectMagicDamage((Entity)spell, (Entity)caster), 50.0f);
@@ -1292,7 +1293,7 @@ public class EffectRegistry {
 
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
-            if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
+            if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
                 EntityLivingBase target = (EntityLivingBase)mop.entityHit;
                 if (target instanceof EntityPlayer) {
                     target.addPotionEffect(new PotionEffect(Witchery.Potions.PARALYSED.id, 400, 0));
@@ -1601,7 +1602,7 @@ public class EffectRegistry {
 
             @Override
             public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
-                if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
+                if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
                     EntityLivingBase target = (EntityLivingBase)mop.entityHit;
                     target.addPotionEffect(new PotionEffect(Potion.field_76434_w.id, 1200, 4));
                     target.addPotionEffect(new PotionEffect(Potion.damageBoost.id, 1200, 1));
@@ -1691,7 +1692,7 @@ public class EffectRegistry {
 
             @Override
             public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
-                if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
+                if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
                     EntityLivingBase target = (EntityLivingBase)mop.entityHit;
                     target.addPotionEffect(new PotionEffect(Potion.fireResistance.id, 6000, 0));
                     target.addPotionEffect(new PotionEffect(Potion.waterBreathing.id, 6000, 0));
@@ -1813,7 +1814,7 @@ public class EffectRegistry {
             @Override
             public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
                 if (mop != null && !world.isRemote) {
-                    if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+                    if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
                         ArrayList drops;
                         Block block = world.getBlock(mop.blockX, mop.blockY, mop.blockZ);
                         int meta = world.getBlockMetadata(mop.blockX, mop.blockY, mop.blockZ);
@@ -1827,7 +1828,7 @@ public class EffectRegistry {
                             world.spawnEntityInWorld((Entity)new EntityItem(world, (double)mop.blockX, (double)mop.blockY, (double)mop.blockZ, smelted.copy()));
                             ParticleEffect.FLAME.send(SoundEffect.MOB_GHAST_FIREBALL, world, mop.blockX, mop.blockY, mop.blockZ, 1.0, 1.0, 16);
                         }
-                    } else if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit != null && mop.entityHit instanceof EntityItem) {
+                    } else if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit != null && mop.entityHit instanceof EntityItem) {
                         EntityItem eItem = (EntityItem)mop.entityHit;
                         ItemStack smelted = FurnaceRecipes.smelting().getSmeltingResult(eItem.getEntityItem());
                         if (smelted != null) {
