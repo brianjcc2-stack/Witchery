@@ -680,19 +680,31 @@ public class EffectRegistry {
 
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect effectEntity) {
-            if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityPlayer) {
+            if (!world.isRemote && mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityPlayer) {
                 EntityPlayer target = (EntityPlayer)mop.entityHit;
                 NBTTagCompound nbt = Infusion.getNBT(target);
                 if (nbt.hasKey("WITCLumos")) {
+                    int ox = nbt.getInteger("WITCLumosX");
+                    int oy = nbt.getInteger("WITCLumosY");
+                    int oz = nbt.getInteger("WITCLumosZ");
+                    if (world.getBlock(ox, oy, oz) == Witchery.Blocks.GLOW_GLOBE) {
+                        world.setBlockToAir(ox, oy, oz);
+                    }
                     nbt.removeTag("WITCLumos");
                     nbt.removeTag("WITCLumosX");
                     nbt.removeTag("WITCLumosY");
                     nbt.removeTag("WITCLumosZ");
                 } else {
+                    int nx = MathHelper.floor_double(target.posX);
+                    int ny = MathHelper.floor_double(target.posY) + 2;
+                    int nz = MathHelper.floor_double(target.posZ);
                     nbt.setBoolean("WITCLumos", true);
-                    nbt.setInteger("WITCLumosX", MathHelper.floor_double(target.posX));
-                    nbt.setInteger("WITCLumosY", MathHelper.floor_double(target.posY) + 2);
-                    nbt.setInteger("WITCLumosZ", MathHelper.floor_double(target.posZ));
+                    nbt.setInteger("WITCLumosX", nx);
+                    nbt.setInteger("WITCLumosY", ny);
+                    nbt.setInteger("WITCLumosZ", nz);
+                    if (world.isAirBlock(nx, ny, nz)) {
+                        world.setBlock(nx, ny, nz, Witchery.Blocks.GLOW_GLOBE);
+                    }
                 }
                 ParticleEffect.INSTANT_SPELL.send(SoundEffect.RANDOM_LEVELUP, target, 1.0, 1.0, 16);
                 return;
@@ -773,6 +785,12 @@ public class EffectRegistry {
                 EntityPlayer p = (EntityPlayer)obj;
                 NBTTagCompound nbt = Infusion.getNBT(p);
                 if (nbt.hasKey("WITCLumos")) {
+                    int ox = nbt.getInteger("WITCLumosX");
+                    int oy = nbt.getInteger("WITCLumosY");
+                    int oz = nbt.getInteger("WITCLumosZ");
+                    if (world.getBlock(ox, oy, oz) == Witchery.Blocks.GLOW_GLOBE) {
+                        world.setBlockToAir(ox, oy, oz);
+                    }
                     nbt.removeTag("WITCLumos");
                     nbt.removeTag("WITCLumosX");
                     nbt.removeTag("WITCLumosY");
