@@ -687,7 +687,7 @@ public class EffectRegistry {
                     int ox = nbt.getInteger("WITCLumosX");
                     int oy = nbt.getInteger("WITCLumosY");
                     int oz = nbt.getInteger("WITCLumosZ");
-                    if (world.getBlock(ox, oy, oz) == Witchery.Blocks.GLOW_GLOBE) {
+                    if (world.blockExists(ox, oy, oz) && world.getBlock(ox, oy, oz) == Witchery.Blocks.GLOW_GLOBE) {
                         world.setBlockToAir(ox, oy, oz);
                     }
                     nbt.removeTag("WITCLumos");
@@ -788,7 +788,7 @@ public class EffectRegistry {
                     int ox = nbt.getInteger("WITCLumosX");
                     int oy = nbt.getInteger("WITCLumosY");
                     int oz = nbt.getInteger("WITCLumosZ");
-                    if (world.getBlock(ox, oy, oz) == Witchery.Blocks.GLOW_GLOBE) {
+                    if (world.blockExists(ox, oy, oz) && world.getBlock(ox, oy, oz) == Witchery.Blocks.GLOW_GLOBE) {
                         world.setBlockToAir(ox, oy, oz);
                     }
                     nbt.removeTag("WITCLumos");

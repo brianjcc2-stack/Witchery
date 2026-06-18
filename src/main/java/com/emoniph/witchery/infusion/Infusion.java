@@ -589,7 +589,7 @@ public class Infusion {
                      int nz = MathHelper.floor_double(belt.posZ);
                      if (ox != nx || oy != ny || oz != nz) {
                         // Remove old globe only if it's still our globe
-                        if (belt.worldObj.getBlock(ox, oy, oz) == Witchery.Blocks.GLOW_GLOBE) {
+                        if (belt.worldObj.blockExists(ox, oy, oz) && belt.worldObj.getBlock(ox, oy, oz) == Witchery.Blocks.GLOW_GLOBE) {
                            belt.worldObj.setBlockToAir(ox, oy, oz);
                         }
                         // Place new globe above head if the space is free
