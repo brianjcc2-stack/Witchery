@@ -1443,6 +1443,19 @@ public class GenericEvents {
 
    }
 
+   @SubscribeEvent
+   public void onLivingSetAttackTarget(net.minecraftforge.event.entity.living.LivingSetAttackTargetEvent event) {
+      if(event.target instanceof EntityPlayer && event.entityLiving != null) {
+         EntityPlayer player = (EntityPlayer)event.target;
+         ExtendedPlayer playerEx = ExtendedPlayer.get(player);
+         if(playerEx != null && playerEx.getSpiritLevel() >= 7 && player.isSneaking()) {
+            if(event.entityLiving.getDistanceSqToEntity(player) > 16.0D && event.entityLiving instanceof net.minecraft.entity.EntityLiving) {
+               ((net.minecraft.entity.EntityLiving)event.entityLiving).setAttackTarget(null);
+            }
+         }
+      }
+   }
+
    @SubscribeEvent(
       priority = EventPriority.HIGH
    )

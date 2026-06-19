@@ -597,9 +597,25 @@ public class EffectRegistry {
         @Override
         public void perform(World world, EntityPlayer player, int effectLevel) {
             if (player.isSneaking()) {
-                EntitySpellEffect dummy = new EntitySpellEffect(world, (EntityLivingBase)player, 0.0, 0.0, 0.0, this, effectLevel);
-                dummy.setPosition(player.posX, player.posY, player.posZ);
-                this.onCollision(world, (EntityLivingBase)player, new MovingObjectPosition((Entity)player), dummy);
+                if (!world.isRemote) {
+                    int px = MathHelper.floor_double(player.posX);
+                    int py = MathHelper.floor_double(player.posY);
+                    int pz = MathHelper.floor_double(player.posZ);
+                    int radius = effectLevel == 1 ? 1 : (effectLevel == 2 ? 2 : 3);
+                    for (int x = -radius; x <= radius; ++x) {
+                        for (int z = -radius; z <= radius; ++z) {
+                            if (Math.abs(x) == radius || Math.abs(z) == radius) {
+                                for (int y = -1; y <= 1; ++y) {
+                                    if (world.isAirBlock(px + x, py + y, pz + z) && world.getBlock(px + x, py + y - 1, pz + z).getMaterial().isSolid()) {
+                                        world.setBlock(px + x, py + y, pz + z, Blocks.fire);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    ParticleEffect.FLAME.send(SoundEffect.MOB_GHAST_FIREBALL, player, 1.0, 1.0, 16);
+                }
             } else {
                 super.perform(world, player, effectLevel);
             }

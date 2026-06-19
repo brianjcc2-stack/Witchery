@@ -252,14 +252,31 @@ public class ClientEvents {
          }
       } else if(event.entity instanceof EntityPlayer) {
          EntityPlayer player1 = (EntityPlayer)event.entity;
+         ExtendedPlayer playerEx = ExtendedPlayer.get(player1);
+         if (playerEx != null && playerEx.isAstralProjecting()) {
+            event.setCanceled(true);
+            if (player1.worldObj.rand.nextInt(3) == 0) {
+               player1.worldObj.spawnParticle("explode", player1.posX + (player1.worldObj.rand.nextDouble() - 0.5D) * (double)player1.width, player1.posY + player1.worldObj.rand.nextDouble() * (double)player1.height, player1.posZ + (player1.worldObj.rand.nextDouble() - 0.5D) * (double)player1.width, 0.0D, 0.0D, 0.0D);
+            }
+            return;
+         }
+         int creatureType = playerEx != null ? playerEx.getCreatureTypeOrdinal() : 0;
+         if (creatureType == 6) { // TransformCreature.SPIRIT
+            event.setCanceled(true);
+            if (player1.worldObj.rand.nextInt(3) == 0) {
+               player1.worldObj.spawnParticle("explode", player1.posX + (player1.worldObj.rand.nextDouble() - 0.5D) * (double)player1.width, player1.posY + player1.worldObj.rand.nextDouble() * (double)player1.height, player1.posZ + (player1.worldObj.rand.nextDouble() - 0.5D) * (double)player1.width, 0.0D, 0.0D, 0.0D);
+            }
+            return;
+         }
          if(WorldProviderDreamWorld.getPlayerIsGhost(Infusion.getNBT(player1))) {
             RenderUtil.blend(true);
             GL11.glColor4f(1.0F, 1.0F, 1.0F, 0.51F);
+         } else if (playerEx != null && playerEx.getSpiritLevel() >= 7 && player1.isSneaking()) {
+            RenderUtil.blend(true);
+            GL11.glColor4f(1.0F, 1.0F, 1.0F, 0.15F);
          }
 
-         ExtendedPlayer playerEx = ExtendedPlayer.get(player1);
-         int creatureType = playerEx.getCreatureTypeOrdinal();
-         if(creatureType > 0 && !(event.renderer instanceof RenderOtherPlayer)) {
+         if(creatureType > 0 && creatureType != 6 && !(event.renderer instanceof RenderOtherPlayer)) {
             event.setCanceled(true);
             PotionEffect pe = player1.getActivePotionEffect(Witchery.Potions.RESIZING);
             if(pe != null) {
@@ -414,7 +431,8 @@ public class ClientEvents {
          GL11.glPopMatrix();
       } else if(event.entity instanceof EntityPlayer) {
          EntityPlayer player = (EntityPlayer)event.entity;
-         if(WorldProviderDreamWorld.getPlayerIsGhost(Infusion.getNBT(player))) {
+         ExtendedPlayer playerEx = ExtendedPlayer.get(player);
+         if(WorldProviderDreamWorld.getPlayerIsGhost(Infusion.getNBT(player)) || (playerEx != null && playerEx.getSpiritLevel() >= 7 && player.isSneaking())) {
             RenderUtil.blend(false);
          }
       }
