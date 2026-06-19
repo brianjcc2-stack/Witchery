@@ -891,6 +891,29 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
       if(this.vampireCooldown > 0) {
          --this.vampireCooldown;
       }
+      
+      if (!this.player.worldObj.isRemote && this.isAstralProjecting() && this.player.ticksExisted % 20 == 0) {
+          boolean hasEnergy = com.emoniph.witchery.infusion.Infusion.aquireEnergy(this.player.worldObj, this.player, 3, false);
+          if (!hasEnergy) {
+              // Forced return because out of energy
+              trySayAstralProjection(this.player, "ex corpus");
+              com.emoniph.witchery.util.ChatUtil.sendTranslated(net.minecraft.util.EnumChatFormatting.RED, this.player, "witchery.infuse.nocharges");
+              
+              // Apply exhaustion debuffs
+              this.player.addPotionEffect(new net.minecraft.potion.PotionEffect(net.minecraft.potion.Potion.confusion.id, 200, 1));
+              this.player.addPotionEffect(new net.minecraft.potion.PotionEffect(net.minecraft.potion.Potion.hunger.id, 200, 1));
+              this.player.addPotionEffect(new net.minecraft.potion.PotionEffect(net.minecraft.potion.Potion.moveSlowdown.id, 200, 1));
+          }
+      }
+      
+      if (!this.player.worldObj.isRemote && this.getCreatureType() == com.emoniph.witchery.util.TransformCreature.SPIRIT && this.player.ticksExisted % 40 == 0) {
+          boolean hasEnergy = com.emoniph.witchery.infusion.Infusion.aquireEnergy(this.player.worldObj, this.player, 1, false);
+          if (!hasEnergy) {
+              com.emoniph.witchery.common.Shapeshift.INSTANCE.shiftTo(this.player, com.emoniph.witchery.util.TransformCreature.NONE);
+              com.emoniph.witchery.util.SoundEffect.RANDOM_FIZZ.playAtPlayer(this.player.worldObj, this.player);
+              com.emoniph.witchery.util.ChatUtil.sendTranslated(net.minecraft.util.EnumChatFormatting.RED, this.player, "witchery.infuse.nocharges");
+          }
+      }
 
    }
 

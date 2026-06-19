@@ -845,8 +845,17 @@ public class GenericEvents {
              mount.rotationYaw = rider.rotationYaw;
              mount.rotationYawHead = rider.rotationYawHead;
              mount.rotationPitch = rider.rotationPitch;
+             
+             // In 1.7.10, rider.moveForward can sometimes get stuck on the server if C0C packets drop or stop.
+             // We ensure we read it on the client for accurate control, and sync to mount. 
+             // Also disable mount's own pathing to avoid conflict.
+             if (mount instanceof net.minecraft.entity.EntityLiving) {
+                 ((net.minecraft.entity.EntityLiving)mount).getNavigator().clearPathEntity();
+             }
+             
              mount.moveForward = rider.moveForward * 1.5f; 
              mount.moveStrafing = rider.moveStrafing * 1.5f;
+             
              boolean isJumping = false;
              try {
                  isJumping = ((Boolean) cpw.mods.fml.relauncher.ReflectionHelper.getPrivateValue(net.minecraft.entity.EntityLivingBase.class, rider, "isJumping", "field_70703_bu")).booleanValue();
@@ -1029,6 +1038,22 @@ public class GenericEvents {
             EntityPlayer player = (EntityPlayer)event.entityLiving;
             float playerHealth = player.getHealth();
             ExtendedPlayer playerEx = ExtendedPlayer.get(player);
+            
+            if (playerEx.isAstralProjecting()) {
+               if (!event.source.isMagicDamage() && event.source != net.minecraft.util.DamageSource.outOfWorld && event.source != net.minecraft.util.DamageSource.inWall && event.source != net.minecraft.util.DamageSource.drown) {
+                  event.setCanceled(true);
+                  return;
+               }
+               if (playerHealth - event.ammount <= 0.0F) {
+                  event.setCanceled(true);
+                  player.setHealth(1.0F);
+                  ExtendedPlayer.trySayAstralProjection(player, "ex corpus");
+                  player.addPotionEffect(new net.minecraft.potion.PotionEffect(net.minecraft.potion.Potion.confusion.id, 200, 1));
+                  player.addPotionEffect(new net.minecraft.potion.PotionEffect(net.minecraft.potion.Potion.hunger.id, 200, 1));
+                  player.addPotionEffect(new net.minecraft.potion.PotionEffect(net.minecraft.potion.Potion.moveSlowdown.id, 200, 1));
+                  return;
+               }
+            }
             if(event.source == DamageSource.drown && playerEx.isVampire()) {
                event.setCanceled(true);
                return;

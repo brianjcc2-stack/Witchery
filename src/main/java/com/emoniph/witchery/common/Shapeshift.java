@@ -377,6 +377,9 @@ public class Shapeshift {
 
    public Shapeshift.StatBoost getStatBoost(EntityPlayer player, ExtendedPlayer playerEx) {
       TransformCreature creature = playerEx.getCreatureType();
+      if (creature == TransformCreature.SPIRIT) {
+         return (new Shapeshift.StatBoost(-12.0F)).setFlying(true);
+      }
       switch(Shapeshift.NamelessClass26779675.$SwitchMap$com$emoniph$witchery$util$TransformCreature[creature.ordinal()]) {
       case 1:
          return this.boostWolf[playerEx.getWerewolfLevel()];
