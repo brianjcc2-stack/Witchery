@@ -12,6 +12,7 @@ import com.emoniph.witchery.brewing.potions.WitcheryPotions;
 import com.emoniph.witchery.client.KeyboardHandler;
 import com.emoniph.witchery.client.PlayerRender;
 import com.emoniph.witchery.common.ChantCommand;
+import com.emoniph.witchery.common.CommandWitcheryLevel;
 import com.emoniph.witchery.common.CommonProxy;
 import com.emoniph.witchery.common.PowerSources;
 import com.emoniph.witchery.common.ServerTickEvents;
@@ -280,6 +281,7 @@ public class Witchery {
    @EventHandler
    public void serverLoad(FMLServerStartingEvent event) {
       event.registerServerCommand(new ChantCommand());
+      event.registerServerCommand(new CommandWitcheryLevel());
       PowerSources.initiate();
       BlockAreaMarker.AreaMarkerRegistry.serverStart();
       worldGenerator.initiate();

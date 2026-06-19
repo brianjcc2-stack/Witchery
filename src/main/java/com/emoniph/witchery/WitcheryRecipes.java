@@ -153,15 +153,7 @@ import com.emoniph.witchery.ritual.rites.RiteTeleportToWaystone;
 import com.emoniph.witchery.ritual.rites.RiteTransposeOres;
 import com.emoniph.witchery.ritual.rites.RiteUnbreakableVow;
 import com.emoniph.witchery.ritual.rites.RiteWeatherCallStorm;
-import com.emoniph.witchery.ritual.rites.RiteReparo;
-import com.emoniph.witchery.ritual.rites.RiteIdentify;
-import com.emoniph.witchery.ritual.rites.RiteAparecium;
-import com.emoniph.witchery.ritual.rites.RiteVociferador;
-import com.emoniph.witchery.ritual.rites.RiteLumosMaxima;
-import com.emoniph.witchery.ritual.rites.RiteDimensionalAnchor;
-import com.emoniph.witchery.ritual.rites.RiteEmpaticLink;
-import com.emoniph.witchery.ritual.rites.RiteHerbivicus;
-import com.emoniph.witchery.ritual.rites.RiteMagicalPrison;
+
 import com.emoniph.witchery.ritual.PatternLine;
 import com.emoniph.witchery.ritual.PatternPolygon;
 import com.emoniph.witchery.util.ClothColor;
