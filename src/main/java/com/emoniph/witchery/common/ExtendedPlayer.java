@@ -443,6 +443,9 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
                for (Object obj : corpses) {
                   com.emoniph.witchery.entity.EntityCorpse corpse = (com.emoniph.witchery.entity.EntityCorpse)obj;
                   if (corpse.getOwnerName().equals(player.getCommandSenderName())) {
+                     if (player.ridingEntity != null) {
+                        player.mountEntity((net.minecraft.entity.Entity)null);
+                     }
                      com.emoniph.witchery.item.ItemGeneral.teleportToLocationSafely(player.worldObj, corpse.posX, corpse.posY + 1, corpse.posZ, player.dimension, player, true);
                      corpse.setDead();
                      break;
@@ -451,6 +454,7 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
                net.minecraft.nbt.NBTTagCompound nbt = com.emoniph.witchery.infusion.Infusion.getNBT(player);
                com.emoniph.witchery.dimension.WorldProviderDreamWorld.setPlayerIsGhost(nbt, false);
                playerEx.setAstralProjecting(false);
+               player.removePotionEffect(net.minecraft.potion.Potion.invisibility.id);
                com.emoniph.witchery.util.SoundEffect.RANDOM_FIZZ.playAtPlayer(player.worldObj, player);
             }
             return true;

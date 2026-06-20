@@ -210,7 +210,7 @@ public class BrazierRecipes {
    };
    public static final BrazierRecipes.BrazierRecipe INFUSION = new BrazierRecipes.BrazierRecipe("witchery.brazier.infusion", true, TimeUtil.minsToTicks(1), new ItemStack[]{Witchery.Items.GENERIC.itemAttunedStoneCharged.createStack(), new ItemStack(Items.ghast_tear), Witchery.Items.GENERIC.itemGraveyardDust.createStack()}, null) {
       public int onBurning(World world, int x, int y, int z, long ticks, BlockBrazier.TileEntityBrazier tile) {
-         if(ticks % 20L == 0L) {
+         if(ticks % 10L == 0L) {
             AxisAlignedBB bb = AxisAlignedBB.getBoundingBox((double)(x - 4), (double)(y - 4), (double)(z - 4), (double)(x + 4), (double)(y + 4), (double)(z + 4));
             List entities = world.getEntitiesWithinAABB(EntityPlayer.class, bb);
             Iterator i$ = entities.iterator();
@@ -222,7 +222,7 @@ public class BrazierRecipes {
                   int currentEnergy = Infusion.getCurrentEnergy(player);
                   int maxEnergy = Infusion.getMaxEnergy(player);
                   if(currentEnergy < maxEnergy) {
-                     Infusion.setCurrentEnergy(player, Math.min(currentEnergy + 10, maxEnergy));
+                     Infusion.setCurrentEnergy(player, Math.min(currentEnergy + 15, maxEnergy));
                      ParticleEffect.SPELL.send(SoundEffect.NONE, player, 0.5D, 1.0D, 8);
                   }
                }

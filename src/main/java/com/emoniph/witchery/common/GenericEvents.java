@@ -774,6 +774,23 @@ public class GenericEvents {
 
    @SubscribeEvent
    public void onPlayerInteract(PlayerInteractEvent event) {
+      if (!event.entityPlayer.worldObj.isRemote && event.entityPlayer.getEntityData().getInteger("WITCLeviosaTicks") > 0) {
+          float currentDist = event.entityPlayer.getEntityData().hasKey("WITCLeviosaDistance") ? event.entityPlayer.getEntityData().getFloat("WITCLeviosaDistance") : 5.0f;
+          boolean changed = false;
+          if (event.action == net.minecraftforge.event.entity.player.PlayerInteractEvent.Action.RIGHT_CLICK_AIR || event.action == net.minecraftforge.event.entity.player.PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK) {
+              currentDist = Math.max(1.0f, currentDist - 0.5f);
+              changed = true;
+          } else if (event.action == net.minecraftforge.event.entity.player.PlayerInteractEvent.Action.LEFT_CLICK_BLOCK) {
+              currentDist = Math.min(20.0f, currentDist + 0.5f);
+              changed = true;
+          }
+          if (changed) {
+              event.entityPlayer.getEntityData().setFloat("WITCLeviosaDistance", currentDist);
+              event.setCanceled(true);
+              return;
+          }
+      }
+
       PotionEffect effect = event.entityPlayer.getActivePotionEffect(Witchery.Potions.PARALYSED);
       if(effect != null && effect.getAmplifier() >= 4) {
          event.setCanceled(true);

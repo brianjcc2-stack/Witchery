@@ -282,14 +282,7 @@ public class ClientEvents {
          }
          
          int creatureType = playerEx != null ? playerEx.getCreatureTypeOrdinal() : 0;
-         if (creatureType == 6) { // TransformCreature.SPIRIT
-            event.setCanceled(true);
-            if (player1.worldObj.rand.nextInt(3) == 0) {
-               player1.worldObj.spawnParticle("explode", player1.posX + (player1.worldObj.rand.nextDouble() - 0.5D) * (double)player1.width, player1.posY + player1.worldObj.rand.nextDouble() * (double)player1.height, player1.posZ + (player1.worldObj.rand.nextDouble() - 0.5D) * (double)player1.width, 0.0D, 0.0D, 0.0D);
-            }
-            return;
-         }
-
+         
          if(creatureType > 0 && !(event.renderer instanceof RenderOtherPlayer)) {
             event.setCanceled(true);
             PotionEffect pe = player1.getActivePotionEffect(Witchery.Potions.RESIZING);

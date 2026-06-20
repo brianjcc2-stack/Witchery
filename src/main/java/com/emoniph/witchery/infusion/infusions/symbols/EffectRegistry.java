@@ -1205,15 +1205,41 @@ public class EffectRegistry {
 
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
-            if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit != null) {
-                if (caster instanceof EntityPlayer) {
-                    EntityPlayer player = (EntityPlayer)caster;
-                    player.getEntityData().setInteger("WITCLeviosaEntity", mop.entityHit.getEntityId());
-                    player.getEntityData().setInteger("WITCLeviosaTicks", 200);
+            Entity target = null;
+            if (mop != null) {
+                if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY) {
+                    target = mop.entityHit;
+                } else if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+                    AxisAlignedBB bounds = AxisAlignedBB.getBoundingBox((double)mop.blockX, (double)mop.blockY, (double)mop.blockZ, (double)(mop.blockX + 1), (double)(mop.blockY + 1), (double)(mop.blockZ + 1)).expand(1.5, 1.5, 1.5);
+                    List list = world.getEntitiesWithinAABBExcludingEntity(spell, bounds);
+                    double closestDist = Double.MAX_VALUE;
+                    for (Object obj : list) {
+                        Entity e = (Entity)obj;
+                        double d = e.getDistanceSqToEntity(spell);
+                        if (d < closestDist) {
+                            closestDist = d;
+                            target = e;
+                        }
+                    }
                 }
-                mop.entityHit.motionY = 0.5;
-                if (mop.entityHit instanceof EntityLivingBase) {
-                    ((EntityLivingBase)mop.entityHit).addPotionEffect(new PotionEffect(Potion.resistance.id, 200, 4));
+            }
+            if (target != null) {
+                if (target instanceof EntityPlayer && ((EntityPlayer)target).getEntityData().getInteger("WITCLeviosaTicks") > 0) {
+                    ((EntityPlayer)target).getEntityData().setInteger("WITCLeviosaTicks", 0);
+                    ParticleEffect.SMOKE.send(SoundEffect.RANDOM_FIZZ, target, 1.0D, 2.0D, 16);
+                } else {
+                    if (caster instanceof EntityPlayer) {
+                        EntityPlayer player = (EntityPlayer)caster;
+                        player.getEntityData().setInteger("WITCLeviosaEntity", target.getEntityId());
+                        player.getEntityData().setInteger("WITCLeviosaTicks", Integer.MAX_VALUE);
+                        if (!player.getEntityData().hasKey("WITCLeviosaDistance")) {
+                            player.getEntityData().setFloat("WITCLeviosaDistance", 5.0f);
+                        }
+                    }
+                    target.motionY = 0.5;
+                    if (target instanceof EntityLivingBase) {
+                        ((EntityLivingBase)target).addPotionEffect(new PotionEffect(Potion.resistance.id, 200, 4));
+                    }
                 }
             }
         }
@@ -1711,25 +1737,9 @@ public class EffectRegistry {
             public void perform(World world, EntityPlayer player, int effectLevel) {
                 if (player.isSneaking()) {
                     if (!world.isRemote) {
-                        int[] negativeEffects = {
-                            Potion.moveSlowdown.id, Potion.digSlowdown.id, Potion.confusion.id,
-                            Potion.blindness.id, Potion.poison.id, Potion.wither.id,
-                            Potion.weakness.id, Potion.hunger.id,
-                            Witchery.Potions.PARALYSED.id
-                        };
-                        boolean cleansed = false;
-                        for (int id : negativeEffects) {
-                            if (player.isPotionActive(id)) {
-                                player.removePotionEffect(id);
-                                cleansed = true;
-                            }
-                        }
-                        if (cleansed) {
-                            ParticleEffect.INSTANT_SPELL.send(SoundEffect.RANDOM_FIZZ, player, 1.0D, 1.5D, 16);
-                            com.emoniph.witchery.util.ChatUtil.sendTranslated(net.minecraft.util.EnumChatFormatting.GREEN, player, "witchery.pott.finiteincantatem.cleanse");
-                        } else {
-                            SoundEffect.NOTE_SNARE.playAtPlayer(world, player);
-                        }
+                        player.clearActivePotions();
+                        ParticleEffect.INSTANT_SPELL.send(SoundEffect.RANDOM_FIZZ, player, 1.0D, 1.5D, 16);
+                        com.emoniph.witchery.util.ChatUtil.sendTranslated(net.minecraft.util.EnumChatFormatting.GREEN, player, "witchery.pott.finiteincantatem.cleanse");
                     }
                 } else {
                     super.perform(world, player, effectLevel);
@@ -1742,6 +1752,8 @@ public class EffectRegistry {
                 for (Object obj : list) {
                     EntityLivingBase target = (EntityLivingBase)obj;
                     target.clearActivePotions();
+                    com.emoniph.witchery.infusion.infusions.symbols.SymbolEffectImperio.IMPERIO_TARGETS.remove(target);
+                    com.emoniph.witchery.infusion.infusions.symbols.SymbolEffectImperio.IMPERIO_STAYING_TARGETS.remove(target);
                     ParticleEffect.INSTANT_SPELL.send(SoundEffect.RANDOM_FIZZ, (Entity)target, 1.0, 1.0, 16);
                 }
                 if (!world.isRemote) {
@@ -1755,7 +1767,7 @@ public class EffectRegistry {
                                 if (_finB == Witchery.Blocks.FORCE || _finB == Witchery.Blocks.BARRIER || _finB == Witchery.Blocks.GLOW_GLOBE
                                     || _finB == Witchery.Blocks.CIRCLE || _finB == Witchery.Blocks.BRAMBLE || _finB == Witchery.Blocks.VOID_BRAMBLE
                                     || _finB == Witchery.Blocks.PIT_DIRT || _finB == Witchery.Blocks.PIT_GRASS || _finB == net.minecraft.init.Blocks.web 
-                                    || _finB == net.minecraft.init.Blocks.fire) {
+                                    || _finB == net.minecraft.init.Blocks.fire || _finB == net.minecraft.init.Blocks.water || _finB == net.minecraft.init.Blocks.flowing_water || _finB == net.minecraft.init.Blocks.ice) {
                                     world.setBlockToAir(px + x, py + y, pz + z);
                                     ParticleEffect.SMOKE.send(SoundEffect.RANDOM_FIZZ, world, px + x, py + y, pz + z, 0.5D, 0.5D, 16);
                                 }

@@ -63,14 +63,17 @@ public class ServerTickEvents {
                 if (event.player.isSneaking()) {
                     event.player.getEntityData().setInteger("WITCLeviosaTicks", 0);
                 } else {
-                    event.player.getEntityData().setInteger("WITCLeviosaTicks", leviosaTicks - 1);
+                    if (leviosaTicks != Integer.MAX_VALUE) {
+                        event.player.getEntityData().setInteger("WITCLeviosaTicks", leviosaTicks - 1);
+                    }
                     int entityId = event.player.getEntityData().getInteger("WITCLeviosaEntity");
                     net.minecraft.entity.Entity target = event.player.worldObj.getEntityByID(entityId);
                     if (target != null && !target.isDead && target.getDistanceSqToEntity(event.player) < 1024.0D) {
                         net.minecraft.util.Vec3 look = event.player.getLookVec();
-                        double targetX = event.player.posX + look.xCoord * 5.0D;
-                        double targetY = event.player.posY + (double)event.player.getEyeHeight() + look.yCoord * 5.0D;
-                        double targetZ = event.player.posZ + look.zCoord * 5.0D;
+                        float dist = event.player.getEntityData().hasKey("WITCLeviosaDistance") ? event.player.getEntityData().getFloat("WITCLeviosaDistance") : 5.0f;
+                        double targetX = event.player.posX + look.xCoord * dist;
+                        double targetY = event.player.posY + (double)event.player.getEyeHeight() + look.yCoord * dist;
+                        double targetZ = event.player.posZ + look.zCoord * dist;
                         target.motionX = (targetX - target.posX) * 0.2D;
                         target.motionY = (targetY - target.posY) * 0.2D;
                         target.motionZ = (targetZ - target.posZ) * 0.2D;
