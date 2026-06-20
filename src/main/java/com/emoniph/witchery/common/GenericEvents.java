@@ -880,9 +880,6 @@ public class GenericEvents {
          }
       }
 
-      if(!event.entity.worldObj.isRemote && event.entity instanceof EntityPlayer) {
-         EntityPlayer player = (EntityPlayer)event.entity;
-   
       if (!event.entity.worldObj.isRemote && event.entity instanceof EntityLivingBase) {
           EntityLivingBase living = (EntityLivingBase) event.entity;
           if (com.emoniph.witchery.infusion.infusions.symbols.SymbolEffectImperio.IMPERIO_STAYING_TARGETS.contains(living)) {
