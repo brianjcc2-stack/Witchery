@@ -371,6 +371,7 @@ public class WitcheryBrewRegistry {
 
       this.register(new BrewPotionEffect(Witchery.Items.GENERIC.itemEnderDew.getBrewItemKey(), new BrewNamePart("witchery:potion.enderinhibition"), new AltarPower(200), new Probability(1.0D), Witchery.Potions.ENDER_INHIBITION, (long)TimeUtil.secsToTicks(90), new EffectLevel(1)));
       this.register(new BrewPotionEffect(new BrewItemKey(Items.wheat), new BrewNamePart("witchery:brew.moonshine"), new AltarPower(0), new Probability(1.0D), Witchery.Potions.FEEL_NO_PAIN, (long)TimeUtil.secsToTicks(90), new EffectLevel(1)));
+      this.register(new BrewPotionEffect(Witchery.Items.GENERIC.itemMutandisExtremis.getBrewItemKey(), new BrewNamePart("witchery:potion.spellpower"), new AltarPower(500), new Probability(1.0D), Witchery.Potions.SPELL_POWER, (long)TimeUtil.minsToTicks(3), new EffectLevel(1)));
       this.register(new BrewActionEffect(new BrewItemKey(Items.coal), new BrewNamePart("witchery:brew.extinguish"), new AltarPower(0), new Probability(1.0D), new EffectLevel(1)) {
          protected void doApplyToEntity(World world, EntityLivingBase targetEntity, ModifiersEffect modifiers, ItemStack stack) {
             if(modifiers.getStrength() > 1 || !world.provider.isHellWorld) {

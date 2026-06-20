@@ -66,6 +66,7 @@ import com.emoniph.witchery.brewing.potions.PotionSwimming;
 import com.emoniph.witchery.brewing.potions.PotionVolatility;
 import com.emoniph.witchery.brewing.potions.PotionWakingNightmare;
 import com.emoniph.witchery.brewing.potions.PotionWorship;
+import com.emoniph.witchery.brewing.potions.PotionSpellPower;
 import com.emoniph.witchery.brewing.potions.PotionWrappedInVine;
 import com.emoniph.witchery.common.ExtendedPlayer;
 import com.emoniph.witchery.infusion.Infusion;
@@ -163,6 +164,7 @@ public class WitcheryPotions {
    public final Potion GAS_MASK = this.register("witchery:potion.gasmask", PotionGasMask.class);
    public final Potion DISEASED = this.register("witchery:potion.diseased", PotionDiseased.class);
    public final Potion FORTUNE = this.register("witchery:potion.fortune", PotionFortune.class);
+   public final Potion SPELL_POWER = this.register("witchery:potion.spellpower", PotionSpellPower.class);
    public final Potion WORSHIP = this.register("witchery:potion.worship", PotionWorship.class);
    public final Potion KEEP_EFFECTS = this.register("witchery:potion.keepeffects", PotionKeepEffectsOnDeath.class);
    public final Potion WOLFSBANE = this.register("witchery:potion.wolfsbane", PotionBase.class);

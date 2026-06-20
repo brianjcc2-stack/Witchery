@@ -5,6 +5,7 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.passive.EntityChicken;
 import net.minecraft.entity.passive.EntityPig;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.RenderLivingEvent.Pre;
@@ -16,6 +17,8 @@ public class PotionPolymorph extends PotionBase implements IHandlePreRenderLivin
 
     @SideOnly(Side.CLIENT)
     private static EntityPig dummyPig;
+    @SideOnly(Side.CLIENT)
+    private static EntityChicken dummyChicken;
 
     public PotionPolymorph(int id, int color) {
         super(id, true, color);
@@ -27,17 +30,22 @@ public class PotionPolymorph extends PotionBase implements IHandlePreRenderLivin
         if (dummyPig == null || dummyPig.worldObj != world) {
             dummyPig = new EntityPig(world);
         }
+        if (dummyChicken == null || dummyChicken.worldObj != world) {
+            dummyChicken = new EntityChicken(world);
+        }
         
         event.setCanceled(true);
         
-        dummyPig.copyDataFrom(entity, true);
-        dummyPig.renderYawOffset = entity.renderYawOffset;
-        dummyPig.rotationYawHead = entity.rotationYawHead;
-        dummyPig.prevRenderYawOffset = entity.prevRenderYawOffset;
-        dummyPig.prevRotationYawHead = entity.prevRotationYawHead;
+        EntityLivingBase dummyTarget = (entity.getEntityId() % 2 == 0) ? dummyPig : dummyChicken;
+        
+        dummyTarget.copyDataFrom(entity, true);
+        dummyTarget.renderYawOffset = entity.renderYawOffset;
+        dummyTarget.rotationYawHead = entity.rotationYawHead;
+        dummyTarget.prevRenderYawOffset = entity.prevRenderYawOffset;
+        dummyTarget.prevRotationYawHead = entity.prevRotationYawHead;
 
         GL11.glPushMatrix();
-        RenderManager.instance.renderEntityWithPosYaw(dummyPig, event.x, event.y, event.z, 0, 0.0f);
+        RenderManager.instance.renderEntityWithPosYaw(dummyTarget, event.x, event.y, event.z, 0, 0.0f);
         GL11.glPopMatrix();
     }
 

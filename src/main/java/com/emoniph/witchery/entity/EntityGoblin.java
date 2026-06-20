@@ -84,6 +84,10 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
    private boolean preventDespawn;
    private static final double KOBOLDITE_HARVEST_CHANCE = 0.02D;
    private boolean testingLeashRange;
+   public String tamedOwnerName = "";
+   public boolean isTamed = false;
+   public boolean isSitting = false;
+   public boolean isFollowing = false;
 
 
    public EntityGoblin(World par1World) {
@@ -219,6 +223,27 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
          }
       }
 
+      if(this.isTamed && this.tamedOwnerName != null && !this.tamedOwnerName.isEmpty()) {
+         EntityPlayerMP owner = net.minecraft.server.MinecraftServer.getServer().getConfigurationManager().func_152612_a(this.tamedOwnerName);
+         if(owner != null) {
+            if(!this.isSitting && TimeUtil.secondsElapsed(2, super.ticksExisted)) {
+               int currentEnergy = com.emoniph.witchery.infusion.Infusion.getCurrentEnergy(owner);
+               int maxEnergy = com.emoniph.witchery.infusion.Infusion.getMaxEnergy(owner);
+               if(currentEnergy < maxEnergy) {
+                  com.emoniph.witchery.infusion.Infusion.setCurrentEnergy(owner, Math.min(currentEnergy + 40, maxEnergy));
+                  com.emoniph.witchery.util.ParticleEffect.INSTANT_SPELL.send(com.emoniph.witchery.util.SoundEffect.NOTE_PLING, owner, 1.0D, 2.0D, 8);
+               }
+            }
+            if(this.isSitting) {
+               this.getNavigator().clearPathEntity();
+            } else if(this.isFollowing && this.getDistanceSqToEntity(owner) > 16.0D) {
+               if (super.ticksExisted % 10 == 0) {
+                  this.getNavigator().tryMoveToEntityLiving(owner, 0.6D);
+               }
+            }
+         }
+      }
+
       super.updateAITick();
    }
 
@@ -303,7 +328,25 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
    public boolean interact(EntityPlayer player) {
       ItemStack stack = player.inventory.getCurrentItem();
       boolean heldSpawnEgg = stack != null && stack.getItem() == Items.spawn_egg;
-      if(!heldSpawnEgg && this.isEntityAlive() && !this.isTrading() && !this.isChild() && !player.isSneaking()) {
+
+      if (!heldSpawnEgg && this.isEntityAlive() && !this.isTrading() && !this.isChild() && !player.isSneaking()) {
+         if (!this.isTamed && stack != null && stack.getItem() == Items.emerald) {
+            if (!super.worldObj.isRemote) {
+               if (!player.capabilities.isCreativeMode) {
+                  --stack.stackSize;
+                  if (stack.stackSize <= 0) {
+                     player.inventory.setInventorySlotContents(player.inventory.currentItem, (ItemStack)null);
+                  }
+               }
+               this.isTamed = true;
+               this.tamedOwnerName = player.getCommandSenderName();
+               this.isFollowing = true;
+               this.preventDespawn = true;
+               super.worldObj.setEntityState(this, (byte)7); // Heart particles
+            }
+            return true;
+         }
+
          if(this.getLeashed()) {
             if(this.getHeldItem() == null) {
                if(stack != null && stack.getItem() instanceof ItemPickaxe) {
@@ -351,6 +394,10 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
       }
 
       nbtRoot.setBoolean("PreventDespawn", this.preventDespawn);
+      nbtRoot.setString("TamedOwnerName", this.tamedOwnerName != null ? this.tamedOwnerName : "");
+      nbtRoot.setBoolean("IsTamed", this.isTamed);
+      nbtRoot.setBoolean("IsSitting", this.isSitting);
+      nbtRoot.setBoolean("IsFollowing", this.isFollowing);
    }
 
    public void readEntityFromNBT(NBTTagCompound nbtRoot) {
@@ -367,6 +414,10 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
       }
 
       this.preventDespawn = nbtRoot.getBoolean("PreventDespawn");
+      this.tamedOwnerName = nbtRoot.getString("TamedOwnerName");
+      this.isTamed = nbtRoot.getBoolean("IsTamed");
+      this.isSitting = nbtRoot.getBoolean("IsSitting");
+      this.isFollowing = nbtRoot.getBoolean("IsFollowing");
    }
 
    protected float getSoundPitch() {

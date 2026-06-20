@@ -176,8 +176,8 @@ public class ItemMysticBranch extends ItemBase {
                      } else {
                         if(level > 1) {
                            int newLevel = 1;
-                           if(player.isPotionActive(Witchery.Potions.WORSHIP)) {
-                              PotionEffect potion = player.getActivePotionEffect(Witchery.Potions.WORSHIP);
+                           if(player.isPotionActive(Witchery.Potions.SPELL_POWER)) {
+                              PotionEffect potion = player.getActivePotionEffect(Witchery.Potions.SPELL_POWER);
                               if(level <= potion.getAmplifier() + 2) {
                                  newLevel = level;
                               }
