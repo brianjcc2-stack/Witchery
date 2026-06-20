@@ -430,14 +430,24 @@ public class EffectRegistry {
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
             if (mop != null && caster != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
-                if (mop.entityHit instanceof EntityPlayer) {
-                    if (world.isRemote || !(caster instanceof EntityPlayer) || MinecraftServer.getServer().isPVPEnabled()) {
-                        EntityPlayer hitCreature = (EntityPlayer)mop.entityHit;
-                        hitCreature.attackEntityFrom(DamageSource.causeIndirectMagicDamage((Entity)spell, (Entity)caster), (float)(4 + 4 * (spell.getEffectLevel() - 1)));
+                
+                int corazones = 2; // Daño base de 2 corazones (4 puntos)
+                if (caster instanceof net.minecraft.entity.player.EntityPlayer && com.emoniph.witchery.commands.CommandCrucio.CRUCIO_POWER.containsKey(caster)) {
+                    corazones = com.emoniph.witchery.commands.CommandCrucio.CRUCIO_POWER.get(caster);
+                }
+                
+                // Wither Nivel 3 (Amplificador 2) hace 1 de daño (0.5 corazones) cada 10 ticks.
+                // Para quitar X corazones, necesita 20 ticks por corazón.
+                int duracionTicks = corazones * 20;
+                
+                EntityLivingBase target = (EntityLivingBase) mop.entityHit;
+                
+                if (target instanceof net.minecraft.entity.player.EntityPlayer) {
+                    if (world.isRemote || !(caster instanceof net.minecraft.entity.player.EntityPlayer) || net.minecraft.server.MinecraftServer.getServer().isPVPEnabled()) {
+                        target.addPotionEffect(new net.minecraft.potion.PotionEffect(net.minecraft.potion.Potion.wither.id, duracionTicks, 2, false));
                     }
-                } else if (mop.entityHit instanceof EntityLiving) {
-                    EntityLiving hitCreature1 = (EntityLiving)mop.entityHit;
-                    hitCreature1.attackEntityFrom(DamageSource.causeIndirectMagicDamage((Entity)spell, (Entity)caster), 4.0f);
+                } else {
+                    target.addPotionEffect(new net.minecraft.potion.PotionEffect(net.minecraft.potion.Potion.wither.id, duracionTicks, 2, false));
                 }
             }
         }
@@ -1195,10 +1205,16 @@ public class EffectRegistry {
 
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
-            if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
-                EntityLivingBase target = (EntityLivingBase)mop.entityHit;
-                target.motionY = 2.0;
-                target.addPotionEffect(new PotionEffect(Potion.resistance.id, 200, 4));
+            if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit != null) {
+                if (caster instanceof EntityPlayer) {
+                    EntityPlayer player = (EntityPlayer)caster;
+                    player.getEntityData().setInteger("WITCLeviosaEntity", mop.entityHit.getEntityId());
+                    player.getEntityData().setInteger("WITCLeviosaTicks", 200);
+                }
+                mop.entityHit.motionY = 0.5;
+                if (mop.entityHit instanceof EntityLivingBase) {
+                    ((EntityLivingBase)mop.entityHit).addPotionEffect(new PotionEffect(Potion.resistance.id, 200, 4));
+                }
             }
         }
     }, new StrokeSet(0, new byte[]{(byte)2,(byte)2,(byte)1}));
@@ -1209,7 +1225,22 @@ public class EffectRegistry {
             if (!world.isRemote && mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
                 EntityLivingBase target = (EntityLivingBase)mop.entityHit;
                 // Slam the target violently into the ground and pin it.
-                target.addVelocity(0.0, -2.0, 0.0);
+                if (target.ridingEntity != null && target.ridingEntity instanceof com.emoniph.witchery.entity.EntityBroom) {
+                    target.mountEntity(null);
+                }
+                boolean isFlyingMob = target instanceof net.minecraft.entity.EntityFlying || target instanceof net.minecraft.entity.passive.EntityBat || target instanceof com.emoniph.witchery.entity.EntityFlyingTameable || target instanceof com.emoniph.witchery.entity.EntityFlyingMob || target instanceof net.minecraft.entity.boss.EntityDragon || target instanceof net.minecraft.entity.boss.EntityWither || target instanceof net.minecraft.entity.monster.EntityGhast || target instanceof net.minecraft.entity.monster.EntityBlaze;
+                boolean isFlyingPlayer = target instanceof EntityPlayer && ((EntityPlayer)target).capabilities.isFlying;
+                
+                if (isFlyingMob || isFlyingPlayer) {
+                    if (isFlyingPlayer) {
+                        ((EntityPlayer)target).capabilities.isFlying = false;
+                        ((EntityPlayer)target).sendPlayerAbilities();
+                    }
+                    target.addVelocity(0.0, -5.0, 0.0);
+                } else {
+                    target.addVelocity(0.0, -2.0, 0.0);
+                }
+                
                 target.velocityChanged = true;
                 target.fallDistance += 4.0f;
                 target.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, 60 * spell.getEffectLevel(), 3));

@@ -5,15 +5,19 @@ import com.emoniph.witchery.entity.EntitySpellEffect;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.potion.PotionEffect;
+import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 import java.util.WeakHashMap;
 
 public class SymbolEffectImperio extends SymbolEffectProjectile {
 
-    public static final Map<EntityPlayer, EntityLivingBase> IMPERIO_TARGETS = new WeakHashMap<EntityPlayer, EntityLivingBase>();
+    public static final Map<EntityLivingBase, EntityPlayer> IMPERIO_TARGETS = new WeakHashMap<EntityLivingBase, EntityPlayer>();
+    public static final Set<EntityLivingBase> IMPERIO_STAYING_TARGETS = Collections.newSetFromMap(new WeakHashMap<EntityLivingBase, Boolean>());
 
     public SymbolEffectImperio(int effectID, String unlocalisedName) {
         super(effectID, unlocalisedName, 200, false, false, "witchery.pott.imperio", 100);
@@ -27,17 +31,12 @@ public class SymbolEffectImperio extends SymbolEffectProjectile {
             EntityLivingBase target = (EntityLivingBase) mop.entityHit;
             EntityPlayer player = (EntityPlayer) caster;
 
-            // Apply paralysis to both for a very long time, but we will remove it manually when GUI closes
-            player.addPotionEffect(new PotionEffect(Witchery.Potions.PARALYSED.id, 6000, 0, true));
-            target.addPotionEffect(new PotionEffect(Witchery.Potions.PARALYSED.id, 6000, 0, true));
+            // Apply paralysis to target temporarily to signify mind control shock
+            target.addPotionEffect(new PotionEffect(Witchery.Potions.PARALYSED.id, 100, 0, true));
 
-            IMPERIO_TARGETS.put(player, target);
+            IMPERIO_TARGETS.put(target, player);
 
-            if (target instanceof EntityPlayer) {
-                player.displayGUIChest(((EntityPlayer) target).inventory);
-            } else {
-                player.displayGUIChest(new InventoryMobEquipment(target));
-            }
+            player.addChatMessage(new ChatComponentText("La criatura ha caído bajo tu control. Usa /imperio para darle órdenes."));
         }
     }
 }

@@ -846,46 +846,60 @@ public class GenericEvents {
              mount.rotationYawHead = rider.rotationYawHead;
              mount.rotationPitch = rider.rotationPitch;
              
-             // In 1.7.10, rider.moveForward can sometimes get stuck on the server if C0C packets drop or stop.
-             // We ensure we read it on the client for accurate control, and sync to mount. 
-             // Also disable mount's own pathing to avoid conflict.
+             // Also disable mount's own pathing and targets to avoid conflict.
              if (mount instanceof net.minecraft.entity.EntityLiving) {
                  ((net.minecraft.entity.EntityLiving)mount).getNavigator().clearPathEntity();
+                 ((net.minecraft.entity.EntityLiving)mount).setAttackTarget(null);
              }
              
-             mount.moveForward = rider.moveForward * 1.5f; 
-             mount.moveStrafing = rider.moveStrafing * 1.5f;
+             if (rider.moveForward != 0 || rider.moveStrafing != 0) {
+                 float speed = 0.15f; 
+                 if (mount.getEntityAttribute(net.minecraft.entity.SharedMonsterAttributes.movementSpeed) != null) {
+                     speed = (float) mount.getEntityAttribute(net.minecraft.entity.SharedMonsterAttributes.movementSpeed).getAttributeValue() * 0.75f;
+                 }
+                 double radYaw = Math.toRadians(rider.rotationYaw);
+                 double motionX = -Math.sin(radYaw) * rider.moveForward * speed;
+                 double motionZ = Math.cos(radYaw) * rider.moveForward * speed;
+                 motionX += Math.cos(radYaw) * rider.moveStrafing * speed;
+                 motionZ += Math.sin(radYaw) * rider.moveStrafing * speed;
+                 
+                 mount.motionX = motionX;
+                 mount.motionZ = motionZ;
+             }
+             
+             mount.moveForward = 0.0f;
+             mount.moveStrafing = 0.0f;
              
              boolean isJumping = false;
              try {
                  isJumping = ((Boolean) cpw.mods.fml.relauncher.ReflectionHelper.getPrivateValue(net.minecraft.entity.EntityLivingBase.class, rider, "isJumping", "field_70703_bu")).booleanValue();
              } catch (Exception e) {}
-             if (isJumping && mount instanceof net.minecraft.entity.EntityLiving) {
-                 ((net.minecraft.entity.EntityLiving)mount).getJumpHelper().setJumping();
+             if (isJumping && mount.onGround) {
+                 mount.motionY = 0.5D;
              }
          }
       }
 
       if(!event.entity.worldObj.isRemote && event.entity instanceof EntityPlayer) {
          EntityPlayer player = (EntityPlayer)event.entity;
-         
-         EntityLivingBase imperioTarget = com.emoniph.witchery.infusion.infusions.symbols.SymbolEffectImperio.IMPERIO_TARGETS.get(player);
-         if (imperioTarget != null) {
-             if (player.openContainer == player.inventoryContainer) {
-                 com.emoniph.witchery.infusion.infusions.symbols.SymbolEffectImperio.IMPERIO_TARGETS.remove(player);
-                 player.removePotionEffect(Witchery.Potions.PARALYSED.id);
-                 imperioTarget.removePotionEffect(Witchery.Potions.PARALYSED.id);
-             } else if (!imperioTarget.isEntityAlive()) {
-                 player.closeScreen();
-                 com.emoniph.witchery.infusion.infusions.symbols.SymbolEffectImperio.IMPERIO_TARGETS.remove(player);
-                 player.removePotionEffect(Witchery.Potions.PARALYSED.id);
-             }
-         }
-         
-         ExtendedPlayer playerEx = ExtendedPlayer.get(player);
-         Shapeshift.INSTANCE.updatePlayerState(player, playerEx);
-         playerEx.tick();
-         if(playerEx.isVampire()) {
+   
+      if (!event.entity.worldObj.isRemote && event.entity instanceof EntityLivingBase) {
+          EntityLivingBase living = (EntityLivingBase) event.entity;
+          if (com.emoniph.witchery.infusion.infusions.symbols.SymbolEffectImperio.IMPERIO_STAYING_TARGETS.contains(living)) {
+              if (living instanceof net.minecraft.entity.EntityLiving) {
+                  ((net.minecraft.entity.EntityLiving)living).getNavigator().clearPathEntity();
+              }
+              living.motionX = 0;
+              living.motionZ = 0;
+          }
+      }
+      
+      if(!event.entity.worldObj.isRemote && event.entity instanceof EntityPlayer) {
+          EntityPlayer player = (EntityPlayer)event.entity;
+          ExtendedPlayer playerEx = ExtendedPlayer.get(player);
+          Shapeshift.INSTANCE.updatePlayerState(player, playerEx);
+          playerEx.tick();
+          if(playerEx.isVampire()) {
             int closestVillage = player.getFoodStats().prevFoodLevel;
             int isWolfman = player.getFoodStats().getFoodLevel();
             if(closestVillage < isWolfman) {
@@ -1039,6 +1053,32 @@ public class GenericEvents {
             float playerHealth = player.getHealth();
             ExtendedPlayer playerEx = ExtendedPlayer.get(player);
             
+            if (player.isUsingItem() && player.getItemInUse() != null && player.getItemInUse().getItem() == Witchery.Items.MYSTIC_BRANCH) {
+                boolean blockable = event.source.isProjectile() || event.source.isMagicDamage() || event.source.damageType.equals("mob") || event.source.damageType.equals("player");
+                if (blockable && !event.source.isUnblockable() && !event.source.isFireDamage() && !event.source.isExplosion() && event.source.getEntity() != player) {
+                    net.minecraft.nbt.NBTTagCompound nbtPerm = com.emoniph.witchery.infusion.Infusion.getNBT(player);
+                    if (nbtPerm != null && nbtPerm.hasKey("witcheryInfusionID") && nbtPerm.hasKey("witcheryInfusionCharges")) {
+                        int charges = nbtPerm.getInteger("witcheryInfusionCharges");
+                        int blockCost = 2;
+                        if (charges >= blockCost) {
+                            com.emoniph.witchery.infusion.Infusion.setCurrentEnergy(player, charges - blockCost);
+                            com.emoniph.witchery.util.ParticleEffect.INSTANT_SPELL.send(com.emoniph.witchery.util.SoundEffect.RANDOM_FIZZ, player, 1.0D, 2.0D, 16);
+                            com.emoniph.witchery.util.ParticleEffect.SPELL_COLORED.send(com.emoniph.witchery.util.SoundEffect.NONE, player, 0.75D, 2.0D, 24, 0x00FFFF);
+                            if (event.source.isProjectile()) {
+                                event.setCanceled(true);
+                                return;
+                            } else {
+                                event.ammount = Math.max(0.0F, event.ammount - 5.0F);
+                                if (event.ammount == 0.0F) {
+                                    event.setCanceled(true);
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             if (playerEx.isAstralProjecting()) {
                if (!event.source.isMagicDamage() && event.source != net.minecraft.util.DamageSource.outOfWorld && event.source != net.minecraft.util.DamageSource.inWall && event.source != net.minecraft.util.DamageSource.drown) {
                   event.setCanceled(true);
@@ -1468,18 +1508,31 @@ public class GenericEvents {
 
    }
 
-   @SubscribeEvent
-   public void onLivingSetAttackTarget(net.minecraftforge.event.entity.living.LivingSetAttackTargetEvent event) {
-      if(event.target instanceof EntityPlayer && event.entityLiving != null) {
-         EntityPlayer player = (EntityPlayer)event.target;
-         ExtendedPlayer playerEx = ExtendedPlayer.get(player);
-         if(playerEx != null && playerEx.getSpiritLevel() >= 7 && player.isSneaking()) {
-            if(event.entityLiving.getDistanceSqToEntity(player) > 16.0D && event.entityLiving instanceof net.minecraft.entity.EntityLiving) {
+    @SubscribeEvent
+    public void onLivingSetAttackTarget(net.minecraftforge.event.entity.living.LivingSetAttackTargetEvent event) {
+       if(event.target instanceof EntityPlayer && event.entityLiving != null) {
+          EntityPlayer player = (EntityPlayer)event.target;
+          
+          EntityPlayer controller = com.emoniph.witchery.infusion.infusions.symbols.SymbolEffectImperio.IMPERIO_TARGETS.get(event.entityLiving);
+          if (controller == player && event.entityLiving instanceof net.minecraft.entity.EntityLiving) {
+              ((net.minecraft.entity.EntityLiving)event.entityLiving).setAttackTarget(null);
+              return;
+          }
+          
+          ExtendedPlayer playerEx = ExtendedPlayer.get(player);
+          if(playerEx != null && playerEx.getSpiritLevel() >= 7 && player.isSneaking()) {
+             if(event.entityLiving.getDistanceSqToEntity(player) > 16.0D && event.entityLiving instanceof net.minecraft.entity.EntityLiving) {
+                ((net.minecraft.entity.EntityLiving)event.entityLiving).setAttackTarget(null);
+             }
+          }
+       }
+       
+       if (event.entityLiving != null && com.emoniph.witchery.infusion.infusions.symbols.SymbolEffectImperio.IMPERIO_STAYING_TARGETS.contains(event.entityLiving)) {
+           if (event.entityLiving instanceof net.minecraft.entity.EntityLiving) {
                ((net.minecraft.entity.EntityLiving)event.entityLiving).setAttackTarget(null);
-            }
-         }
-      }
-   }
+           }
+       }
+    }
 
    @SubscribeEvent(
       priority = EventPriority.HIGH

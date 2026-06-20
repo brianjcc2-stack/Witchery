@@ -282,6 +282,8 @@ public class Witchery {
    public void serverLoad(FMLServerStartingEvent event) {
       event.registerServerCommand(new ChantCommand());
       event.registerServerCommand(new CommandWitcheryLevel());
+      event.registerServerCommand(new com.emoniph.witchery.commands.CommandImperio());
+      event.registerServerCommand(new com.emoniph.witchery.commands.CommandCrucio());
       PowerSources.initiate();
       BlockAreaMarker.AreaMarkerRegistry.serverStart();
       worldGenerator.initiate();

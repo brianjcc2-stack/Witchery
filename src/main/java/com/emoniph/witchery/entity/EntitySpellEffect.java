@@ -6,6 +6,7 @@ import com.emoniph.witchery.infusion.infusions.symbols.SymbolEffect;
 import com.emoniph.witchery.infusion.infusions.symbols.SymbolEffectProjectile;
 import com.emoniph.witchery.util.ParticleEffect;
 import com.emoniph.witchery.util.SoundEffect;
+import com.emoniph.witchery.infusion.Infusion;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import java.util.List;
@@ -285,10 +286,38 @@ public class EntitySpellEffect extends Entity {
       return 0.95F;
    }
 
+   private boolean isSpellBlockable(int effectID) {
+      // 17 = Flipendo, 15 = Expelliarmus, 19 = Impedimenta, 1 = Accio
+      // 3 = Alohomora, 8 = Confundus, 12 = Ennervate, 35 = Petrificus Totalus, 36 = Stupefy, 37 = Glacius
+      // Nota: Avada Kedavra (4) y Crucio (9) son Maldiciones Imperdonables y NO se pueden bloquear.
+      return effectID == 17 || effectID == 15 || effectID == 19 || effectID == 1 || effectID == 3 || effectID == 8 || effectID == 12 || effectID == 35 || effectID == 36 || effectID == 37;
+   }
+
    protected void onImpact(MovingObjectPosition mop) {
       if(!super.worldObj.isRemote) {
          SymbolEffect effect = EffectRegistry.instance().getEffect(this.getEffectID());
          if(effect != null && effect instanceof SymbolEffectProjectile) {
+            
+            if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityPlayer) {
+               EntityPlayer hitPlayer = (EntityPlayer) mop.entityHit;
+               if (hitPlayer.isUsingItem() && hitPlayer.getItemInUse() != null && hitPlayer.getItemInUse().getItem() == Witchery.Items.MYSTIC_BRANCH) {
+                  if (this.isSpellBlockable(this.getEffectID())) {
+                     NBTTagCompound nbtPerm = Infusion.getNBT(hitPlayer);
+                     if (nbtPerm != null && nbtPerm.hasKey("witcheryInfusionID") && nbtPerm.hasKey("witcheryInfusionCharges")) {
+                        int charges = nbtPerm.getInteger("witcheryInfusionCharges");
+                        int blockCost = 2;
+                        if (charges >= blockCost) {
+                           Infusion.setCurrentEnergy(hitPlayer, charges - blockCost);
+                           ParticleEffect.INSTANT_SPELL.send(SoundEffect.RANDOM_FIZZ, this, 1.0D, 1.0D, 16);
+                           ParticleEffect.SPELL_COLORED.send(SoundEffect.NONE, this, 0.75D, 1.0D, 24, 0x00FFFF);
+                           this.setDead();
+                           return;
+                        }
+                     }
+                  }
+               }
+            }
+
             int color = ((SymbolEffectProjectile)effect).getColor();
             if(effect.isCurse()) {
                ParticleEffect.MOB_SPELL.send(SoundEffect.MOB_ENDERDRAGON_HIT, this, 1.0D, 1.0D, 16);

@@ -1,21 +1,43 @@
 package com.emoniph.witchery.client;
 
-import com.emoniph.witchery.client.renderer.RenderSpirit;
-import com.emoniph.witchery.entity.EntitySpirit;
+import com.emoniph.witchery.client.model.ModelSpectre;
+import com.emoniph.witchery.entity.EntityBanshee;
 import com.emoniph.witchery.infusion.Infusion;
+import com.emoniph.witchery.util.RenderUtil;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import net.minecraft.client.renderer.entity.RenderLiving;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.entity.RendererLivingEntity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
+import org.lwjgl.opengl.GL11;
 
 @SideOnly(Side.CLIENT)
 public class TransformSpirit {
 
-   private EntitySpirit proxyEntity;
-   private RenderSpirit proxyRenderer = new RenderSpirit();
+   private EntityBanshee proxyEntity;
+   private int currentColor = 0xFFFFFF;
+
+   private RenderLiving proxyRenderer = new RenderLiving(new ModelSpectre(false), 0.0F) {
+       protected ResourceLocation getEntityTexture(Entity par1Entity) {
+           return new ResourceLocation("witchery", "textures/entities/banshee.png");
+       }
+       public void doRender(EntityLivingBase entity, double x, double y, double z, float yaw, float partialTicks) {
+           GL11.glPushMatrix();
+           RenderUtil.blend(true);
+           float r = (float)(currentColor >> 16 & 255) / 255.0F;
+           float g = (float)(currentColor >> 8 & 255) / 255.0F;
+           float b = (float)(currentColor & 255) / 255.0F;
+           GL11.glColor4f(r, g, b, 0.7F);
+           super.doRender(entity, x, y, z, yaw, partialTicks);
+           RenderUtil.blend(false);
+           GL11.glPopMatrix();
+       }
+   };
 
    public EntityLivingBase getModel() {
       return this.proxyEntity;
@@ -23,7 +45,7 @@ public class TransformSpirit {
 
    public void syncModelWith(EntityLivingBase entity, boolean frontface) {
       if(this.proxyEntity == null) {
-         this.proxyEntity = new EntitySpirit(entity.worldObj);
+         this.proxyEntity = new EntityBanshee(entity.worldObj);
       } else if(this.proxyEntity.worldObj != entity.worldObj) {
          this.proxyEntity.setWorld(entity.worldObj);
       }
@@ -46,19 +68,18 @@ public class TransformSpirit {
       this.proxyEntity.ticksExisted = entity.ticksExisted;
       this.proxyEntity.isDead = false;
 
-      // Set color based on infusion
       if (entity instanceof EntityPlayer) {
           EntityPlayer player = (EntityPlayer)entity;
           int infusionID = Infusion.getInfusionID(player);
-          int color = 0xFFFFFF; // White (Ghosting or default)
+          int color = 0xFFFFFF; 
           if (infusionID == 4) {
-              color = 0xFF0000; // Red (Infernal)
+              color = 0xFF0000; 
           } else if (infusionID == 2) {
-              color = 0x00FF00; // Green (Overworld/Earth)
+              color = 0x00FF00; 
           } else if (infusionID == 3) {
-              color = 0x800080; // Purple (Otherwhere)
+              color = 0x800080; 
           }
-          this.proxyEntity.setFeatherColor(color);
+          this.currentColor = color;
       }
    }
 
