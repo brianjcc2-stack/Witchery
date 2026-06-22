@@ -913,6 +913,29 @@ public class GenericEvents {
           ExtendedPlayer playerEx = ExtendedPlayer.get(player);
           Shapeshift.INSTANCE.updatePlayerState(player, playerEx);
           playerEx.tick();
+
+          if(!playerEx.getUnbreakableVowID().isEmpty() && event.entity.ticksExisted % 20 == 0) {
+              java.util.List<EntityPlayer> linkedPlayers = new java.util.ArrayList<EntityPlayer>();
+              for (Object obj : net.minecraft.server.MinecraftServer.getServer().getConfigurationManager().playerEntityList) {
+                  EntityPlayer p = (EntityPlayer) obj;
+                  if (p != player && ExtendedPlayer.get(p).getUnbreakableVowID().equals(playerEx.getUnbreakableVowID())) {
+                      linkedPlayers.add(p);
+                  }
+              }
+              if (!linkedPlayers.isEmpty()) {
+                  java.util.Collection<net.minecraft.potion.PotionEffect> effects = player.getActivePotionEffects();
+                  for (net.minecraft.potion.PotionEffect effect : effects) {
+                      if (effect.getDuration() > 20) {
+                          for (EntityPlayer p : linkedPlayers) {
+                              net.minecraft.potion.PotionEffect current = p.getActivePotionEffect(net.minecraft.potion.Potion.potionTypes[effect.getPotionID()]);
+                              if (current == null || current.getAmplifier() < effect.getAmplifier() || (current.getAmplifier() == effect.getAmplifier() && current.getDuration() < effect.getDuration() - 10)) {
+                                  p.addPotionEffect(new net.minecraft.potion.PotionEffect(effect.getPotionID(), effect.getDuration(), effect.getAmplifier(), effect.getIsAmbient()));
+                              }
+                          }
+                      }
+                  }
+              }
+          }
           if(playerEx.isVampire()) {
             int closestVillage = player.getFoodStats().prevFoodLevel;
             int isWolfman = player.getFoodStats().getFoodLevel();
@@ -1056,6 +1079,36 @@ public class GenericEvents {
 
    }
 
+   @SubscribeEvent
+   public void onLivingHeal(net.minecraftforge.event.entity.living.LivingHealEvent event) {
+      if(!event.entityLiving.worldObj.isRemote && !event.isCanceled()) {
+         if(event.entityLiving instanceof EntityPlayer) {
+            EntityPlayer player = (EntityPlayer)event.entityLiving;
+            ExtendedPlayer playerEx = ExtendedPlayer.get(player);
+            if (!playerEx.getUnbreakableVowID().isEmpty() && !event.entityLiving.getEntityData().getBoolean("VowHealing")) {
+                java.util.List<EntityPlayer> linkedPlayers = new java.util.ArrayList<EntityPlayer>();
+                for (Object obj : net.minecraft.server.MinecraftServer.getServer().getConfigurationManager().playerEntityList) {
+                    EntityPlayer p = (EntityPlayer) obj;
+                    if (p != player && ExtendedPlayer.get(p).getUnbreakableVowID().equals(playerEx.getUnbreakableVowID())) {
+                        linkedPlayers.add(p);
+                    }
+                }
+                if (!linkedPlayers.isEmpty()) {
+                    float totalHeal = event.amount;
+                    int totalPlayers = linkedPlayers.size() + 1;
+                    float sharedHeal = totalHeal / totalPlayers;
+                    event.amount = sharedHeal;
+                    for (EntityPlayer p : linkedPlayers) {
+                        p.getEntityData().setBoolean("VowHealing", true);
+                        p.heal(sharedHeal);
+                        p.getEntityData().setBoolean("VowHealing", false);
+                    }
+                }
+            }
+         }
+      }
+   }
+
    @SubscribeEvent(
       priority = EventPriority.HIGHEST
    )
@@ -1066,6 +1119,25 @@ public class GenericEvents {
             EntityPlayer player = (EntityPlayer)event.entityLiving;
             float playerHealth = player.getHealth();
             ExtendedPlayer playerEx = ExtendedPlayer.get(player);
+
+            if (!playerEx.getUnbreakableVowID().isEmpty() && !event.source.getDamageType().equals("vow_share")) {
+                java.util.List<EntityPlayer> linkedPlayers = new java.util.ArrayList<EntityPlayer>();
+                for (Object obj : net.minecraft.server.MinecraftServer.getServer().getConfigurationManager().playerEntityList) {
+                    EntityPlayer p = (EntityPlayer) obj;
+                    if (p != player && ExtendedPlayer.get(p).getUnbreakableVowID().equals(playerEx.getUnbreakableVowID())) {
+                        linkedPlayers.add(p);
+                    }
+                }
+                if (!linkedPlayers.isEmpty()) {
+                    float totalDamage = event.ammount;
+                    int totalPlayers = linkedPlayers.size() + 1;
+                    float sharedDamage = totalDamage / totalPlayers;
+                    event.ammount = sharedDamage;
+                    for (EntityPlayer p : linkedPlayers) {
+                        p.attackEntityFrom(new net.minecraft.util.DamageSource("vow_share").setDamageBypassesArmor().setMagicDamage(), sharedDamage);
+                    }
+                }
+            }
             
             if (player.isUsingItem() && player.getItemInUse() != null && player.getItemInUse().getItem() == Witchery.Items.MYSTIC_BRANCH) {
                 boolean blockable = event.source.isProjectile() || event.source.isMagicDamage() || event.source.damageType.equals("mob") || event.source.damageType.equals("player");

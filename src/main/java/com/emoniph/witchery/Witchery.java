@@ -284,6 +284,7 @@ public class Witchery {
       event.registerServerCommand(new CommandWitcheryLevel());
       event.registerServerCommand(new com.emoniph.witchery.commands.CommandImperio());
       event.registerServerCommand(new com.emoniph.witchery.commands.CommandHobgoblin());
+      event.registerServerCommand(new com.emoniph.witchery.commands.CommandPet());
       event.registerServerCommand(new com.emoniph.witchery.commands.CommandCrucio());
       PowerSources.initiate();
       BlockAreaMarker.AreaMarkerRegistry.serverStart();

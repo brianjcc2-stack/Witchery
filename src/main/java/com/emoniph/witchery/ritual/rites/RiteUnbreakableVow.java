@@ -11,7 +11,9 @@ import com.emoniph.witchery.util.TimeUtil;
 import java.util.Iterator;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import net.minecraft.entity.player.EntityPlayer;
+import com.emoniph.witchery.common.ExtendedPlayer;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.AxisAlignedBB;
@@ -38,19 +40,31 @@ public class RiteUnbreakableVow extends Rite {
                 return RitualStep.Result.STARTING;
             }
             if (!world.isRemote) {
-                int dur = TimeUtil.minsToTicks(10);
                 boolean blessed = false;
                 AxisAlignedBB bounds = AxisAlignedBB.getBoundingBox((double)(x - 6), (double)(y - 2), (double)(z - 6), (double)(x + 6), (double)(y + 4), (double)(z + 6));
                 List players = world.getEntitiesWithinAABB(EntityPlayer.class, bounds);
+                ArrayList<EntityPlayer> validPlayers = new ArrayList<EntityPlayer>();
+
                 Iterator i$ = players.iterator();
                 while (i$.hasNext()) {
                     EntityPlayer player = (EntityPlayer)i$.next();
                     if (Coord.distance(player.posX, player.posY, player.posZ, (double)x + 0.5D, (double)y, (double)z + 0.5D) <= 6.0D) {
-                        player.addPotionEffect(new PotionEffect(Potion.resistance.id, dur, 1));
-                        player.addPotionEffect(new PotionEffect(Potion.regeneration.id, dur, 0));
-                        player.addPotionEffect(new PotionEffect(Potion.fireResistance.id, dur, 0));
-                        player.addPotionEffect(new PotionEffect(Potion.field_76444_x.id, dur, 0));
-                        ChatUtil.sendTranslated(EnumChatFormatting.GOLD, player, "witchery.rite.unbreakablevow.blessed", new Object[0]);
+                        validPlayers.add(player);
+                    }
+                }
+
+                if (validPlayers.size() > 1) {
+                    String vowID = UUID.randomUUID().toString();
+                    for (EntityPlayer p : validPlayers) {
+                        ExtendedPlayer.get(p).setUnbreakableVowID(vowID);
+                        ChatUtil.sendTranslated(EnumChatFormatting.LIGHT_PURPLE, p, "Your soul has been bound by the Unbreakable Vow.", new Object[0]);
+                    }
+                    blessed = true;
+                } else if (validPlayers.size() == 1) {
+                    ExtendedPlayer playerEx = ExtendedPlayer.get(validPlayers.get(0));
+                    if (!playerEx.getUnbreakableVowID().isEmpty()) {
+                        playerEx.setUnbreakableVowID("");
+                        ChatUtil.sendTranslated(EnumChatFormatting.DARK_PURPLE, validPlayers.get(0), "Your soul has been freed from the Unbreakable Vow.", new Object[0]);
                         blessed = true;
                     }
                 }

@@ -108,6 +108,7 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
    static final long COOLDOWN_ESCAPE_2_TICKS = (long)TimeUtil.minsToTicks(60);
    long mirrorWorldEscapeCooldown1;
    long mirrorWorldEscapeCooldown2;
+   private String unbreakableVowID = "";
 
 
    public static final void register(EntityPlayer player) {
@@ -189,6 +190,9 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
 
       props.setLong("MirrorEscape1", this.mirrorWorldEscapeCooldown1);
       props.setLong("MirrorEscape2", this.mirrorWorldEscapeCooldown2);
+      if (this.unbreakableVowID != null && !this.unbreakableVowID.isEmpty()) {
+         props.setString("UnbreakableVowID", this.unbreakableVowID);
+      }
       compound.setTag("WitcheryExtendedPlayer", props);
    }
 
@@ -242,6 +246,11 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
 
          this.mirrorWorldEscapeCooldown1 = nbtRoot.getLong("MirrorEscape1");
          this.mirrorWorldEscapeCooldown2 = nbtRoot.getLong("MirrorEscape2");
+         if(nbtRoot.hasKey("UnbreakableVowID")) {
+            this.unbreakableVowID = nbtRoot.getString("UnbreakableVowID");
+         } else {
+            this.unbreakableVowID = "";
+         }
       }
 
    }
@@ -978,6 +987,19 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
          this.incurablePotionEffectCache.clear();
       }
 
+   }
+
+   public void setCachedWorship(int worship) {
+      this.cachedWorship = worship;
+   }
+
+   public String getUnbreakableVowID() {
+      return this.unbreakableVowID == null ? "" : this.unbreakableVowID;
+   }
+
+   public void setUnbreakableVowID(String vowID) {
+      this.unbreakableVowID = vowID;
+      this.sync();
    }
 
    public void addWorship(int level) {

@@ -1,9 +1,10 @@
 package com.emoniph.witchery.commands;
 
-import com.emoniph.witchery.entity.EntityGoblin;
+import com.emoniph.witchery.util.TameableUtil;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.passive.EntityTameable;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChatComponentText;
@@ -12,16 +13,16 @@ import net.minecraft.util.Vec3;
 
 import java.util.List;
 
-public class CommandHobgoblin extends CommandBase {
+public class CommandPet extends CommandBase {
 
     @Override
     public String getCommandName() {
-        return "hobgoblin";
+        return "pet";
     }
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/hobgoblin <follow|stay|attack|release|inventory>";
+        return "/pet <follow|stay|attack|release|inventory>";
     }
 
     @Override
@@ -82,62 +83,59 @@ public class CommandHobgoblin extends CommandBase {
 
         if (subCommand.equals("attack")) {
             if (lookedAtEntity == null) {
-                player.addChatMessage(new ChatComponentText("You must look at the enemy you want your hobgoblins to attack."));
+                player.addChatMessage(new ChatComponentText("You must look at the enemy you want your pets to attack."));
                 return;
             }
 
             AxisAlignedBB bb = AxisAlignedBB.getBoundingBox(player.posX - 30.0D, player.posY - 30.0D, player.posZ - 30.0D, player.posX + 30.0D, player.posY + 30.0D, player.posZ + 30.0D);
-            List<EntityGoblin> goblins = player.worldObj.getEntitiesWithinAABB(EntityGoblin.class, bb);
+            List<EntityTameable> pets = player.worldObj.getEntitiesWithinAABB(EntityTameable.class, bb);
             
             int attackCount = 0;
-            for (EntityGoblin goblin : goblins) {
-                if (goblin.isTamed && player.getCommandSenderName().equals(goblin.tamedOwnerName) && !goblin.isSitting) {
-                    goblin.setAttackTarget(lookedAtEntity);
+            for (EntityTameable pet : pets) {
+                if (pet.isTamed() && TameableUtil.isOwner(pet, player) && !pet.isSitting()) {
+                    pet.setAttackTarget(lookedAtEntity);
                     attackCount++;
                 }
             }
             
             if (attackCount > 0) {
-                player.addChatMessage(new ChatComponentText(attackCount + " hobgoblins have locked onto the target."));
+                player.addChatMessage(new ChatComponentText(attackCount + " pets have locked onto the target."));
             } else {
-                player.addChatMessage(new ChatComponentText("There are no tame hobgoblins nearby that can attack."));
+                player.addChatMessage(new ChatComponentText("There are no tame pets nearby that can attack."));
             }
             return;
         }
 
-        // For other commands, we MUST be looking at a tamed hobgoblin
-        if (lookedAtEntity == null || !(lookedAtEntity instanceof EntityGoblin)) {
-            player.addChatMessage(new ChatComponentText("You must look directly at one of your hobgoblins to give this order."));
+        // For other commands, we MUST be looking at a tamed pet
+        if (lookedAtEntity == null || !(lookedAtEntity instanceof EntityTameable)) {
+            player.addChatMessage(new ChatComponentText("You must look directly at one of your pets to give this order."));
             return;
         }
 
-        EntityGoblin goblin = (EntityGoblin) lookedAtEntity;
+        EntityTameable pet = (EntityTameable) lookedAtEntity;
 
-        if (!goblin.isTamed || goblin.tamedOwnerName == null || !goblin.tamedOwnerName.equals(player.getCommandSenderName())) {
-            player.addChatMessage(new ChatComponentText("This hobgoblin is not yours. It will not obey your orders."));
+        if (!pet.isTamed() || !TameableUtil.isOwner(pet, player)) {
+            player.addChatMessage(new ChatComponentText("This pet is not yours. It will not obey your orders."));
             return;
         }
 
         if (subCommand.equals("stay")) {
-            goblin.isSitting = true;
-            goblin.isFollowing = false;
-            goblin.setAttackTarget(null);
-            goblin.getNavigator().clearPathEntity();
-            player.addChatMessage(new ChatComponentText("The hobgoblin will wait here."));
+            pet.setSitting(true);
+            pet.setAttackTarget(null);
+            pet.getNavigator().clearPathEntity();
+            player.addChatMessage(new ChatComponentText("The pet will wait here."));
         } else if (subCommand.equals("follow")) {
-            goblin.isSitting = false;
-            goblin.isFollowing = true;
-            player.addChatMessage(new ChatComponentText("The hobgoblin will follow and protect you."));
+            pet.setSitting(false);
+            player.addChatMessage(new ChatComponentText("The pet will follow and protect you."));
         } else if (subCommand.equals("release")) {
-            goblin.isTamed = false;
-            goblin.tamedOwnerName = "";
-            goblin.isSitting = false;
-            goblin.isFollowing = false;
-            goblin.setAttackTarget(null);
-            goblin.getNavigator().clearPathEntity();
-            player.addChatMessage(new ChatComponentText("You have released the hobgoblin. It will no longer follow you."));
+            pet.setTamed(false);
+            pet.func_152115_b(""); // Clear owner ID string
+            pet.setSitting(false);
+            pet.setAttackTarget(null);
+            pet.getNavigator().clearPathEntity();
+            player.addChatMessage(new ChatComponentText("You have released the pet. It will no longer follow you."));
         } else if (subCommand.equals("inventory")) {
-            player.displayGUIChest(new com.emoniph.witchery.infusion.infusions.symbols.InventoryMobEquipment(goblin));
+            player.displayGUIChest(new com.emoniph.witchery.infusion.infusions.symbols.InventoryMobEquipment(pet));
         } else {
             player.addChatMessage(new ChatComponentText("Unknown command. Valid commands are: follow, stay, attack, release, inventory."));
         }

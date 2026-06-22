@@ -786,8 +786,11 @@ public class WitcheryRecipes {
     public void postInit() {
         if (Config.instance().smeltAllSaplingsToWoodAsh) {
             ArrayList saplingTypes = OreDictionary.getOres((String)"treeSapling");
-            for (Object obj : saplingTypes) { ItemStack stack = (ItemStack)obj;
-                if (stack == null || stack.getItem() != Item.getItemFromBlock(Blocks.sapling) || stack.getItemDamage() != 2) continue;GameRegistry.addSmelting((ItemStack)stack, (ItemStack)Witchery.Items.GENERIC.itemAshWood.createStack(), (float)0.0f);
+            for (Object obj : saplingTypes) {
+                ItemStack stack = (ItemStack)obj;
+                if (stack != null) {
+                    GameRegistry.addSmelting(stack.copy(), (ItemStack)Witchery.Items.GENERIC.itemAshWood.createStack(), (float)0.0f);
+                }
             }
         }
     }

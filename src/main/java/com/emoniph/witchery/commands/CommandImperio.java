@@ -24,7 +24,7 @@ public class CommandImperio extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/imperio <adelante|atras|atacar|cord|inventario|quieto|liberar> [argumentos]";
+        return "/imperio <forward|backward|attack|coord|inventory|stay|release> [args]";
     }
 
     @Override
@@ -76,7 +76,7 @@ public class CommandImperio extends CommandBase {
         EntityPlayer player = (EntityPlayer) sender;
 
         if (args.length == 0) {
-            player.addChatMessage(new ChatComponentText("Uso: " + getCommandUsage(sender)));
+            player.addChatMessage(new ChatComponentText("Usage: " + getCommandUsage(sender)));
             return;
         }
 
@@ -94,18 +94,18 @@ public class CommandImperio extends CommandBase {
         }
 
         if (controlledEntities.isEmpty()) {
-            player.addChatMessage(new ChatComponentText("No tienes ninguna criatura bajo tu control mental."));
+            player.addChatMessage(new ChatComponentText("You do not have any creature under your mental control."));
             return;
         }
 
-        // Logic for ATACAR (Target Enemy)
-        if (subCommand.equals("atacar")) {
+        // Logic for ATTACK (Target Enemy)
+        if (subCommand.equals("attack")) {
             if (lookedAtEntity == null) {
-                player.addChatMessage(new ChatComponentText("Debes mirar al enemigo al que quieres que tu ejército ataque."));
+                player.addChatMessage(new ChatComponentText("You must look at the enemy you want your army to attack."));
                 return;
             }
             if (controlledEntities.contains(lookedAtEntity)) {
-                player.addChatMessage(new ChatComponentText("No puedes ordenarles atacar a un aliado de la mente enjambre."));
+                player.addChatMessage(new ChatComponentText("You cannot order them to attack an ally of the hive mind."));
                 return;
             }
             int attackCount = 0;
@@ -115,25 +115,25 @@ public class CommandImperio extends CommandBase {
                     attackCount++;
                 }
             }
-            player.addChatMessage(new ChatComponentText(attackCount + " criaturas han fijado al objetivo."));
+            player.addChatMessage(new ChatComponentText(attackCount + " creatures have locked onto the target."));
             return;
         }
 
         // The rest of the commands REQUIRE the looked-at entity to be an ALIEN CONTROLLED BY US
         if (lookedAtEntity == null || !controlledEntities.contains(lookedAtEntity)) {
-            player.addChatMessage(new ChatComponentText("Debes mirar directamente a una de tus criaturas para darle esta orden."));
+            player.addChatMessage(new ChatComponentText("You must look directly at one of your creatures to give this order."));
             return;
         }
 
         EntityLivingBase target = lookedAtEntity;
 
-        if (subCommand.equals("adelante") || subCommand.equals("atras")) {
+        if (subCommand.equals("forward") || subCommand.equals("backward")) {
             SymbolEffectImperio.IMPERIO_STAYING_TARGETS.remove(target);
             int steps = 1;
             if (args.length > 1) {
                 try { steps = Integer.parseInt(args[1]); } catch (NumberFormatException e) {}
             }
-            int multiplier = subCommand.equals("adelante") ? 1 : -1;
+            int multiplier = subCommand.equals("forward") ? 1 : -1;
             
             if (target instanceof net.minecraft.entity.EntityLiving) {
                 double destX = target.posX + target.getLookVec().xCoord * steps * multiplier;
@@ -143,12 +143,12 @@ public class CommandImperio extends CommandBase {
             } else if (target instanceof EntityPlayer) {
                 target.setPositionAndUpdate(target.posX + target.getLookVec().xCoord * steps * multiplier, target.posY, target.posZ + target.getLookVec().zCoord * steps * multiplier);
             }
-            player.addChatMessage(new ChatComponentText("La criatura avanza " + steps + " pasos."));
+            player.addChatMessage(new ChatComponentText("The creature moves " + steps + " steps."));
 
-        } else if (subCommand.equals("cord")) {
+        } else if (subCommand.equals("coord")) {
             SymbolEffectImperio.IMPERIO_STAYING_TARGETS.remove(target);
             if (args.length < 4) {
-                player.addChatMessage(new ChatComponentText("Uso: /imperio cord <x> <y> <z>"));
+                player.addChatMessage(new ChatComponentText("Usage: /imperio coord <x> <y> <z>"));
                 return;
             }
             try {
@@ -160,33 +160,33 @@ public class CommandImperio extends CommandBase {
                 } else if (target instanceof EntityPlayer) {
                     target.setPositionAndUpdate(x, y, z);
                 }
-                player.addChatMessage(new ChatComponentText("Criatura dirigida a " + x + ", " + y + ", " + z));
+                player.addChatMessage(new ChatComponentText("Creature directed to " + x + ", " + y + ", " + z));
             } catch (NumberFormatException e) {
-                player.addChatMessage(new ChatComponentText("Coordenadas inválidas."));
+                player.addChatMessage(new ChatComponentText("Invalid coordinates."));
             }
 
-        } else if (subCommand.equals("quieto")) {
+        } else if (subCommand.equals("stay")) {
             SymbolEffectImperio.IMPERIO_STAYING_TARGETS.add(target);
             if (target instanceof net.minecraft.entity.EntityLiving) {
                 ((net.minecraft.entity.EntityLiving) target).setAttackTarget(null);
                 ((net.minecraft.entity.EntityLiving) target).getNavigator().clearPathEntity();
             }
-            player.addChatMessage(new ChatComponentText("La criatura esperará aquí estática y no atacará a nadie."));
+            player.addChatMessage(new ChatComponentText("The creature will wait here and not attack anyone."));
 
-        } else if (subCommand.equals("liberar")) {
+        } else if (subCommand.equals("release")) {
             SymbolEffectImperio.IMPERIO_TARGETS.remove(target);
             SymbolEffectImperio.IMPERIO_STAYING_TARGETS.remove(target);
             target.removePotionEffect(com.emoniph.witchery.Witchery.Potions.PARALYSED.id);
-            player.addChatMessage(new ChatComponentText("Has liberado a la criatura de tu control."));
+            player.addChatMessage(new ChatComponentText("You have released the creature from your control."));
 
-        } else if (subCommand.equals("inventario")) {
+        } else if (subCommand.equals("inventory")) {
             if (target instanceof EntityPlayer) {
                 player.displayGUIChest(((EntityPlayer) target).inventory);
             } else {
                 player.displayGUIChest(new com.emoniph.witchery.infusion.infusions.symbols.InventoryMobEquipment(target));
             }
         } else {
-            player.addChatMessage(new ChatComponentText("Comando desconocido."));
+            player.addChatMessage(new ChatComponentText("Unknown command."));
         }
     }
 }
