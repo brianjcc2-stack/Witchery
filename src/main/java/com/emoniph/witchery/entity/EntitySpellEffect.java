@@ -300,7 +300,7 @@ public class EntitySpellEffect extends Entity {
             
             if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityPlayer) {
                EntityPlayer hitPlayer = (EntityPlayer) mop.entityHit;
-               if (hitPlayer.isUsingItem() && hitPlayer.getItemInUse() != null && hitPlayer.getItemInUse().getItem() == Witchery.Items.MYSTIC_BRANCH) {
+               if (hitPlayer.isUsingItem() && hitPlayer.getHeldItem() != null && hitPlayer.getHeldItem().getItem() == Witchery.Items.MYSTIC_BRANCH) {
                   if (this.isSpellBlockable(this.getEffectID())) {
                      NBTTagCompound nbtPerm = Infusion.getNBT(hitPlayer);
                      if (nbtPerm != null && nbtPerm.hasKey("witcheryInfusionID") && nbtPerm.hasKey("witcheryInfusionCharges")) {

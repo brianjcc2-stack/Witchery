@@ -1139,7 +1139,7 @@ public class GenericEvents {
                 }
             }
             
-            if (player.isUsingItem() && player.getItemInUse() != null && player.getItemInUse().getItem() == Witchery.Items.MYSTIC_BRANCH) {
+            if (player.isUsingItem() && player.getHeldItem() != null && player.getHeldItem().getItem() == Witchery.Items.MYSTIC_BRANCH) {
                 boolean blockable = event.source.isProjectile() || event.source.isMagicDamage() || event.source.damageType.equals("mob") || event.source.damageType.equals("player");
                 if (blockable && !event.source.isUnblockable() && !event.source.isFireDamage() && !event.source.isExplosion() && event.source.getEntity() != player) {
                     net.minecraft.nbt.NBTTagCompound nbtPerm = com.emoniph.witchery.infusion.Infusion.getNBT(player);
