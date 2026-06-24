@@ -38,7 +38,7 @@ public class CommandImperio extends CommandBase {
     }
 
     private EntityLivingBase getLookedAtEntity(EntityPlayer player, double range) {
-        Vec3 vec3 = player.getPosition(1.0F);
+        Vec3 vec3 = Vec3.createVectorHelper(player.posX, player.posY, player.posZ);
         vec3.yCoord += player.getEyeHeight();
         Vec3 vec31 = player.getLook(1.0F);
         Vec3 vec32 = vec3.addVector(vec31.xCoord * range, vec31.yCoord * range, vec31.zCoord * range);
