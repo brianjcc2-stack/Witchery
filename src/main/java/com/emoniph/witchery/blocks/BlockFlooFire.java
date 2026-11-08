@@ -12,14 +12,19 @@ import cpw.mods.fml.relauncher.SideOnly;
 import java.util.Random;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFire;
+import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.IIcon;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
 public class BlockFlooFire extends BlockFire {
+
+   @SideOnly(Side.CLIENT)
+   private IIcon[] fireIcons;
 
    public BlockFlooFire() {
       super();
@@ -28,6 +33,31 @@ public class BlockFlooFire extends BlockFire {
       this.setHardness(0.0F);
       this.setStepSound(Block.soundTypeCloth);
       this.setCreativeTab(WitcheryCreativeTab.INSTANCE);
+      this.setBlockTextureName("witchery:floofire");
+   }
+
+   @SideOnly(Side.CLIENT)
+   @Override
+   public void registerBlockIcons(IIconRegister register) {
+      this.fireIcons = new IIcon[]{
+         register.registerIcon("witchery:floofire_layer_0"),
+         register.registerIcon("witchery:floofire_layer_1")
+      };
+   }
+
+   @SideOnly(Side.CLIENT)
+   @Override
+   public IIcon getFireIcon(int layer) {
+      if (this.fireIcons == null || layer < 0 || layer >= this.fireIcons.length) {
+         return super.getFireIcon(layer);
+      }
+      return this.fireIcons[layer];
+   }
+
+   @SideOnly(Side.CLIENT)
+   @Override
+   public IIcon getIcon(int side, int meta) {
+      return this.getFireIcon(0);
    }
 
    public Block setBlockName(String blockName) {
@@ -43,25 +73,29 @@ public class BlockFlooFire extends BlockFire {
       if(!World.doesBlockHaveSolidTopSurface(world, x, y - 1, z) && world.getBlock(x, y - 1, z) != Blocks.netherrack) {
          world.setBlockToAir(x, y, z);
       }
-
    }
 
    public void updateTick(World world, int x, int y, int z, Random rand) {
-      // The verdant Floo flame does NOT spread like normal fire; it simply dies out over time.
+      // The verdant Floo flame lasts for 60 seconds (15 age stages * 80 ticks) or is permanent over Netherrack
       if(!world.isRemote) {
          if(!World.doesBlockHaveSolidTopSurface(world, x, y - 1, z) && world.getBlock(x, y - 1, z) != Blocks.netherrack) {
             world.setBlockToAir(x, y, z);
-         } else if(rand.nextInt(4) == 0) {
-            world.setBlockToAir(x, y, z);
-         } else {
+         } else if(world.getBlock(x, y - 1, z) == Blocks.netherrack) {
             world.scheduleBlockUpdate(x, y, z, this, this.tickRate(world));
+         } else {
+            int age = world.getBlockMetadata(x, y, z);
+            if(age >= 15) {
+               world.setBlockToAir(x, y, z);
+            } else {
+               world.setBlockMetadataWithNotify(x, y, z, age + 1, 2);
+               world.scheduleBlockUpdate(x, y, z, this, this.tickRate(world));
+            }
          }
       }
-
    }
 
    public int tickRate(World world) {
-      return 40;
+      return 80;
    }
 
    public void onBlockAdded(World world, int x, int y, int z) {
@@ -78,38 +112,38 @@ public class BlockFlooFire extends BlockFire {
       }
    }
 
+   @Override
    public void onEntityCollidedWithBlock(World world, int x, int y, int z, Entity entity) {
       entity.extinguish();
+      entity.setFire(0);
       if(!world.isRemote && entity instanceof EntityPlayer) {
          EntityPlayer player = (EntityPlayer)entity;
          ItemStack held = player.getHeldItem();
          if(held != null && (Witchery.Items.GENERIC.itemWaystone.isMatch(held) || Witchery.Items.GENERIC.itemWaystoneBound.isMatch(held)) && ItemGeneral.isWaystoneBound(held)) {
             if(Witchery.Items.GENERIC.teleportToLocation(world, held, player, 0, true)) {
-               // The Waystone is the destination key, never consumed.
                world.setBlockToAir(x, y, z);
                ParticleEffect.PORTAL.send(SoundEffect.MOB_ENDERMEN_PORTAL, player, 0.5D, 1.0D, 32);
             }
          }
       }
-
    }
 
    public int colorMultiplier(IBlockAccess world, int x, int y, int z) {
-      return 5308749;
+      return 0x00FF88;
    }
 
    @SideOnly(Side.CLIENT)
    public void randomDisplayTick(World world, int x, int y, int z, Random rand) {
-      if(rand.nextInt(24) == 0) {
+      if(rand.nextInt(18) == 0) {
          world.playSound((double)((float)x + 0.5F), (double)((float)y + 0.5F), (double)((float)z + 0.5F), "fire.fire", 1.0F + rand.nextFloat(), rand.nextFloat() * 0.7F + 0.3F, false);
       }
 
       for(int i = 0; i < 4; ++i) {
-         double d0 = (double)((float)x + rand.nextFloat());
-         double d1 = (double)((float)y + rand.nextFloat() * 0.5F + 0.2F);
-         double d2 = (double)((float)z + rand.nextFloat());
-         world.spawnParticle("happyVillager", d0, d1, d2, 0.0D, 0.0D, 0.0D);
+         double d0 = (double)x + 0.1D + rand.nextDouble() * 0.8D;
+         double d1 = (double)y + rand.nextDouble() * 0.6D;
+         double d2 = (double)z + 0.1D + rand.nextDouble() * 0.8D;
+         world.spawnParticle("happyVillager", d0, d1, d2, 0.0D, 0.08D, 0.0D);
+         world.spawnParticle("flame", d0, d1, d2, 0.0D, 0.02D, 0.0D);
       }
-
    }
 }

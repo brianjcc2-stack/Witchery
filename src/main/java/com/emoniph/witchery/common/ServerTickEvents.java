@@ -58,33 +58,47 @@ public class ServerTickEvents {
    public void onPlayerTick(PlayerTickEvent event) {
       if(event.side == Side.SERVER && !event.player.worldObj.isRemote) {
          if(event.phase == Phase.START) {
+            int selfLeviosa = event.player.getEntityData().getInteger("WITCLeviosaSelfTicks");
+            if (selfLeviosa > 0) {
+               event.player.getEntityData().setInteger("WITCLeviosaSelfTicks", selfLeviosa - 1);
+               event.player.fallDistance = 0.0F;
+               if (event.player.isSneaking()) {
+                  event.player.motionY = -0.12D;
+                  if (event.player.onGround) {
+                     event.player.getEntityData().setInteger("WITCLeviosaSelfTicks", 0);
+                  }
+               } else if (event.player.motionY < -0.05D) {
+                  event.player.motionY = -0.05D;
+               }
+            }
+
             int leviosaTicks = event.player.getEntityData().getInteger("WITCLeviosaTicks");
             if (leviosaTicks > 0) {
-                if (event.player.isSneaking()) {
-                    event.player.getEntityData().setInteger("WITCLeviosaTicks", 0);
-                } else {
-                    if (leviosaTicks != Integer.MAX_VALUE) {
-                        event.player.getEntityData().setInteger("WITCLeviosaTicks", leviosaTicks - 1);
-                    }
-                    int entityId = event.player.getEntityData().getInteger("WITCLeviosaEntity");
-                    net.minecraft.entity.Entity target = event.player.worldObj.getEntityByID(entityId);
-                    if (target != null && !target.isDead && target.getDistanceSqToEntity(event.player) < 1024.0D) {
-                        net.minecraft.util.Vec3 look = event.player.getLookVec();
-                        float dist = event.player.getEntityData().hasKey("WITCLeviosaDistance") ? event.player.getEntityData().getFloat("WITCLeviosaDistance") : 5.0f;
-                        double targetX = event.player.posX + look.xCoord * dist;
-                        double targetY = event.player.posY + (double)event.player.getEyeHeight() + look.yCoord * dist;
-                        double targetZ = event.player.posZ + look.zCoord * dist;
-                        target.motionX = (targetX - target.posX) * 0.2D;
-                        target.motionY = (targetY - target.posY) * 0.2D;
-                        target.motionZ = (targetZ - target.posZ) * 0.2D;
-                        target.fallDistance = 0.0F;
-                        if (target instanceof net.minecraft.entity.EntityLivingBase) {
-                            ((net.minecraft.entity.EntityLivingBase)target).addPotionEffect(new PotionEffect(net.minecraft.potion.Potion.resistance.id, 20, 4));
-                        }
-                    } else {
-                        event.player.getEntityData().setInteger("WITCLeviosaTicks", 0);
-                    }
-                }
+               if (event.player.getHeldItem() == null || event.player.getHeldItem().getItem() != Witchery.Items.MYSTIC_BRANCH) {
+                  event.player.getEntityData().setInteger("WITCLeviosaTicks", 0);
+               } else {
+                  if (leviosaTicks != Integer.MAX_VALUE) {
+                     event.player.getEntityData().setInteger("WITCLeviosaTicks", leviosaTicks - 1);
+                  }
+                  int entityId = event.player.getEntityData().getInteger("WITCLeviosaEntity");
+                  net.minecraft.entity.Entity target = event.player.worldObj.getEntityByID(entityId);
+                  if (target != null && !target.isDead && target.getDistanceSqToEntity(event.player) < 1024.0D) {
+                     net.minecraft.util.Vec3 look = event.player.getLookVec();
+                     float dist = event.player.getEntityData().hasKey("WITCLeviosaDistance") ? event.player.getEntityData().getFloat("WITCLeviosaDistance") : 5.0f;
+                     double targetX = event.player.posX + look.xCoord * dist;
+                     double targetY = event.player.posY + (double)event.player.getEyeHeight() + look.yCoord * dist;
+                     double targetZ = event.player.posZ + look.zCoord * dist;
+                     target.motionX = (targetX - target.posX) * 0.25D;
+                     target.motionY = (targetY - target.posY) * 0.25D;
+                     target.motionZ = (targetZ - target.posZ) * 0.25D;
+                     target.fallDistance = 0.0F;
+                     if (target instanceof net.minecraft.entity.EntityLivingBase) {
+                        ((net.minecraft.entity.EntityLivingBase)target).addPotionEffect(new PotionEffect(net.minecraft.potion.Potion.resistance.id, 20, 4));
+                     }
+                  } else {
+                     event.player.getEntityData().setInteger("WITCLeviosaTicks", 0);
+                  }
+               }
             }
 
             Collection playerExt = event.player.getActivePotionEffects();

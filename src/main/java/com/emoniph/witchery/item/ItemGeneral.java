@@ -47,6 +47,7 @@ import com.emoniph.witchery.util.Coord;
 import com.emoniph.witchery.util.CreatureUtil;
 import com.emoniph.witchery.util.EffectSpiral;
 import com.emoniph.witchery.util.EntityUtil;
+import com.emoniph.witchery.util.FlooNetwork;
 import com.emoniph.witchery.util.ISpiralBlockAction;
 import com.emoniph.witchery.util.MutableBlock;
 import com.emoniph.witchery.util.ParticleEffect;
@@ -1277,16 +1278,14 @@ public class ItemGeneral extends ItemBase {
    }
 
    private void useFlooPowder(World world, EntityPlayer player, ItemStack itemstack) {
-      // Throw the Floo Powder onto a nearby fire; the flame turns verdant green (Floo Fire).
-      // Then, holding a bound Waystone, step into the green flame to travel to its location.
       MovingObjectPosition mop = this.getMovingObjectPositionFromPlayer(world, player, true);
       if(mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
          int fireX = mop.blockX;
          int fireY = mop.blockY;
          int fireZ = mop.blockZ;
          Block hit = world.getBlock(fireX, fireY, fireZ);
+
          if(hit != Blocks.fire) {
-            // Allow aiming at the block under/beside the fire (the flame sits on the hit face).
             switch(mop.sideHit) {
             case 0:
                --fireY;
@@ -1310,10 +1309,25 @@ public class ItemGeneral extends ItemBase {
             hit = world.getBlock(fireX, fireY, fireZ);
          }
 
-         if(hit == Blocks.fire) {
+         boolean canIgnite = (hit == Blocks.fire) || (world.isAirBlock(fireX, fireY, fireZ) && (World.doesBlockHaveSolidTopSurface(world, fireX, fireY - 1, fireZ) || world.getBlock(fireX, fireY - 1, fireZ) == Blocks.netherrack));
+
+         if(canIgnite) {
             if(!world.isRemote) {
                world.setBlock(fireX, fireY, fireZ, Witchery.Blocks.FLOO_FIRE);
-               world.playSoundEffect((double)fireX + 0.5D, (double)fireY + 0.5D, (double)fireZ + 0.5D, "fire.ignite", 1.0F, 0.6F);
+               world.playSoundEffect((double)fireX + 0.5D, (double)fireY + 0.5D, (double)fireZ + 0.5D, "fire.ignite", 1.0F, 0.7F);
+               com.emoniph.witchery.util.ParticleEffect.SPELL_COLORED.send(SoundEffect.RANDOM_ORB, world, (double)fireX + 0.5D, (double)fireY + 0.5D, (double)fireZ + 0.5D, 0.5D, 1.0D, 24, 0x00FF88);
+
+               String signName = FlooNetwork.findNearbySignName(world, fireX, fireY, fireZ);
+               if(signName != null && !signName.isEmpty()) {
+                  FlooNetwork network = FlooNetwork.get(world);
+                  if(network != null) {
+                     network.addFireplace(signName, world.provider.dimensionId, fireX, fireY, fireZ);
+                     ChatUtil.sendTranslated(EnumChatFormatting.GREEN, player, "witchery.floo.registered", new Object[]{signName});
+                  }
+               } else {
+                  ChatUtil.sendTranslated(EnumChatFormatting.DARK_GREEN, player, "witchery.floo.ignited", new Object[0]);
+               }
+
                if(!player.capabilities.isCreativeMode) {
                   --itemstack.stackSize;
                   if(itemstack.stackSize <= 0) {
@@ -1329,7 +1343,6 @@ public class ItemGeneral extends ItemBase {
       if(!world.isRemote) {
          SoundEffect.NOTE_SNARE.playAtPlayer(world, player);
       }
-
    }
 
    public void throwBrew(ItemStack itemstack, World world, EntityPlayer player) {

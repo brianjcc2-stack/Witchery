@@ -1926,3 +1926,5 @@ witchery:potion.silence=Silenced
 witchery.floo.travelsuccess=You travelled to %s via the Floo Network!
 witchery.floo.notfound=Unknown Floo Network destination: "%s".
 witchery.floo.registered=Fireplace registered on the Floo Network: "%s"!
+witchery.floo.ignited=Floo Fire ignited! Say your destination in chat, or step in with a Waystone.
+witchery.floo.available=Available destinations: %s

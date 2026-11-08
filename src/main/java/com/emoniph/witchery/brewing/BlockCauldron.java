@@ -26,6 +26,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -159,6 +160,7 @@ public class BlockCauldron extends BlockBaseContainer {
                      cauldron.markBlockForUpdate(true);
                   }
                } else if(cauldron.isBoiling()) {
+                  boolean added = false;
                   BrewAction brewAction1 = WitcheryBrewRegistry.INSTANCE.getActionForItemStack(itemEntity.getEntityItem());
                   if(brewAction1 != null && cauldron.addItem(brewAction1, itemEntity.getEntityItem())) {
                      Item containerItem = itemEntity.getEntityItem().getItem().getContainerItem();
@@ -168,12 +170,229 @@ public class BlockCauldron extends BlockBaseContainer {
 
                      entity.setDead();
                      ParticleEffect.SPLASH.send(SoundEffect.WATER_SPLASH, world, (double)x + 0.5D, (double)y + 0.6D, (double)z + 0.5D, 0.5D, 0.5D, 8);
+                     added = true;
+                  }
+
+                  if(!added) {
+                     this.tryTransmutation(world, x, y, z, cauldron, itemEntity);
                   }
                }
             }
          }
       }
 
+   }
+
+   private boolean tryTransmutation(World world, int x, int y, int z, TileEntityCauldron cauldron, EntityItem itemEntity) {
+      if (world.isRemote || itemEntity == null || itemEntity.isDead || itemEntity.getEntityItem() == null) {
+         return false;
+      }
+
+      IPowerSource power = PowerSources.findClosestPowerSource(cauldron);
+      if (power == null) {
+         return false;
+      }
+
+      ItemStack stack = itemEntity.getEntityItem();
+      Item item = stack.getItem();
+      Random rand = world.rand;
+      ItemStack result = null;
+      int powerCost = 150;
+      boolean returnBucket = false;
+
+      // 1. TIERRA / MINERALES / METALES
+      if (item == Item.getItemFromBlock(Blocks.cobblestone) ||
+          item == Item.getItemFromBlock(Blocks.stone) ||
+          item == Item.getItemFromBlock(Blocks.sand) ||
+          item == Item.getItemFromBlock(Blocks.gravel) ||
+          item == Item.getItemFromBlock(Blocks.dirt) ||
+          item == Item.getItemFromBlock(Blocks.clay) ||
+          item == Item.getItemFromBlock(Blocks.hardened_clay) ||
+          item == Item.getItemFromBlock(Blocks.stained_hardened_clay) ||
+          item == Items.flint ||
+          item == Items.clay_ball) {
+
+         powerCost = 150;
+         int roll = rand.nextInt(100);
+         if (roll < 28) {
+            result = new ItemStack(Items.iron_ingot);
+         } else if (roll < 50) {
+            result = new ItemStack(Items.coal, 1 + rand.nextInt(2));
+         } else if (roll < 65) {
+            result = new ItemStack(Items.redstone, 2 + rand.nextInt(2));
+         } else if (roll < 76) {
+            result = new ItemStack(Items.dye, 2 + rand.nextInt(2), 4);
+         } else if (roll < 86) {
+            result = new ItemStack(Items.gold_ingot);
+         } else if (roll < 93) {
+            result = new ItemStack(Items.diamond);
+         } else if (roll < 97) {
+            result = new ItemStack(Items.emerald);
+         } else {
+            result = Witchery.Items.GENERIC.itemKobolditeDust.createStack(1 + rand.nextInt(2));
+         }
+      }
+      else if (item == Items.iron_ingot) {
+         powerCost = 250;
+         result = new ItemStack(Items.gold_ingot);
+      } else if (item == Items.gold_ingot) {
+         powerCost = 500;
+         result = new ItemStack(Items.diamond);
+      } else if (item == Items.diamond) {
+         powerCost = 800;
+         if (rand.nextBoolean()) {
+            result = new ItemStack(Items.emerald);
+         } else {
+            result = Witchery.Items.GENERIC.itemKobolditeNugget.createStack();
+         }
+      }
+      // 2. NETHER / INFRAMUNDO
+      else if (item == Item.getItemFromBlock(Blocks.netherrack) ||
+               item == Item.getItemFromBlock(Blocks.soul_sand) ||
+               item == Item.getItemFromBlock(Blocks.nether_brick) ||
+               item == Items.fire_charge ||
+               item == Items.blaze_powder ||
+               item == Items.magma_cream ||
+               item == Items.lava_bucket) {
+
+         powerCost = 200;
+         if (item == Items.lava_bucket) {
+            returnBucket = true;
+         }
+         int roll = rand.nextInt(100);
+         if (roll < 30) {
+            result = new ItemStack(Items.quartz, 2 + rand.nextInt(2));
+         } else if (roll < 55) {
+            result = new ItemStack(Items.nether_wart, 1 + rand.nextInt(2));
+         } else if (roll < 72) {
+            result = new ItemStack(Items.glowstone_dust, 2 + rand.nextInt(2));
+         } else if (roll < 86) {
+            result = new ItemStack(Items.blaze_rod);
+         } else if (roll < 94) {
+            result = new ItemStack(Items.magma_cream, 1 + rand.nextInt(2));
+         } else {
+            result = new ItemStack(Items.ghast_tear);
+         }
+      }
+      // 3. BESTIAS / VIDA ANIMAL / CAZA
+      else if (item == Items.beef || item == Items.cooked_beef ||
+               item == Items.porkchop || item == Items.cooked_porkchop ||
+               item == Items.chicken || item == Items.cooked_chicken ||
+               item == Items.fish || item == Items.cooked_fished ||
+               item == Items.rotten_flesh || item == Items.bone ||
+               item == Items.feather || item == Items.leather) {
+
+         powerCost = 200;
+         int roll = rand.nextInt(100);
+         if (roll < 25) {
+            result = Witchery.Items.GENERIC.itemBatWool.createStack(1 + rand.nextInt(2));
+         } else if (roll < 50) {
+            result = Witchery.Items.GENERIC.itemToeOfFrog.createStack(1 + rand.nextInt(2));
+         } else if (roll < 75) {
+            result = Witchery.Items.GENERIC.itemDogTongue.createStack(1 + rand.nextInt(2));
+         } else if (roll < 88) {
+            result = Witchery.Items.GENERIC.itemOwletsWing.createStack(1 + rand.nextInt(2));
+         } else if (roll < 95) {
+            result = Witchery.Items.GENERIC.itemDropOfLuck.createStack();
+         } else {
+            result = Witchery.Items.GENERIC.itemDemonHeart.createStack();
+         }
+      }
+      // 4. BOTANICA SAGRADA / ARBOLES MISTICOS
+      else if (item == Item.getItemFromBlock(Blocks.sapling) ||
+               item == Item.getItemFromBlock(Blocks.leaves) ||
+               item == Item.getItemFromBlock(Blocks.leaves2) ||
+               item == Item.getItemFromBlock(Blocks.yellow_flower) ||
+               item == Item.getItemFromBlock(Blocks.red_flower) ||
+               item == Item.getItemFromBlock(Blocks.tallgrass) ||
+               item == Item.getItemFromBlock(Blocks.vine) ||
+               item == Item.getItemFromBlock(Blocks.waterlily) ||
+               item == Items.wheat_seeds ||
+               item == Items.melon_seeds ||
+               item == Items.pumpkin_seeds ||
+               item == Items.apple) {
+
+         powerCost = 150;
+         int roll = rand.nextInt(100);
+         if (roll < 20) {
+            result = new ItemStack(Witchery.Blocks.SAPLING, 1, 0);
+         } else if (roll < 40) {
+            result = new ItemStack(Witchery.Blocks.SAPLING, 1, 1);
+         } else if (roll < 60) {
+            result = new ItemStack(Witchery.Blocks.SAPLING, 1, 2);
+         } else if (roll < 75) {
+            result = Witchery.Items.GENERIC.itemBranchEnt.createStack(1 + rand.nextInt(2));
+         } else if (roll < 84) {
+            result = new ItemStack(Witchery.Items.SEEDS_MANDRAKE, 1 + rand.nextInt(2));
+         } else if (roll < 91) {
+            result = new ItemStack(Witchery.Items.SEEDS_BELLADONNA, 1 + rand.nextInt(2));
+         } else if (roll < 96) {
+            result = new ItemStack(Witchery.Items.SEEDS_SNOWBELL, 1 + rand.nextInt(2));
+         } else {
+            result = new ItemStack(Witchery.Items.SEEDS_WOLFSBANE, 1 + rand.nextInt(2));
+         }
+      }
+      else if (item == Item.getItemFromBlock(Witchery.Blocks.SAPLING) ||
+               Witchery.Items.GENERIC.itemBranchEnt.isMatch(stack) ||
+               item == Witchery.Items.SEEDS_MANDRAKE ||
+               item == Witchery.Items.SEEDS_BELLADONNA ||
+               item == Witchery.Items.SEEDS_SNOWBELL ||
+               item == Witchery.Items.SEEDS_WOLFSBANE) {
+
+         powerCost = 200;
+         result = stack.copy();
+         result.stackSize = 2;
+      }
+      // 5. HUMOS MAGICOS Y ALQUIMIA DE CENIZA
+      else if (Witchery.Items.GENERIC.itemAshWood.isMatch(stack) ||
+               Witchery.Items.GENERIC.itemEmptyClayJar.isMatch(stack)) {
+
+         powerCost = 250;
+         int roll = rand.nextInt(100);
+         if (roll < 35) {
+            result = Witchery.Items.GENERIC.itemFoulFume.createStack();
+         } else if (roll < 65) {
+            result = Witchery.Items.GENERIC.itemBreathOfTheGoddess.createStack();
+         } else if (roll < 85) {
+            result = Witchery.Items.GENERIC.itemExhaleOfTheHornedOne.createStack();
+         } else {
+            result = Witchery.Items.GENERIC.itemTearOfTheGoddess.createStack();
+         }
+      }
+
+      if (result != null) {
+         if (!power.consumePower((float) powerCost)) {
+            ParticleEffect.SMOKE.send(SoundEffect.RANDOM_FIZZ, world, (double)x + 0.5D, (double)y + 0.8D, (double)z + 0.5D, 0.4D, 0.5D, 8);
+            return false;
+         }
+
+         stack.stackSize--;
+         if (stack.stackSize <= 0) {
+            itemEntity.setDead();
+         }
+
+         if (returnBucket) {
+            EntityItem bucket = new EntityItem(world, (double)x + 0.5D, (double)y + 0.9D, (double)z + 0.5D, new ItemStack(Items.bucket));
+            bucket.motionX = (rand.nextDouble() - 0.5D) * 0.1D;
+            bucket.motionY = 0.25D;
+            bucket.motionZ = (rand.nextDouble() - 0.5D) * 0.1D;
+            bucket.delayBeforeCanPickup = 10;
+            world.spawnEntityInWorld(bucket);
+         }
+
+         EntityItem spawned = new EntityItem(world, (double)x + 0.5D, (double)y + 0.9D, (double)z + 0.5D, result);
+         spawned.motionX = (rand.nextDouble() - 0.5D) * 0.1D;
+         spawned.motionY = 0.32D;
+         spawned.motionZ = (rand.nextDouble() - 0.5D) * 0.1D;
+         spawned.delayBeforeCanPickup = 10;
+         world.spawnEntityInWorld(spawned);
+
+         ParticleEffect.MAGIC_CRIT.send(SoundEffect.RANDOM_ORB, world, (double)x + 0.5D, (double)y + 0.8D, (double)z + 0.5D, 0.5D, 0.5D, 16);
+         ParticleEffect.FLAME.send(SoundEffect.NONE, world, (double)x + 0.5D, (double)y + 0.7D, (double)z + 0.5D, 0.3D, 0.3D, 8);
+         return true;
+      }
+
+      return false;
    }
 
    public boolean hasComparatorInputOverride() {

@@ -780,16 +780,47 @@ public class GenericEvents {
    }
 
    @SubscribeEvent
+   public void onAttackEntity(net.minecraftforge.event.entity.player.AttackEntityEvent event) {
+      if (event.entityPlayer != null && !event.entityPlayer.worldObj.isRemote && event.entityPlayer.getEntityData().getInteger("WITCLeviosaTicks") > 0) {
+         int entityId = event.entityPlayer.getEntityData().getInteger("WITCLeviosaEntity");
+         net.minecraft.entity.Entity target = event.entityPlayer.worldObj.getEntityByID(entityId);
+         if (target != null) {
+            net.minecraft.util.Vec3 look = event.entityPlayer.getLookVec();
+            target.motionX = look.xCoord * 2.2D;
+            target.motionY = look.yCoord * 2.2D + 0.2D;
+            target.motionZ = look.zCoord * 2.2D;
+            target.velocityChanged = true;
+         }
+         event.entityPlayer.getEntityData().setInteger("WITCLeviosaTicks", 0);
+         event.setCanceled(true);
+      }
+   }
+
+   @SubscribeEvent
    public void onPlayerInteract(PlayerInteractEvent event) {
       if (!event.entityPlayer.worldObj.isRemote && event.entityPlayer.getEntityData().getInteger("WITCLeviosaTicks") > 0) {
           float currentDist = event.entityPlayer.getEntityData().hasKey("WITCLeviosaDistance") ? event.entityPlayer.getEntityData().getFloat("WITCLeviosaDistance") : 5.0f;
           boolean changed = false;
           if (event.action == net.minecraftforge.event.entity.player.PlayerInteractEvent.Action.RIGHT_CLICK_AIR || event.action == net.minecraftforge.event.entity.player.PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK) {
-              currentDist = Math.max(1.0f, currentDist - 0.5f);
+              if (event.entityPlayer.isSneaking()) {
+                  currentDist = Math.min(30.0f, currentDist + 2.0f);
+              } else {
+                  currentDist = Math.max(1.5f, currentDist - 2.0f);
+              }
               changed = true;
           } else if (event.action == net.minecraftforge.event.entity.player.PlayerInteractEvent.Action.LEFT_CLICK_BLOCK) {
-              currentDist = Math.min(20.0f, currentDist + 0.5f);
-              changed = true;
+              int entityId = event.entityPlayer.getEntityData().getInteger("WITCLeviosaEntity");
+              net.minecraft.entity.Entity target = event.entityPlayer.worldObj.getEntityByID(entityId);
+              if (target != null) {
+                  net.minecraft.util.Vec3 look = event.entityPlayer.getLookVec();
+                  target.motionX = look.xCoord * 2.2D;
+                  target.motionY = look.yCoord * 2.2D + 0.2D;
+                  target.motionZ = look.zCoord * 2.2D;
+                  target.velocityChanged = true;
+              }
+              event.entityPlayer.getEntityData().setInteger("WITCLeviosaTicks", 0);
+              event.setCanceled(true);
+              return;
           }
           if (changed) {
               event.entityPlayer.getEntityData().setFloat("WITCLeviosaDistance", currentDist);

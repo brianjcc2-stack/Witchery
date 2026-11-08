@@ -1377,6 +1377,22 @@ public class EffectRegistry {
     public static final SymbolEffect WingardiumLeviosa = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(18, "witchery.pott.wingardiumleviosa"){
 
         @Override
+        public void perform(World world, EntityPlayer player, int effectLevel) {
+            if (player.isSneaking()) {
+                if (!world.isRemote) {
+                    int duration = 160 * effectLevel;
+                    player.getEntityData().setInteger("WITCLeviosaSelfTicks", duration);
+                    player.motionY = 0.45D;
+                    player.fallDistance = 0.0F;
+                    player.addPotionEffect(new PotionEffect(Potion.resistance.id, duration, 4));
+                    ParticleEffect.SPELL_COLORED.send(SoundEffect.RANDOM_ORB, (Entity)player, 0.5D, 1.0D, 16, 0x88DDFF);
+                }
+            } else {
+                super.perform(world, player, effectLevel);
+            }
+        }
+
+        @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
             Entity target = null;
             if (mop != null) {
@@ -1516,7 +1532,6 @@ public class EffectRegistry {
             }
         }
     }.setColor(0xCC0000).setSize(1.0f), new StrokeSet(1, new byte[]{(byte)2,(byte)1,(byte)2}));
-    public static final SymbolEffect Telekinesis = EffectRegistry.instance().addEffect(new SymbolEffectTelekinesis(100, "witchery.pott.telekinesis"), new StrokeSet(1, new byte[]{(byte)1,(byte)0,(byte)3}));
     public static final SymbolEffect Avis = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(25, "witchery.pott.avis"){
 
         @Override

@@ -93,19 +93,6 @@ public class ItemMysticBranch extends ItemBase {
    }
 
    public void onUsingTick(ItemStack stack, EntityPlayer player, int countdown) {
-      if(!player.worldObj.isRemote) {
-         NBTTagCompound nbtServer = player.getEntityData();
-         if(nbtServer != null && nbtServer.hasKey("WITCSpellEffectID") && countdown % 6 == 0) {
-            SymbolEffect prepared = EffectRegistry.instance().getEffect(nbtServer.getInteger("WITCSpellEffectID"));
-            if(prepared != null) {
-               // Continuous casting aura, visible to all nearby players while a spell is charged.
-               ParticleEffect.SPELL_COLORED.send(SoundEffect.NONE, player, 0.45D, 1.6D, 32, prepared.getDisplayColor());
-            }
-         }
-
-         return;
-      }
-
       if(player.worldObj.isRemote) {
          NBTTagCompound nbtTag = player.getEntityData();
          if(nbtTag == null) {
@@ -244,13 +231,6 @@ public class ItemMysticBranch extends ItemBase {
    }
 
    private void announceCastSpell(EntityPlayer player, SymbolEffect effect) {
-      MinecraftServer server = MinecraftServer.getServer();
-      if(server != null) {
-         EnumChatFormatting nameColor = effect.isCurse()?EnumChatFormatting.DARK_PURPLE:EnumChatFormatting.LIGHT_PURPLE;
-         IChatComponent spoken = new ChatComponentText(nameColor + effect.getLocalizedName() + "!" + EnumChatFormatting.RESET);
-         IChatComponent chatLine = new ChatComponentTranslation("chat.type.text", new Object[]{player.getDisplayName(), spoken});
-         server.getConfigurationManager().sendChatMsg(chatLine);
-      }
-
+      // Chat broadcast disabled per request
    }
 }

@@ -106,6 +106,20 @@ public class FlooNetwork extends WorldSavedData {
       nbt.setTag("Fireplaces", list);
    }
 
+   public String getFormattedDestinations() {
+      if (this.fireplaces.isEmpty()) {
+         return "";
+      }
+      StringBuilder sb = new StringBuilder();
+      for (FireplaceLocation loc : this.fireplaces.values()) {
+         if (sb.length() > 0) {
+            sb.append(", ");
+         }
+         sb.append(loc.name);
+      }
+      return sb.toString();
+   }
+
    public static String findNearbySignName(World world, int x, int y, int z) {
       for (int dx = -2; dx <= 2; ++dx) {
          for (int dy = -1; dy <= 3; ++dy) {
@@ -132,46 +146,33 @@ public class FlooNetwork extends WorldSavedData {
       return null;
    }
 
-   public static boolean isEntityInFlooFire(EntityLivingBase entity) {
-      if (entity == null || entity.worldObj == null) {
-         return false;
-      }
-      World world = entity.worldObj;
-      int x = MathHelper.floor_double(entity.posX);
-      int y = MathHelper.floor_double(entity.posY);
-      int z = MathHelper.floor_double(entity.posZ);
-      if (world.getBlock(x, y, z) == Witchery.Blocks.FLOO_FIRE) {
-         return true;
-      }
-      if (world.getBlock(x, y + 1, z) == Witchery.Blocks.FLOO_FIRE) {
-         return true;
-      }
-      int feetY = MathHelper.floor_double(entity.boundingBox.minY);
-      if (world.getBlock(x, feetY, z) == Witchery.Blocks.FLOO_FIRE) {
-         return true;
-      }
-      return false;
-   }
-
    public static Coord getEntityFlooFireCoord(EntityLivingBase entity) {
       if (entity == null || entity.worldObj == null) {
          return null;
       }
       World world = entity.worldObj;
-      int x = MathHelper.floor_double(entity.posX);
-      int y = MathHelper.floor_double(entity.posY);
-      int z = MathHelper.floor_double(entity.posZ);
-      if (world.getBlock(x, y, z) == Witchery.Blocks.FLOO_FIRE) {
-         return new Coord(x, y, z);
-      }
-      if (world.getBlock(x, y + 1, z) == Witchery.Blocks.FLOO_FIRE) {
-         return new Coord(x, y + 1, z);
-      }
-      int feetY = MathHelper.floor_double(entity.boundingBox.minY);
-      if (world.getBlock(x, feetY, z) == Witchery.Blocks.FLOO_FIRE) {
-         return new Coord(x, feetY, z);
+      net.minecraft.util.AxisAlignedBB bb = entity.boundingBox.expand(0.35D, 0.35D, 0.35D);
+      int minX = MathHelper.floor_double(bb.minX);
+      int maxX = MathHelper.floor_double(bb.maxX);
+      int minY = MathHelper.floor_double(bb.minY);
+      int maxY = MathHelper.floor_double(bb.maxY);
+      int minZ = MathHelper.floor_double(bb.minZ);
+      int maxZ = MathHelper.floor_double(bb.maxZ);
+
+      for (int x = minX; x <= maxX; ++x) {
+         for (int y = minY; y <= maxY; ++y) {
+            for (int z = minZ; z <= maxZ; ++z) {
+               if (world.getBlock(x, y, z) == Witchery.Blocks.FLOO_FIRE) {
+                  return new Coord(x, y, z);
+               }
+            }
+         }
       }
       return null;
+   }
+
+   public static boolean isEntityInFlooFire(EntityLivingBase entity) {
+      return getEntityFlooFireCoord(entity) != null;
    }
 
    public static boolean travelFlooNetwork(EntityPlayer player, String destinationName) {
@@ -211,6 +212,10 @@ public class FlooNetwork extends WorldSavedData {
       } else {
          ParticleEffect.SMOKE.send(SoundEffect.RANDOM_FIZZ, world, (double)fireCoord.x + 0.5D, (double)fireCoord.y + 0.5D, (double)fireCoord.z + 0.5D, 0.5D, 1.0D, 16);
          ChatUtil.sendTranslated(EnumChatFormatting.RED, player, "witchery.floo.notfound", new Object[]{destinationName});
+         String available = network.getFormattedDestinations();
+         if (available != null && !available.isEmpty()) {
+            ChatUtil.sendTranslated(EnumChatFormatting.YELLOW, player, "witchery.floo.available", new Object[]{available});
+         }
          return false;
       }
    }
