@@ -20,7 +20,20 @@ import net.minecraft.world.World;
 public class EntityLostSoul extends EntitySpirit {
 
    private int timeToLive = -1;
+   private String summonerName;
 
+   public void setSummoner(EntityPlayer player) {
+      if (player != null) {
+         this.summonerName = player.getCommandSenderName();
+         this.targetTasks.taskEntries.clear();
+         this.targetTasks.addTask(1, new net.minecraft.entity.ai.EntityAIHurtByTarget(this, true));
+         this.targetTasks.addTask(2, new net.minecraft.entity.ai.EntityAINearestAttackableTarget(this, net.minecraft.entity.monster.EntityMob.class, 0, true));
+      }
+   }
+
+   public String getSummonerName() {
+      return this.summonerName;
+   }
 
    public void setTimeToLive(int i) {
       this.timeToLive = i;
@@ -46,6 +59,9 @@ public class EntityLostSoul extends EntitySpirit {
       par1NBTTagCompound.setInteger("FeatherColor", this.getFeatherColor());
       par1NBTTagCompound.setByte("SoulType", (byte)this.getSoulType());
       par1NBTTagCompound.setInteger("SuicideIn", this.timeToLive);
+      if (this.summonerName != null) {
+         par1NBTTagCompound.setString("Summoner", this.summonerName);
+      }
    }
 
    public void readEntityFromNBT(NBTTagCompound par1NBTTagCompound) {
@@ -64,6 +80,12 @@ public class EntityLostSoul extends EntitySpirit {
          this.timeToLive = -1;
       }
 
+      if(par1NBTTagCompound.hasKey("Summoner")) {
+         this.summonerName = par1NBTTagCompound.getString("Summoner");
+         this.targetTasks.taskEntries.clear();
+         this.targetTasks.addTask(1, new net.minecraft.entity.ai.EntityAIHurtByTarget(this, true));
+         this.targetTasks.addTask(2, new net.minecraft.entity.ai.EntityAINearestAttackableTarget(this, net.minecraft.entity.monster.EntityMob.class, 0, true));
+      }
    }
 
    public void setInWeb() {}
@@ -100,6 +122,9 @@ public class EntityLostSoul extends EntitySpirit {
    }
 
    public boolean attackEntityAsMob(Entity targetEntity) {
+      if (this.summonerName != null && targetEntity instanceof EntityPlayer && ((EntityPlayer)targetEntity).getCommandSenderName().equals(this.summonerName)) {
+         return false;
+      }
       float f = (float)this.getEntityAttribute(SharedMonsterAttributes.attackDamage).getAttributeValue();
       int i = 0;
       if(targetEntity instanceof EntityLivingBase) {
@@ -127,6 +152,12 @@ public class EntityLostSoul extends EntitySpirit {
 
       boolean flag = targetEntity.attackEntityFrom(source, f);
       if(flag) {
+         if (targetEntity instanceof EntityLivingBase && this.getEntityData().hasKey("WITCBrewCarrier")) {
+            NBTTagCompound brewTag = this.getEntityData().getCompoundTag("WITCBrewCarrier");
+            this.getEntityData().removeTag("WITCBrewCarrier");
+            com.emoniph.witchery.brewing.WitcheryBrewRegistry.INSTANCE.applyToEntity(super.worldObj, (EntityLivingBase)targetEntity, brewTag, new com.emoniph.witchery.brewing.ModifiersEffect(1.0D, 1.0D, false, new com.emoniph.witchery.util.EntityPosition(targetEntity), null));
+            com.emoniph.witchery.util.ParticleEffect.PORTAL.send(com.emoniph.witchery.util.SoundEffect.RANDOM_ORB, (EntityLivingBase)targetEntity, 1.0D, 1.0D, 20);
+         }
          if(i > 0) {
             targetEntity.addVelocity((double)(-MathHelper.sin(super.rotationYaw * 3.1415927F / 180.0F) * (float)i * 0.5F), 0.1D, (double)(MathHelper.cos(super.rotationYaw * 3.1415927F / 180.0F) * (float)i * 0.5F));
             super.motionX *= 0.6D;

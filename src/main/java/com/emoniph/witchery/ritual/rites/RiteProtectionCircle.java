@@ -67,7 +67,15 @@ public abstract class RiteProtectionCircle extends Rite {
             }
 
             this.powerSourceCoord = powerSource.getLocation();
-            if(!powerSource.consumePower(this.rite.upkeepPowerCost)) {
+            float cost = this.rite.upkeepPowerCost;
+            net.minecraft.entity.player.EntityPlayer initiator = ritual != null ? ritual.getInitiatingPlayer(world) : null;
+            if (initiator != null) {
+               int covenSize = com.emoniph.witchery.entity.EntityCovenWitch.getCovenSize(initiator);
+               if (covenSize > 0) {
+                  cost = Math.max(0.1F, cost * (1.0F - (Math.min(covenSize, 6) * 0.15F)));
+               }
+            }
+            if(!powerSource.consumePower(cost)) {
                return RitualStep.Result.ABORTED;
             }
          }

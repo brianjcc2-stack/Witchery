@@ -18,9 +18,9 @@ public class PotionSunAllergy extends PotionBase implements IHandleLivingUpdate 
    }
 
    public void onLivingUpdate(World world, EntityLivingBase entity, LivingUpdateEvent event, int amplifier, int duration) {
-      if(!world.isRemote && world.getWorldTime() % 20L == 0L && world.isDaytime()) {
+      if(!world.isRemote && world.getWorldTime() % 20L == 0L && com.emoniph.witchery.util.CreatureUtil.isInSunlight(entity)) {
          float f = entity.getBrightness(1.0F);
-         if(f > 0.5F && !entity.isInWater() && world.rand.nextFloat() < f - 0.45F && world.canBlockSeeTheSky(MathHelper.floor_double(entity.posX), MathHelper.floor_double(entity.posY), MathHelper.floor_double(entity.posZ))) {
+         if(f > 0.5F && !entity.isInWater() && world.rand.nextFloat() < f - 0.45F) {
             boolean burnEntity = true;
             ItemStack itemstack = entity.getEquipmentInSlot(4);
             if(itemstack != null && !(entity instanceof EntityPlayer)) {

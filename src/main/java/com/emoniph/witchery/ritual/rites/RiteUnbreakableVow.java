@@ -61,8 +61,30 @@ public class RiteUnbreakableVow extends Rite {
                     }
                     blessed = true;
                 } else if (validPlayers.size() == 1) {
-                    ExtendedPlayer playerEx = ExtendedPlayer.get(validPlayers.get(0));
-                    if (!playerEx.getUnbreakableVowID().isEmpty()) {
+                    EntityPlayer p = validPlayers.get(0);
+                    ExtendedPlayer playerEx = ExtendedPlayer.get(p);
+                    net.minecraft.entity.Entity boundHuman = null;
+                    List villagers = world.getEntitiesWithinAABB(net.minecraft.entity.passive.EntityVillager.class, bounds);
+                    for (Object obj : villagers) {
+                        if (obj instanceof net.minecraft.entity.Entity && com.emoniph.witchery.integration.ModHookMCA.isMCAHuman((net.minecraft.entity.Entity)obj)) {
+                            net.minecraft.entity.Entity h = (net.minecraft.entity.Entity)obj;
+                            if (Coord.distance(h.posX, h.posY, h.posZ, (double)x + 0.5D, (double)y, (double)z + 0.5D) <= 6.0D) {
+                                if (com.emoniph.witchery.integration.ModHookMCA.isSpouse(h, p) || com.emoniph.witchery.integration.ModHookMCA.getHearts(h, p) >= 50) {
+                                    boundHuman = h;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (boundHuman != null) {
+                        String vowID = UUID.randomUUID().toString();
+                        playerEx.setUnbreakableVowID(vowID);
+                        boundHuman.getEntityData().setString("UnbreakableVowID", vowID);
+                        ChatUtil.sendTranslated(EnumChatFormatting.LIGHT_PURPLE, p, "Your soul has been bound by the Unbreakable Vow to " + com.emoniph.witchery.integration.ModHookMCA.getHumanName(boundHuman) + ".", new Object[0]);
+                        com.emoniph.witchery.integration.ModHookMCA.say(boundHuman, p, "§d*Un lazo magico de sangre y luz une nuestras almas* He sellado el Juramento Inquebrantable contigo...");
+                        blessed = true;
+                    } else if (!playerEx.getUnbreakableVowID().isEmpty()) {
                         playerEx.setUnbreakableVowID("");
                         ChatUtil.sendTranslated(EnumChatFormatting.DARK_PURPLE, validPlayers.get(0), "Your soul has been freed from the Unbreakable Vow.", new Object[0]);
                         blessed = true;

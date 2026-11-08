@@ -69,6 +69,10 @@ public class ItemMysticBranch extends ItemBase {
    public void onUpdate(ItemStack stack, World world, Entity entity, int invSlot, boolean isHeld) {}
 
    public ItemStack onItemRightClick(ItemStack stack, World world, EntityPlayer player) {
+      if (player.getEntityData().getLong("witchery_silenced_until") > world.getTotalWorldTime()) {
+         SoundEffect.NOTE_SNARE.playOnlyTo(player, 1.0F, 0.5F);
+         return stack;
+      }
       NBTTagCompound nbtTag = player.getEntityData();
       if(!player.worldObj.isRemote) {
          nbtTag.removeTag("WITCSpellEffectID");
@@ -162,7 +166,15 @@ public class ItemMysticBranch extends ItemBase {
                         ChatUtil.sendTranslated(EnumChatFormatting.RED, player, "witchery.infuse.branch.effectoncooldown", new Object[]{Long.valueOf(TimeUtil.ticksToSecs(ticksRemaining)).toString()});
                         SoundEffect.NOTE_SNARE.playAtPlayer(world, player);
                      } else {
-                        if(!player.capabilities.isCreativeMode && nbtPerm.getInteger("witcheryInfusionCharges") < effect.getChargeCost(world, player, level)) {
+                        int cost = effect.getChargeCost(world, player, level);
+                        int currentCharges = nbtPerm.getInteger("witcheryInfusionCharges");
+                        boolean canCast = player.capabilities.isCreativeMode || currentCharges >= cost;
+                        if (!canCast) {
+                           int deficit = cost - currentCharges;
+                           canCast = Infusion.attemptOvercharge(world, player, deficit);
+                        }
+
+                        if (!canCast) {
                            ChatUtil.sendTranslated(EnumChatFormatting.RED, player, "witchery.infuse.branch.nocharges", new Object[0]);
                            SoundEffect.NOTE_SNARE.playAtPlayer(world, player);
                         } else {
@@ -182,8 +194,8 @@ public class ItemMysticBranch extends ItemBase {
                                    Infusion.setCurrentEnergy(player, Math.max(0, nbtPerm.getInteger("witcheryInfusionCharges") - effect.getChargeCost(world, player, level)));
                                    SoundEffect.RANDOM_FIZZ.playAtPlayer(world, player);
                                } else if (mishapType == 1) {
-                                   int cost = effect.getChargeCost(world, player, level) * 3;
-                                   if (nbtPerm.getInteger("witcheryInfusionCharges") < cost) {
+                                   int mishapCost = effect.getChargeCost(world, player, level) * 3;
+                                   if (nbtPerm.getInteger("witcheryInfusionCharges") < mishapCost) {
                                        ChatUtil.sendTranslated(EnumChatFormatting.RED, player, "witchery.infuse.branch.clumsy_fail");
                                        Infusion.setCurrentEnergy(player, 0);
                                        SoundEffect.RANDOM_FIZZ.playAtPlayer(world, player);
@@ -191,7 +203,7 @@ public class ItemMysticBranch extends ItemBase {
                                        ChatUtil.sendTranslated(EnumChatFormatting.YELLOW, player, "witchery.infuse.branch.clumsy_success");
                                        effect.perform(world, player, level);
                                        this.announceCastSpell(player, effect);
-                                       Infusion.setCurrentEnergy(player, nbtPerm.getInteger("witcheryInfusionCharges") - cost);
+                                       Infusion.setCurrentEnergy(player, nbtPerm.getInteger("witcheryInfusionCharges") - mishapCost);
                                    }
                                } else if (mishapType == 2) {
                                    ChatUtil.sendTranslated(EnumChatFormatting.DARK_RED, player, "witchery.infuse.branch.backfire");

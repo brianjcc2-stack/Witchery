@@ -265,7 +265,13 @@ public class Infusion {
       } else {
          int charges = getCurrentEnergy(player);
          if(charges - cost < 0) {
-            world.playSoundAtEntity(player, "note.snare", 0.5F, 0.4F / ((float)Math.random() * 0.4F + 0.8F));
+            int deficit = cost - charges;
+            if(attemptOvercharge(world, player, deficit)) {
+               return true;
+            }
+            if(playFailSound) {
+               world.playSoundAtEntity(player, "note.snare", 0.5F, 0.4F / ((float)Math.random() * 0.4F + 0.8F));
+            }
             this.clearInfusion(player);
             return false;
          } else {
@@ -273,6 +279,61 @@ public class Infusion {
             return true;
          }
       }
+   }
+
+   public static boolean attemptOvercharge(World world, EntityPlayer player, int deficit) {
+      if (player == null || deficit <= 0) return false;
+      if (player.capabilities.isCreativeMode) return true;
+
+      ExtendedPlayer playerEx = ExtendedPlayer.get(player);
+
+      // 1. Vampire Overcharge: Sacrifices stored blood
+      if (com.emoniph.witchery.util.CreatureUtil.isVampire(player) && playerEx != null) {
+         int bloodNeeded = Math.max(10, deficit * 2);
+         if (playerEx.getBloodPower() >= bloodNeeded) {
+            playerEx.decreaseBloodPower(bloodNeeded, true);
+            setCurrentEnergy(player, 0);
+            if (!world.isRemote) {
+               ChatUtil.sendTranslated(net.minecraft.util.EnumChatFormatting.DARK_RED, player, "witchery.infuse.branch.overcharge", new Object[0]);
+               SoundEffect.WITCHERY_RANDOM_DRINK.playAtPlayer(world, player);
+               ParticleEffect.REDDUST.send(SoundEffect.NONE, world, player.posX, player.posY + 1.0D, player.posZ, 0.5D, 0.5D, 12);
+            }
+            return true;
+         }
+      }
+
+      // 2. Werewolf Overcharge: Sacrifices stamina and hunger
+      if (com.emoniph.witchery.util.CreatureUtil.isWerewolf(player) && playerEx != null) {
+         int foodLevel = player.getFoodStats().getFoodLevel();
+         int foodCost = Math.max(2, (int) Math.ceil((double) deficit / 15.0D));
+         if (foodLevel >= foodCost + 2) {
+            player.getFoodStats().setFoodLevel(foodLevel - foodCost);
+            player.addPotionEffect(new net.minecraft.potion.PotionEffect(net.minecraft.potion.Potion.moveSlowdown.id, 40, 0));
+            setCurrentEnergy(player, 0);
+            if (!world.isRemote) {
+               ChatUtil.sendTranslated(net.minecraft.util.EnumChatFormatting.GOLD, player, "witchery.infuse.branch.overcharge", new Object[0]);
+               SoundEffect.WITCHERY_MOB_WOLFMAN_TALK.playAtPlayer(world, player);
+               ParticleEffect.EXPLODE.send(SoundEffect.NONE, world, player.posX, player.posY + 1.0D, player.posZ, 0.5D, 0.5D, 10);
+            }
+            return true;
+         }
+      }
+
+      // 3. Witch / Human Sacrificial Overcharge: Life Drain
+      float healthCost = Math.max(1.0F, (float) deficit * 0.12F);
+      if (player.getHealth() > healthCost + 1.0F) {
+         player.attackEntityFrom(net.minecraft.util.DamageSource.magic, healthCost);
+         player.addPotionEffect(new net.minecraft.potion.PotionEffect(net.minecraft.potion.Potion.confusion.id, 80, 0));
+         setCurrentEnergy(player, 0);
+         if (!world.isRemote) {
+            ChatUtil.sendTranslated(net.minecraft.util.EnumChatFormatting.DARK_RED, player, "witchery.infuse.branch.overcharge", new Object[0]);
+            SoundEffect.RANDOM_FIZZ.playAtPlayer(world, player);
+            ParticleEffect.FLAME.send(SoundEffect.NONE, world, player.posX, player.posY + 1.0D, player.posZ, 0.5D, 0.5D, 16);
+         }
+         return true;
+      }
+
+      return false;
    }
 
    public void onUpdate(ItemStack itemstack, World world, EntityPlayer player, int par4, boolean par5) {}

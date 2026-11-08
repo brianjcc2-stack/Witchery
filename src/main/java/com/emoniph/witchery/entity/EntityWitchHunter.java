@@ -83,6 +83,9 @@ public class EntityWitchHunter extends EntityCreature implements IRangedAttackMo
             return false;
          } else {
             EntityPlayer player = (EntityPlayer)entity;
+            if (com.emoniph.witchery.item.ItemInquisitorCloak.isInquisitorCloakWorn(player)) {
+               return false;
+            }
             return CreatureUtil.isWitch(entity) || CreatureUtil.isWerewolf(entity) || CreatureUtil.isVampire(entity) || this.targetPlayerName != null && !this.targetPlayerName.isEmpty() && player.getCommandSenderName().equals(this.targetPlayerName);
          }
       } else {
@@ -352,12 +355,15 @@ public class EntityWitchHunter extends EntityCreature implements IRangedAttackMo
    private static boolean isVampireActive(EntityPlayer player, long totalWorldTicks) {
       if(Config.instance().vampireHunterSpawnChance > 0.0D && !player.capabilities.isCreativeMode) {
          ExtendedPlayer playerEx = ExtendedPlayer.get(player);
-         if(playerEx.getVampireLevel() < 10) {
+         boolean isHatedMCA = com.emoniph.witchery.integration.ModHookMCA.isTerrorizingVillage(player);
+         if(playerEx.getVampireLevel() < 10 && !isHatedMCA) {
             return false;
          } else {
-            if(player.worldObj.rand.nextDouble() < Config.instance().vampireHunterSpawnChance) {
+            double chance = isHatedMCA ? Math.max(0.05D, Config.instance().vampireHunterSpawnChance * 2.0D) : Config.instance().vampireHunterSpawnChance;
+            if(player.worldObj.rand.nextDouble() < chance) {
                Village village = player.worldObj.villageCollectionObj.findNearestVillage(MathHelper.floor_double(player.posX), MathHelper.floor_double(player.posY), MathHelper.floor_double(player.posZ), 128);
-               if(village != null && village.getReputationForPlayer(player.getCommandSenderName()) < -1) {
+               boolean isHatedVanilla = village != null && village.getReputationForPlayer(player.getCommandSenderName()) < -1;
+               if(isHatedVanilla || isHatedMCA) {
                   List hunters = player.worldObj.getEntitiesWithinAABB(EntityWitchHunter.class, player.boundingBox.expand(64.0D, 16.0D, 64.0D));
                   return hunters == null || hunters.size() == 0;
                }

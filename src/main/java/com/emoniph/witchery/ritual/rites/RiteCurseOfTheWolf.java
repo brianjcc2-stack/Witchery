@@ -4,6 +4,7 @@ import com.emoniph.witchery.Witchery;
 import com.emoniph.witchery.blocks.BlockAreaMarker;
 import com.emoniph.witchery.blocks.BlockCircle;
 import com.emoniph.witchery.common.ExtendedPlayer;
+import com.emoniph.witchery.common.SupremeWitchData;
 import com.emoniph.witchery.entity.EntityVillagerWere;
 import com.emoniph.witchery.entity.EntityWitchHunter;
 import com.emoniph.witchery.entity.EntityWolfman;
@@ -57,28 +58,38 @@ public class RiteCurseOfTheWolf extends Rite {
                boolean complete = false;
                boolean cursed = false;
                EntityPlayer curseMasterPlayer = ritual.getInitiatingPlayer(world);
-               if(!CreatureUtil.isFullMoon(world)) {
+               EntityLivingBase entity = null;
+               Iterator i$ = ritual.sacrificedItems.iterator();
+               while(i$.hasNext()) {
+                  RitualStep.SacrificedItem item = (RitualStep.SacrificedItem)i$.next();
+                  if(item.itemstack.getItem() == Witchery.Items.TAGLOCK_KIT && item.itemstack.getItemDamage() == 1) {
+                     entity = Witchery.Items.TAGLOCK_KIT.getBoundEntity(world, (Entity)null, item.itemstack, Integer.valueOf(1));
+                     break;
+                  }
+               }
+               if(entity == null) {
+                  entity = curseMasterPlayer;
+               }
+
+               boolean isSelf = (entity == curseMasterPlayer);
+               boolean isSupreme = SupremeWitchData.isPlayerSupreme(curseMasterPlayer);
+
+               if(!CreatureUtil.isFullMoon(world) && !isSupreme && ritual.covenSize < 3) {
                   ChatUtil.sendTranslated(EnumChatFormatting.RED, curseMasterPlayer, "witchery.rite.wolfcurse.requiresfullmoon", new Object[0]);
                   return RitualStep.Result.ABORTED_REFUND;
                }
 
-               if(!Familiar.hasActiveCurseMasteryFamiliar(curseMasterPlayer)) {
+               if(!isSelf && !isSupreme && !Familiar.hasActiveCurseMasteryFamiliar(curseMasterPlayer)) {
                   ChatUtil.sendTranslated(EnumChatFormatting.RED, curseMasterPlayer, "witchery.rite.wolfcurse.requirescat", new Object[0]);
                   return RitualStep.Result.ABORTED_REFUND;
                }
 
-               if(ritual.covenSize < 6) {
+               if(!isSelf && !isSupreme && ritual.covenSize < 6 && ritual.covenSize < 3) {
                   ChatUtil.sendTranslated(EnumChatFormatting.RED, curseMasterPlayer, "witchery.rite.wolfcurse.requiresfullcoven", new Object[0]);
                   return RitualStep.Result.ABORTED_REFUND;
                }
 
-               Iterator i$ = ritual.sacrificedItems.iterator();
-
-               while(i$.hasNext()) {
-                  RitualStep.SacrificedItem item = (RitualStep.SacrificedItem)i$.next();
-                  if(item.itemstack.getItem() == Witchery.Items.TAGLOCK_KIT && item.itemstack.getItemDamage() == 1) {
-                     EntityLivingBase entity = Witchery.Items.TAGLOCK_KIT.getBoundEntity(world, (Entity)null, item.itemstack, Integer.valueOf(1));
-                     if(entity != null) {
+               if(entity != null) {
                         if(this.rite.curse) {
                            EntityWitchHunter.blackMagicPerformed(curseMasterPlayer);
                            boolean villager = ItemHunterClothes.isCurseProtectionActive(entity);
@@ -144,9 +155,6 @@ public class RiteCurseOfTheWolf extends Rite {
                            ChatUtil.sendTranslated(EnumChatFormatting.RED, curseMasterPlayer, "witchery.rite.wolfcurse.notactive", new Object[0]);
                         }
                      }
-                     break;
-                  }
-               }
 
                if(!complete) {
                   return RitualStep.Result.ABORTED_REFUND;

@@ -2,6 +2,7 @@ package com.emoniph.witchery.ritual.rites;
 
 import com.emoniph.witchery.Witchery;
 import com.emoniph.witchery.blocks.BlockCircle;
+import com.emoniph.witchery.infusion.Infusion;
 import com.emoniph.witchery.ritual.Rite;
 import com.emoniph.witchery.ritual.RitualStep;
 import com.emoniph.witchery.util.ChatUtil;
@@ -13,6 +14,7 @@ import java.util.Iterator;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.EnumChatFormatting;
@@ -55,13 +57,24 @@ public class RiteFidelio extends Rite {
                 }
 
                 // The Fidelius charm hides the secret-keeper: cleanse and conceal.
-                int dur = TimeUtil.minsToTicks(20);
+                int baseMins = 20;
+                EntityPlayer initiator = circleType.getInitiatingPlayer(world);
+                if (initiator != null) {
+                    int covenSize = com.emoniph.witchery.entity.EntityCovenWitch.getCovenSize(initiator);
+                    baseMins += covenSize * 5;
+                }
+                int dur = TimeUtil.minsToTicks(baseMins);
                 subject.clearActivePotions();
                 subject.addPotionEffect(new PotionEffect(Potion.invisibility.id, dur, 0));
                 subject.addPotionEffect(new PotionEffect(Potion.nightVision.id, dur, 0));
                 subject.addPotionEffect(new PotionEffect(Potion.resistance.id, dur, 0));
                 if (subject instanceof EntityPlayer) {
-                    ChatUtil.sendTranslated(EnumChatFormatting.AQUA, (EntityPlayer)subject, "witchery.rite.fidelio.hidden", new Object[0]);
+                    EntityPlayer p = (EntityPlayer)subject;
+                    NBTTagCompound nbt = Infusion.getNBT(p);
+                    if (nbt != null) {
+                        nbt.setLong("witcheryFidelioUntil", TimeUtil.getServerTimeInTicks() + (long)dur);
+                    }
+                    ChatUtil.sendTranslated(EnumChatFormatting.AQUA, p, "witchery.rite.fidelio.hidden", new Object[0]);
                 }
                 ParticleEffect.PORTAL.send(SoundEffect.MOB_ENDERMEN_PORTAL, subject, 1.0D, 2.0D, 24);
                 ParticleEffect.INSTANT_SPELL.send(SoundEffect.RANDOM_LEVELUP, world, 0.5D + (double)x, (double)y + 1.0D, 0.5D + (double)z, 2.0D, 2.0D, 24);

@@ -234,6 +234,9 @@ public class CreatureUtil {
    }
 
    public static boolean isFullMoon(World world) {
+      if(world != null && world.provider != null && "Twilight Forest".equals(world.provider.getDimensionName())) {
+         return true;
+      }
       return (double)world.getCurrentMoonPhaseFactor() == 1.0D && !world.isDaytime();
    }
 
@@ -287,11 +290,17 @@ public class CreatureUtil {
 
    public static boolean isInSunlight(EntityLivingBase entity) {
       World world = entity.worldObj;
+      if(world != null && world.provider != null && "Twilight Forest".equals(world.provider.getDimensionName())) {
+         return false;
+      }
       if(world.provider.dimensionId != Config.instance().dimensionDreamID && world.provider.dimensionId != Config.instance().dimensionTormentID && !world.provider.hasNoSky && world.provider.isSurfaceWorld() && world.isDaytime()) {
          int x = MathHelper.floor_double(entity.posX);
          int y = MathHelper.floor_double(entity.posY);
          int z = MathHelper.floor_double(entity.posZ);
          BiomeGenBase biome = world.getBiomeGenForCoords(x, z);
+         if(biome != null && biome.biomeName != null && (biome.biomeName.equals("Ominous Woods") || biome.biomeName.startsWith("Twilight") || biome.biomeName.contains("Dark Forest"))) {
+            return false;
+         }
          return biome.biomeName.equals("Ominous Woods")?false:(world.isRaining() && biome.canSpawnLightningBolt()?false:world.canBlockSeeTheSky(x, y + MathHelper.ceiling_double_int((double)entity.height), z));
       } else {
          return false;

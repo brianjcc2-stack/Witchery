@@ -1,6 +1,11 @@
 package com.emoniph.witchery.entity;
 
 import com.emoniph.witchery.Witchery;
+import com.emoniph.witchery.common.WitchAdvisor;
+import com.emoniph.witchery.common.CovenTask;
+import com.emoniph.witchery.common.CovenTaskManager;
+import com.emoniph.witchery.common.WeeklyQuestEngine;
+import net.minecraft.util.ChatComponentText;
 import com.emoniph.witchery.blocks.BlockCircle;
 import com.emoniph.witchery.brewing.TileEntityCauldron;
 import com.emoniph.witchery.entity.ai.EntityAIMoveToRestrictionAndSit;
@@ -449,6 +454,35 @@ public class EntityCovenWitch extends EntityTameable implements IRangedAttackMob
                }
 
                playWitchTalk(super.worldObj, this, 1.0F);
+            }
+         } else if(this.isTamed()) {
+            playWitchTalk(super.worldObj, this, 0.6F);
+            String witchName = this.hasCustomNameTag() ? this.getCustomNameTag() : "Hermana del Aquelarre";
+
+            if (player.isSneaking()) {
+               WeeklyQuestEngine.displayWeekly(player, witchName);
+            } else {
+               String activeTaskId = CovenTaskManager.getActiveTaskId(player);
+               CovenTask currentTask = (activeTaskId != null && !activeTaskId.isEmpty()) ? CovenTaskManager.getTask(activeTaskId) : null;
+
+               if (currentTask != null && currentTask.canComplete(player)) {
+                  currentTask.completeAndReward(player, witchName);
+                  CovenTaskManager.setActiveTask(player, "");
+               } else if (currentTask == null) {
+                  CovenTask newTask = CovenTaskManager.getRandomTask(player);
+                  if (newTask != null) {
+                     CovenTaskManager.setActiveTask(player, newTask.getId());
+                     player.addChatMessage(new ChatComponentText("§5§m-----------------------------------------------------"));
+                     player.addChatMessage(new ChatComponentText("§d<" + witchName + "> §f\"Hermana, el aquelarre tiene una misión para ti:\""));
+                     player.addChatMessage(new ChatComponentText("§e📜 " + newTask.getCategory().colorPrefix + newTask.getTitle() + " §7- " + newTask.getDescription()));
+                     player.addChatMessage(new ChatComponentText("§5★ Recompensa: §6Alijo Místico + Bendición: " + newTask.getBlessingName() + " (+" + newTask.getMasteryReward() + " pts)"));
+                     player.addChatMessage(new ChatComponentText("§5§m-----------------------------------------------------"));
+                  }
+                  WitchAdvisor.whisperProgression(player, witchName);
+               } else {
+                  CovenTaskManager.showCurrentTaskStatus(player, witchName);
+                  WitchAdvisor.whisperProgression(player, witchName);
+               }
             }
          }
 

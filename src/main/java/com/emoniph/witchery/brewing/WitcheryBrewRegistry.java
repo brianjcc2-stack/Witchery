@@ -13,6 +13,17 @@ import com.emoniph.witchery.brewing.DispersalGas;
 import com.emoniph.witchery.brewing.DispersalInstant;
 import com.emoniph.witchery.brewing.DispersalLiquid;
 import com.emoniph.witchery.brewing.DispersalTriggered;
+import com.emoniph.witchery.brewing.DispersalSpirit;
+import com.emoniph.witchery.brewing.DispersalChain;
+import com.emoniph.witchery.brewing.DispersalMantle;
+import com.emoniph.witchery.brewing.action.effect.BrewActionSpiritFlame;
+import com.emoniph.witchery.brewing.action.effect.BrewActionLifeDrain;
+import com.emoniph.witchery.brewing.action.effect.BrewActionSoulStun;
+import com.emoniph.witchery.brewing.action.effect.BrewActionSoulLink;
+import com.emoniph.witchery.brewing.action.effect.BrewActionDimensionalLock;
+import com.emoniph.witchery.brewing.action.effect.BrewActionBloodBoil;
+import com.emoniph.witchery.brewing.action.effect.BrewActionShadowFade;
+import com.emoniph.witchery.brewing.action.effect.BrewActionCorrosion;
 import com.emoniph.witchery.brewing.EffectLevel;
 import com.emoniph.witchery.brewing.EffectLevelCounter;
 import com.emoniph.witchery.brewing.EntitySplatter;
@@ -150,6 +161,9 @@ public class WitcheryBrewRegistry {
       this.register((new BrewActionDispersal(Witchery.Items.GENERIC.itemBatWool.getBrewItemKey(), new AltarPower(0), new DispersalGas())).addNullifier(new BrewItemKey(Items.gunpowder), false).addNullifier(Witchery.Items.GENERIC.itemArtichoke.getBrewItemKey(), false).addNullifier(Witchery.Items.GENERIC.itemBatWool.getBrewItemKey(), false).addNullifier(Witchery.Items.GENERIC.itemWormwood.getBrewItemKey(), false).addNullifier(triggeredKey, false).addNullifier(new BrewItemKey(Items.wheat), false));
       this.register((new BrewActionDispersal(Witchery.Items.GENERIC.itemWormwood.getBrewItemKey(), new AltarPower(0), new DispersalLiquid())).addNullifier(new BrewItemKey(Items.gunpowder), false).addNullifier(Witchery.Items.GENERIC.itemBatWool.getBrewItemKey(), false).addNullifier(Witchery.Items.GENERIC.itemArtichoke.getBrewItemKey(), false).addNullifier(Witchery.Items.GENERIC.itemWormwood.getBrewItemKey(), false).addNullifier(triggeredKey, false).addNullifier(new BrewItemKey(Items.wheat), false));
       this.register((new BrewActionDispersal(triggeredKey, new AltarPower(0), new DispersalTriggered())).addNullifier(new BrewItemKey(Items.gunpowder), false).addNullifier(Witchery.Items.GENERIC.itemBatWool.getBrewItemKey(), false).addNullifier(Witchery.Items.GENERIC.itemArtichoke.getBrewItemKey(), false).addNullifier(Witchery.Items.GENERIC.itemWormwood.getBrewItemKey(), false).addNullifier(triggeredKey, false).addNullifier(new BrewItemKey(Items.wheat), false));
+      this.register((new BrewActionDispersal(Witchery.Items.GENERIC.itemSubduedSpirit.getBrewItemKey(), new AltarPower(0), new DispersalSpirit())).addNullifier(new BrewItemKey(Items.gunpowder), false).addNullifier(Witchery.Items.GENERIC.itemBatWool.getBrewItemKey(), false).addNullifier(Witchery.Items.GENERIC.itemArtichoke.getBrewItemKey(), false).addNullifier(Witchery.Items.GENERIC.itemWormwood.getBrewItemKey(), false).addNullifier(triggeredKey, false).addNullifier(new BrewItemKey(Items.wheat), false));
+      this.register((new BrewActionDispersal(Witchery.Items.GENERIC.itemSpectralDust.getBrewItemKey(), new AltarPower(0), new DispersalChain())).addNullifier(new BrewItemKey(Items.gunpowder), false).addNullifier(Witchery.Items.GENERIC.itemBatWool.getBrewItemKey(), false).addNullifier(Witchery.Items.GENERIC.itemArtichoke.getBrewItemKey(), false).addNullifier(Witchery.Items.GENERIC.itemWormwood.getBrewItemKey(), false).addNullifier(triggeredKey, false).addNullifier(new BrewItemKey(Items.wheat), false));
+      this.register((new BrewActionDispersal(Witchery.Items.GENERIC.itemGoldenThread.getBrewItemKey(), new AltarPower(0), new DispersalMantle())).addNullifier(new BrewItemKey(Items.gunpowder), false).addNullifier(Witchery.Items.GENERIC.itemBatWool.getBrewItemKey(), false).addNullifier(Witchery.Items.GENERIC.itemArtichoke.getBrewItemKey(), false).addNullifier(Witchery.Items.GENERIC.itemWormwood.getBrewItemKey(), false).addNullifier(triggeredKey, false).addNullifier(new BrewItemKey(Items.wheat), false));
       this.register(new BrewActionImpactModifier(Witchery.Items.GENERIC.itemAshWood.getBrewItemKey(), new BrewNamePartModifier(0, 0, false, 1, 0), new AltarPower(50)) {
          protected void onPrepareSplashPotion(World world, ModifiersImpact modifiers) {
             if(modifiers.extent < 1) {
@@ -1933,6 +1947,16 @@ public class WitcheryBrewRegistry {
       this.register(new com.emoniph.witchery.brewing.action.effect.BrewActionMarionette(new BrewItemKey(Items.string), new BrewNamePart("witchery:brew.marionette"), new AltarPower(3000), new Probability(1.0D), new EffectLevel(8)));
       this.register(new BrewPotionEffect(new BrewItemKey(Items.reeds), new BrewNamePart("witchery:brew.sirensong"), new AltarPower(2000), new Probability(1.0D), Witchery.Potions.SIREN_SONG, (long)com.emoniph.witchery.util.TimeUtil.secsToTicks(30), new EffectLevel(6)));
       this.register(new BrewPotionEffect(new BrewItemKey(Blocks.sponge), new BrewNamePart("witchery:brew.silence"), new AltarPower(3000), new Probability(1.0D), Witchery.Potions.SILENCE, (long)com.emoniph.witchery.util.TimeUtil.secsToTicks(15), new EffectLevel(8)));
+      
+      // NEW CUSTOM BREWS (Batch 3 - Arsenal Espectral y Tactico)
+      this.register(new BrewActionSpiritFlame(new BrewItemKey(Items.blaze_powder), new BrewNamePart("witchery:brew.spiritflame"), new AltarPower(1500), new Probability(1.0D), new EffectLevel(5)));
+      this.register(new BrewActionLifeDrain(new BrewItemKey(Items.ghast_tear), new BrewNamePart("witchery:brew.lifedrain"), new AltarPower(2000), new Probability(1.0D), new EffectLevel(6)));
+      this.register(new BrewActionSoulStun(new BrewItemKey(Blocks.soul_sand), new BrewNamePart("witchery:brew.soulstun"), new AltarPower(1500), new Probability(1.0D), new EffectLevel(5)));
+      this.register(new BrewActionSoulLink(new BrewItemKey(Items.slime_ball), new BrewNamePart("witchery:brew.soullink"), new AltarPower(2000), new Probability(1.0D), new EffectLevel(6)));
+      this.register(new BrewActionDimensionalLock(new BrewItemKey(Items.ender_eye), new BrewNamePart("witchery:brew.dimensionallock"), new AltarPower(2500), new Probability(1.0D), new EffectLevel(7)));
+      this.register(new BrewActionBloodBoil(new BrewItemKey(Items.magma_cream), new BrewNamePart("witchery:brew.bloodboil"), new AltarPower(2000), new Probability(1.0D), new EffectLevel(6)));
+      this.register(new BrewActionShadowFade(new BrewItemKey(Items.glass_bottle), new BrewNamePart("witchery:brew.shadowfade"), new AltarPower(1500), new Probability(1.0D), new EffectLevel(5)));
+      this.register(new BrewActionCorrosion(new BrewItemKey(Items.iron_ingot), new BrewNamePart("witchery:brew.corrosion"), new AltarPower(1500), new Probability(1.0D), new EffectLevel(5)));
    }
 
    public List getRecipes() {

@@ -303,6 +303,8 @@ public class ClientProxy extends CommonProxy {
       RenderingRegistry.registerEntityRenderingHandler(EntityAttackBat.class, new RenderBat());
       RenderingRegistry.registerEntityRenderingHandler(EntityMirrorFace.class, new RenderMirrorFace());
       RenderingRegistry.registerEntityRenderingHandler(EntityReflection.class, new RenderReflection());
+      RenderingRegistry.registerEntityRenderingHandler(com.emoniph.witchery.entity.EntityMirrorClone.class, new net.minecraft.client.renderer.entity.RenderBiped(new net.minecraft.client.model.ModelBiped(), 0.5F));
+      RenderingRegistry.registerEntityRenderingHandler(com.emoniph.witchery.entity.EntityFlyingMortar.class, new RenderBroom());
       this.bindRenderer(BlockPoppetShelf.TileEntityPoppetShelf.class, new RenderPoppetChest(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.POPPET_SHELF)});
       this.bindRenderer(BlockGrassper.TileEntityGrassper.class, new RenderGrassper(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.GRASSPER)});
       this.bindRenderer(BlockDistillery.TileEntityDistillery.class, new RenderDistillery(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.DISTILLERY_IDLE)});

@@ -23,9 +23,51 @@ public class EntitySizeInfo {
          EntityPlayer nbtEntity = (EntityPlayer)entity;
          this.creature = ExtendedPlayer.get(nbtEntity).getCreatureType();
          NBTTagCompound nbtEntity1 = entity.getEntityData();
-         switch(EntitySizeInfo.NamelessClass1729390445.$SwitchMap$com$emoniph$witchery$util$TransformCreature[this.creature.ordinal()]) {
-         case 1:
-         case 2:
+         switch(this.creature) {
+         case WOLF:
+            this.isDefault = false;
+            this.defaultWidth = 0.6F;
+            this.defaultHeight = 0.8F;
+            this.eyeHeight = this.defaultHeight * 0.92F;
+            this.stepSize = 1.0F;
+            break;
+         case WOLFMAN:
+            this.isDefault = true;
+            this.defaultWidth = 0.6F;
+            this.defaultHeight = 1.8F;
+            this.eyeHeight = nbtEntity.getDefaultEyeHeight();
+            this.stepSize = 1.0F;
+            break;
+         case BAT:
+            this.isDefault = false;
+            this.defaultWidth = 0.3F;
+            this.defaultHeight = 0.6F;
+            this.eyeHeight = this.defaultHeight * 0.8F;
+            this.stepSize = 0.5F;
+            break;
+         case TOAD:
+            this.isDefault = false;
+            this.defaultWidth = 0.3F;
+            this.defaultHeight = 0.5F;
+            this.eyeHeight = this.defaultHeight * 0.92F;
+            this.stepSize = 0.5F;
+            break;
+         case SPIRIT:
+            this.isDefault = true;
+            this.defaultWidth = 0.6F;
+            this.defaultHeight = 1.8F;
+            this.eyeHeight = nbtEntity.getDefaultEyeHeight();
+            this.stepSize = 0.5F;
+            break;
+         case SUBDUED_SPIRIT:
+            this.isDefault = false;
+            this.defaultWidth = 0.25F;
+            this.defaultHeight = 0.25F;
+            this.eyeHeight = 0.2F;
+            this.stepSize = 0.5F;
+            break;
+         case NONE:
+         case PLAYER:
          default:
             this.isDefault = true;
             this.defaultWidth = 0.6F;
@@ -33,33 +75,6 @@ public class EntitySizeInfo {
             this.stepSize = 0.5F;
             this.eyeHeight = nbtEntity.getDefaultEyeHeight();
             break;
-         case 3:
-            this.isDefault = false;
-            this.defaultWidth = 0.6F;
-            this.defaultHeight = 0.8F;
-            this.eyeHeight = this.defaultHeight * 0.92F;
-            this.stepSize = 1.0F;
-            break;
-         case 4:
-            this.isDefault = true;
-            this.defaultWidth = 0.6F;
-            this.defaultHeight = 1.8F;
-            this.eyeHeight = nbtEntity.getDefaultEyeHeight();
-            this.stepSize = 1.0F;
-            break;
-         case 5:
-            this.isDefault = false;
-            this.defaultWidth = 0.3F;
-            this.defaultHeight = 0.6F;
-            this.eyeHeight = this.defaultHeight * 0.8F;
-            this.stepSize = 0.5F;
-            break;
-         case 6:
-            this.isDefault = false;
-            this.defaultWidth = 0.3F;
-            this.defaultHeight = 0.5F;
-            this.eyeHeight = this.defaultHeight * 0.92F;
-            this.stepSize = 0.5F;
          }
       } else {
          NBTTagCompound nbtEntity2 = entity.getEntityData();

@@ -1704,6 +1704,7 @@ public class EffectRegistry {
     public static final SymbolEffect Vermillious;
     public static final SymbolEffect BasicAttack;
     public static final SymbolEffect Revelio;
+    public static final SymbolEffect SpeculumMutatio;
 
     public static final EffectRegistry instance() {
         return INSTANCE;
@@ -1886,6 +1887,32 @@ public class EffectRegistry {
         SoundEffect.NOTE_SNARE.playAtPlayer(world, player);
     }
 
+    private static void purgeBuffsKeepCurses(EntityLivingBase target) {
+        if (target == null) return;
+        java.util.Collection active = target.getActivePotionEffects();
+        if (active == null || active.isEmpty()) return;
+        java.util.List<Integer> toRemove = new java.util.ArrayList<Integer>();
+        for (Object o : active) {
+            net.minecraft.potion.PotionEffect pe = (net.minecraft.potion.PotionEffect) o;
+            int id = pe.getPotionID();
+            boolean isCurse = (id == Witchery.Potions.MORTAL_COIL.id ||
+                               id == Witchery.Potions.SINKING.id ||
+                               id == Witchery.Potions.OVERHEATING.id ||
+                               id == Witchery.Potions.INSANITY.id ||
+                               id == Witchery.Potions.WAKING_NIGHTMARE.id ||
+                               id == Witchery.Potions.ILL_FITTING.id ||
+                               id == Witchery.Potions.ENSLAVED.id ||
+                               id == Witchery.Potions.PARALYSED.id);
+            if (!isCurse) {
+                toRemove.add(id);
+            }
+        }
+        for (Integer pid : toRemove) {
+            target.removePotionEffect(pid);
+        }
+        target.extinguish();
+    }
+
     static {
         FMLCommonHandler.instance().bus().register((Object)new ErectoTickHandler());
         Apparition = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(55, "witchery.pott.apparition"){
@@ -1974,7 +2001,7 @@ public class EffectRegistry {
             public void perform(World world, EntityPlayer player, int effectLevel) {
                 if (player.isSneaking()) {
                     if (!world.isRemote) {
-                        player.clearActivePotions();
+                        purgeBuffsKeepCurses(player);
                         ParticleEffect.INSTANT_SPELL.send(SoundEffect.RANDOM_FIZZ, player, 1.0D, 1.5D, 16);
                         com.emoniph.witchery.util.ChatUtil.sendTranslated(net.minecraft.util.EnumChatFormatting.GREEN, player, "witchery.pott.finiteincantatem.cleanse");
                     }
@@ -1988,7 +2015,7 @@ public class EffectRegistry {
                 List list = world.getEntitiesWithinAABB(EntityLivingBase.class, spell.boundingBox.expand(15.0D, 15.0D, 15.0D));
                 for (Object obj : list) {
                     EntityLivingBase target = (EntityLivingBase)obj;
-                    target.clearActivePotions();
+                    purgeBuffsKeepCurses(target);
                     com.emoniph.witchery.infusion.infusions.symbols.SymbolEffectImperio.IMPERIO_TARGETS.remove(target);
                     com.emoniph.witchery.infusion.infusions.symbols.SymbolEffectImperio.IMPERIO_STAYING_TARGETS.remove(target);
                     ParticleEffect.INSTANT_SPELL.send(SoundEffect.RANDOM_FIZZ, (Entity)target, 1.0, 1.0, 16);
@@ -2361,6 +2388,31 @@ public class EffectRegistry {
                 }
             }
         }, new StrokeSet(1, new byte[]{(byte)0,(byte)1,(byte)0}));
+        SpeculumMutatio = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(86, "witchery.pott.speculummutatio"){
+
+            @Override
+            public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
+                if (!world.isRemote && mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
+                    EntityLivingBase target = (EntityLivingBase)mop.entityHit;
+                    double px = caster.posX;
+                    double py = caster.posY;
+                    double pz = caster.posZ;
+
+                    double tx = target.posX;
+                    double ty = target.posY;
+                    double tz = target.posZ;
+
+                    caster.setPositionAndUpdate(tx, ty, tz);
+                    target.setPositionAndUpdate(px, py, pz);
+
+                    target.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, 60, 2));
+                    target.addPotionEffect(new PotionEffect(Potion.confusion.id, 60, 1));
+
+                    ParticleEffect.PORTAL.send(SoundEffect.RANDOM_GLASS, (Entity)caster, 1.0, 1.0, 16);
+                    ParticleEffect.PORTAL.send(SoundEffect.RANDOM_GLASS, (Entity)target, 1.0, 1.0, 16);
+                }
+            }
+        }.setColor(0x88CCFF).setSize(1.2f), new StrokeSet(1, new byte[]{(byte)2,(byte)3,(byte)2,(byte)3}));
         Orchideous = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(81, "witchery.pott.orchideous"){
 
             @Override

@@ -28,10 +28,20 @@ import net.minecraft.world.World;
 public class ServerTickEvents {
 
    public static final ArrayList TASKS = new ArrayList();
-
+   private long lastSupremeCheck = 0L;
 
    @SubscribeEvent
    public void onServerTick(ServerTickEvent event) {
+      if(event.side == Side.SERVER && event.phase == Phase.START) {
+         long now = MinecraftServer.getSystemTimeMillis();
+         if(now - this.lastSupremeCheck > 10000L) {
+            this.lastSupremeCheck = now;
+            if(MinecraftServer.getServer() != null && MinecraftServer.getServer().worldServerForDimension(0) != null) {
+               SupremeWitchData.updateSupremeStatus(MinecraftServer.getServer().worldServerForDimension(0));
+            }
+         }
+      }
+
       if(event.side == Side.SERVER && event.phase == Phase.START && TASKS.size() > 0) {
          ArrayList completedTasks = new ArrayList();
          Iterator i$ = TASKS.iterator();
@@ -58,6 +68,11 @@ public class ServerTickEvents {
    public void onPlayerTick(PlayerTickEvent event) {
       if(event.side == Side.SERVER && !event.player.worldObj.isRemote) {
          if(event.phase == Phase.START) {
+            int mantleTicks = event.player.getEntityData().getInteger("WITCMantleTicks");
+            if (mantleTicks > 0) {
+               event.player.getEntityData().setInteger("WITCMantleTicks", mantleTicks - 1);
+            }
+
             int selfLeviosa = event.player.getEntityData().getInteger("WITCLeviosaSelfTicks");
             if (selfLeviosa > 0) {
                event.player.getEntityData().setInteger("WITCLeviosaSelfTicks", selfLeviosa - 1);
@@ -104,6 +119,43 @@ public class ServerTickEvents {
             Collection playerExt = event.player.getActivePotionEffects();
             ExtendedPlayer playerExt1 = ExtendedPlayer.get(event.player);
             if(playerExt1 != null) {
+               boolean isGhost = WorldProviderDreamWorld.getPlayerIsGhost(Infusion.getNBT(event.player));
+               boolean isSpirit = playerExt1.getCreatureType() == com.emoniph.witchery.util.TransformCreature.SPIRIT || 
+                                  playerExt1.getCreatureType() == com.emoniph.witchery.util.TransformCreature.SUBDUED_SPIRIT || 
+                                  playerExt1.isAstralProjecting() || 
+                                  (isGhost && playerExt1.getSpiritLevel() >= 1);
+               if (isSpirit) {
+                  event.player.fallDistance = 0.0F;
+
+                  if (event.player.isSneaking()) {
+                     event.player.setInvisible(true);
+                  }
+
+                  if ((playerExt1.getSpiritLevel() >= 9 || playerExt1.isAstralProjecting()) && (event.player.isCollidedHorizontally || (event.player.isSneaking() && (Math.abs(event.player.motionX) > 0.02 || Math.abs(event.player.motionZ) > 0.02)))) {
+                     double yawRad = Math.toRadians((double)event.player.rotationYaw);
+                     double forwardX = -Math.sin(yawRad);
+                     double forwardZ = Math.cos(yawRad);
+
+                     for (double d = 1.2D; d <= 3.8D; d += 0.7D) {
+                        double testX = event.player.posX + forwardX * d;
+                        double testY = event.player.posY;
+                        double testZ = event.player.posZ + forwardZ * d;
+                        int bx = net.minecraft.util.MathHelper.floor_double(testX);
+                        int by = net.minecraft.util.MathHelper.floor_double(testY);
+                        int bz = net.minecraft.util.MathHelper.floor_double(testZ);
+
+                        net.minecraft.block.Block b1 = event.player.worldObj.getBlock(bx, by, bz);
+                        net.minecraft.block.Block b2 = event.player.worldObj.getBlock(bx, by + 1, bz);
+                        if (!b1.getMaterial().isSolid() && !b2.getMaterial().isSolid()) {
+                           event.player.setPositionAndUpdate(testX, testY, testZ);
+                           event.player.worldObj.playSoundEffect(testX, testY, testZ, "witchery:mob.spirit.say", 0.6F, 1.3F);
+                           com.emoniph.witchery.util.ParticleEffect.PORTAL.send(com.emoniph.witchery.util.SoundEffect.NONE, event.player.worldObj, testX, testY, testZ, 0.5D, 1.0D, 12);
+                           break;
+                        }
+                     }
+                  }
+               }
+
                playerExt1.updateWorship();
                if(playerExt.size() > 0) {
                   playerExt1.cacheIncurablePotionEffect(playerExt);
@@ -189,6 +241,17 @@ public class ServerTickEvents {
             Witchery.packetPipeline.sendToDimension(new PacketPlayerStyle(player), player.worldObj.provider.dimensionId);
             if(player.dimension != Config.instance().dimensionDreamID && WorldProviderDreamWorld.getPlayerIsSpiritWalking(player) && !WorldProviderDreamWorld.getPlayerIsGhost(player)) {
                WorldProviderDreamWorld.setPlayerMustAwaken(player, true);
+            }
+
+            SupremeWitchData.updateSupremeStatus(player.worldObj);
+            SupremeWitchData supremeData = SupremeWitchData.get(player.worldObj);
+            if(supremeData != null) {
+               if(supremeData.isSupreme(player)) {
+                  player.addChatMessage(new net.minecraft.util.ChatComponentText(net.minecraft.util.EnumChatFormatting.DARK_PURPLE + "" + net.minecraft.util.EnumChatFormatting.BOLD + "[Bruja Suprema] " + net.minecraft.util.EnumChatFormatting.LIGHT_PURPLE + "Bienvenida de vuelta, Bruja Suprema " + net.minecraft.util.EnumChatFormatting.GOLD + player.getCommandSenderName() + net.minecraft.util.EnumChatFormatting.LIGHT_PURPLE + "."));
+               }
+               if(player instanceof net.minecraft.entity.player.EntityPlayerMP) {
+                  supremeData.syncTo((net.minecraft.entity.player.EntityPlayerMP)player);
+               }
             }
          }
       }

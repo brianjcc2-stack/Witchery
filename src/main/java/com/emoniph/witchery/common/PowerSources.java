@@ -1,7 +1,9 @@
 package com.emoniph.witchery.common;
 
+import com.emoniph.witchery.Witchery;
 import com.emoniph.witchery.common.INullSource;
 import com.emoniph.witchery.common.IPowerSource;
+import com.emoniph.witchery.Witchery;
 import com.emoniph.witchery.util.Coord;
 import com.emoniph.witchery.util.Log;
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -10,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
@@ -175,7 +178,28 @@ public class PowerSources {
 
    public static IPowerSource findClosestPowerSource(World world, int posX, int posY, int posZ) {
       ArrayList sources = instance() != null?instance().get(world, new Coord(posX, posY, posZ), 16):null;
-      return sources != null && sources.size() > 0?((PowerSources.RelativePowerSource)sources.get(0)).source():null;
+      if (sources != null && sources.size() > 0) {
+         return ((PowerSources.RelativePowerSource)sources.get(0)).source();
+      }
+
+      // Baba Yaga's Blessing: Mobile Altar Power
+      if (world != null) {
+         double r = 16.0D;
+         net.minecraft.util.AxisAlignedBB bb = net.minecraft.util.AxisAlignedBB.getBoundingBox((double)posX - r, (double)posY - r, (double)posZ - r, (double)posX + r, (double)posY + r, (double)posZ + r);
+         List players = world.getEntitiesWithinAABB(net.minecraft.entity.player.EntityPlayer.class, bb);
+         for (Object pObj : players) {
+            net.minecraft.entity.player.EntityPlayer player = (net.minecraft.entity.player.EntityPlayer)pObj;
+            if (player.inventory.armorItemInSlot(3) != null && player.inventory.armorItemInSlot(3).getItem() == Witchery.Items.BABAS_HAT) {
+               return new BabaYagaMobilePowerSource(world, posX, posY, posZ);
+            }
+         }
+         List witches = world.getEntitiesWithinAABB(com.emoniph.witchery.entity.EntityBabaYaga.class, bb);
+         if (witches != null && !witches.isEmpty()) {
+            return new BabaYagaMobilePowerSource(world, posX, posY, posZ);
+         }
+      }
+
+      return null;
    }
 
    public static IPowerSource findClosestPowerSource(World world, Coord coord) {

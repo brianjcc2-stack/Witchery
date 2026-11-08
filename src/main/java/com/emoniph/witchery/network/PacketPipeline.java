@@ -61,6 +61,7 @@ public class PacketPipeline {
       this.CHANNEL.registerMessage((Class)PacketExtendedEntityRequestSyncToClient.Handler.class, (Class)PacketExtendedEntityRequestSyncToClient.class, 17, Side.SERVER);
       this.CHANNEL.registerMessage((Class)PacketPartialExtendedPlayerSync.Handler.class, (Class)PacketPartialExtendedPlayerSync.class, 18, Side.CLIENT);
       this.CHANNEL.registerMessage((Class)PacketSetClientPlayerFacing.Handler.class, (Class)PacketSetClientPlayerFacing.class, 19, Side.CLIENT);
+      this.CHANNEL.registerMessage((Class)PacketSyncSupremeWitch.Handler.class, (Class)PacketSyncSupremeWitch.class, 20, Side.CLIENT);
    }
 
    public void sendTo(IMessage message, EntityPlayer player) {

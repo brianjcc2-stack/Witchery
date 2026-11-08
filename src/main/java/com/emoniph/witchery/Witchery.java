@@ -250,6 +250,7 @@ public class Witchery {
       modHooks.register(ModHookWaila.class);
       modHooks.register(ModHookMorph.class);
       modHooks.register(ModHookBaubles.class);
+      modHooks.register(com.emoniph.witchery.integration.ModHookMCA.class);
       modHooks.init();
       Potions.init();
       Recipes.init();
@@ -288,6 +289,8 @@ public class Witchery {
       event.registerServerCommand(new com.emoniph.witchery.commands.CommandCrucio());
       event.registerServerCommand(new com.emoniph.witchery.commands.CommandCoven());
       event.registerServerCommand(new com.emoniph.witchery.commands.CommandSpirit());
+      event.registerServerCommand(new com.emoniph.witchery.commands.CommandVampire());
+      event.registerServerCommand(new com.emoniph.witchery.commands.CommandWerewolf());
       PowerSources.initiate();
       BlockAreaMarker.AreaMarkerRegistry.serverStart();
       worldGenerator.initiate();

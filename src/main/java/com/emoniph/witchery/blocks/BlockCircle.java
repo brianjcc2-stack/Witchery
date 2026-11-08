@@ -9,6 +9,7 @@ import com.emoniph.witchery.entity.EntityCovenWitch;
 import com.emoniph.witchery.ritual.Circle;
 import com.emoniph.witchery.ritual.RiteRegistry;
 import com.emoniph.witchery.ritual.RitualStep;
+import com.emoniph.witchery.ritual.rites.RiteProtectionCircle;
 import com.emoniph.witchery.util.BlockUtil;
 import com.emoniph.witchery.util.ChatUtil;
 import com.emoniph.witchery.util.Config;
@@ -446,6 +447,16 @@ public class BlockCircle extends BlockBaseContainer {
 
       public boolean isRitualActive() {
          return !this.activeRituals.isEmpty() || !this.upkeepRituals.isEmpty();
+      }
+
+      public boolean hasProtectionRitual() {
+         for (int i = 0; i < this.upkeepRituals.size(); ++i) {
+            BlockCircle.TileEntityCircle.ActivatedRitual ar = (BlockCircle.TileEntityCircle.ActivatedRitual)this.upkeepRituals.get(i);
+            if (ar != null && ar.ritual != null && ar.ritual.rite instanceof RiteProtectionCircle) {
+               return true;
+            }
+         }
+         return false;
       }
 
       public void queueRitual(RiteRegistry.Ritual ritual, AxisAlignedBB bounds, EntityPlayer player, int covenSize, boolean summonCoven) {

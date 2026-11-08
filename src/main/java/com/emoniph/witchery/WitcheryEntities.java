@@ -37,6 +37,8 @@ import com.emoniph.witchery.entity.EntityLostSoul;
 import com.emoniph.witchery.entity.EntityMandrake;
 import com.emoniph.witchery.entity.EntityMindrake;
 import com.emoniph.witchery.entity.EntityMirrorFace;
+import com.emoniph.witchery.entity.EntityMirrorClone;
+import com.emoniph.witchery.entity.EntityFlyingMortar;
 import com.emoniph.witchery.entity.EntityNightmare;
 import com.emoniph.witchery.entity.EntityOwl;
 import com.emoniph.witchery.entity.EntityParasyticLouse;
@@ -127,6 +129,8 @@ public class WitcheryEntities {
    public final WitcheryEntities.EntityRef ATTACK_BAT;
    public final WitcheryEntities.EntityRef MIRROR_FACE;
    public final WitcheryEntities.EntityRef REFLECTION;
+   public final WitcheryEntities.EntityRef MIRROR_CLONE;
+   public final WitcheryEntities.EntityRef FLYING_MORTAR;
 
 
    public WitcheryEntities() {
@@ -185,6 +189,8 @@ public class WitcheryEntities {
       this.ATTACK_BAT = new WitcheryEntities.LivingRef(144, EntityAttackBat.class, "attackbat", this.entities);
       this.MIRROR_FACE = new WitcheryEntities.LivingRef(145, EntityMirrorFace.class, "mirrorface", this.entities);
       this.REFLECTION = (new WitcheryEntities.LivingRef(146, EntityReflection.class, "reflection", this.entities)).setEgg(5596842, 6715391);
+      this.MIRROR_CLONE = new WitcheryEntities.LivingRef(147, EntityMirrorClone.class, "mirrorclone", this.entities);
+      this.FLYING_MORTAR = new WitcheryEntities.EntityRef(148, EntityFlyingMortar.class, "flyingmortar", 64, 1, this.entities);
    }
 
    public List getEntites() {

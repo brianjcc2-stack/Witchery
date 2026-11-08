@@ -31,7 +31,7 @@ public class CommandCoven extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/coven <summon|follow|stay|attack|dismiss> [all] (o <invocar|seguir|quieto|atacar|despedir>)";
+        return "/coven <summon|follow|stay|attack|dismiss|task|whisper|weekly> [all]";
     }
 
     @Override
@@ -48,7 +48,8 @@ public class CommandCoven extends CommandBase {
     public List addTabCompletionOptions(ICommandSender sender, String[] args) {
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args, "summon", "follow", "stay", "attack", "dismiss",
-                    "invocar", "seguir", "quieto", "atacar", "despedir");
+                    "task", "whisper", "weekly", "invocar", "seguir", "quieto", "atacar", "despedir",
+                    "tarea", "consejo", "susurro", "semanal");
         } else if (args.length == 2 && (args[0].equalsIgnoreCase("summon") || args[0].equalsIgnoreCase("invocar"))) {
             return getListOfStringsMatchingLastWord(args, "all");
         }
@@ -95,15 +96,52 @@ public class CommandCoven extends CommandBase {
 
         if (args.length == 0) {
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "=== Control de Aquelarre (Coven) ==="));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "/coven summon [all]" + EnumChatFormatting.GRAY + " (o invocar) - Convoca a tus brujas."));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "/coven follow" + EnumChatFormatting.GRAY + " (o seguir) - Tus brujas te escoltan y te curan."));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "/coven stay" + EnumChatFormatting.GRAY + " (o quieto) - Tus brujas montan guardia fija."));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "/coven attack" + EnumChatFormatting.GRAY + " (o atacar) - Ordena atacar al objetivo que miras."));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "/coven dismiss" + EnumChatFormatting.GRAY + " (o despedir) - Devuelve las brujas al plano espiritual."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "/coven summon [all]" + EnumChatFormatting.GRAY + " - Convoca a tus brujas."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "/coven task / tarea" + EnumChatFormatting.GRAY + " - Muestra o solicita una misión del aquelarre."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "/coven whisper / consejo" + EnumChatFormatting.GRAY + " - Pide un susurro de guía para el siguiente nivel."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "/coven weekly / semanal" + EnumChatFormatting.GRAY + " - Consulta el Gran Decreto Semanal de la IA."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "/coven follow" + EnumChatFormatting.GRAY + " - Tus brujas te escoltan y te curan."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "/coven stay" + EnumChatFormatting.GRAY + " - Tus brujas montan guardia fija."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "/coven attack" + EnumChatFormatting.GRAY + " - Ordena atacar al objetivo que miras."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "/coven dismiss" + EnumChatFormatting.GRAY + " - Devuelve las brujas al plano espiritual."));
             return;
         }
 
         String sub = args[0].toLowerCase();
+
+        if (sub.equals("whisper") || sub.equals("consejo") || sub.equals("susurro") || sub.equals("guia")) {
+            com.emoniph.witchery.common.WitchAdvisor.whisperProgression(player, "El Aquelarre");
+            return;
+        }
+
+        if (sub.equals("weekly") || sub.equals("semanal") || sub.equals("decreto")) {
+            com.emoniph.witchery.common.WeeklyQuestEngine.displayWeekly(player, "El Gran Aquelarre");
+            return;
+        }
+
+        if (sub.equals("task") || sub.equals("tarea") || sub.equals("mision")) {
+            String activeTaskId = com.emoniph.witchery.common.CovenTaskManager.getActiveTaskId(player);
+            com.emoniph.witchery.common.CovenTask currentTask = (activeTaskId != null && !activeTaskId.isEmpty()) ?
+                    com.emoniph.witchery.common.CovenTaskManager.getTask(activeTaskId) : null;
+
+            if (currentTask != null && currentTask.canComplete(player)) {
+                currentTask.completeAndReward(player, "El Aquelarre");
+                com.emoniph.witchery.common.CovenTaskManager.setActiveTask(player, "");
+            } else if (currentTask == null) {
+                com.emoniph.witchery.common.CovenTask newTask = com.emoniph.witchery.common.CovenTaskManager.getRandomTask(player);
+                if (newTask != null) {
+                    com.emoniph.witchery.common.CovenTaskManager.setActiveTask(player, newTask.getId());
+                    player.addChatMessage(new ChatComponentText("§5§m-----------------------------------------------------"));
+                    player.addChatMessage(new ChatComponentText("§d<El Aquelarre> §f\"Hermana, te hemos encomendado una nueva tarea:\""));
+                    player.addChatMessage(new ChatComponentText("§e📜 " + newTask.getCategory().colorPrefix + newTask.getTitle() + " §7- " + newTask.getDescription()));
+                    player.addChatMessage(new ChatComponentText("§5★ Recompensa: §6Alijo Místico + Bendición: " + newTask.getBlessingName() + " (+" + newTask.getMasteryReward() + " pts)"));
+                    player.addChatMessage(new ChatComponentText("§5§m-----------------------------------------------------"));
+                }
+            } else {
+                com.emoniph.witchery.common.CovenTaskManager.showCurrentTaskStatus(player, "El Aquelarre");
+            }
+            return;
+        }
 
         if (sub.equals("summon") || sub.equals("invocar") || sub.equals("llamar")) {
             int covenSize = EntityCovenWitch.getCovenSize(player);

@@ -511,8 +511,17 @@ public class GenericEvents {
                      } else if(event.target instanceof EntityVillager) {
                         EntityVillager var19 = (EntityVillager)event.target;
                         ExtendedVillager rep = ExtendedVillager.get(var19);
+                        boolean isMCA = com.emoniph.witchery.integration.ModHookMCA.isMCAHuman(var19);
+                        boolean isHypno = var19.isPotionActive(Witchery.Potions.PARALYSED);
+                        boolean isAsleep = rep.isSleeping() || com.emoniph.witchery.integration.ModHookMCA.isSleeping(var19);
                         playerEx.increaseBloodPower(rep.takeBlood(playerEx.getCreatureType() == TransformCreature.NONE?victim:2, event.entityPlayer));
                         ParticleEffect.REDDUST.send(SoundEffect.WITCHERY_RANDOM_DRINK, event.entityPlayer.worldObj, var19.posX, var19.posY + (double)var19.height * 0.8D, var19.posZ, 0.5D, 0.2D, 16);
+                        if(isMCA) {
+                           com.emoniph.witchery.integration.ModHookMCA.onVampireFeed(var19, event.entityPlayer, isHypno, isAsleep);
+                           if(rep.getBlood() < 250) {
+                              com.emoniph.witchery.integration.ModHookMCA.applyAnemia(var19);
+                           }
+                        }
                         this.checkForBloodDrinkingWitnesses(event.entityPlayer, var19);
                         if(playerEx.getVampireLevel() == 2) {
                            if(Config.instance().allowVampireQuests && rep.getBlood() >= 250 && rep.getBlood() <= 280) {
@@ -716,6 +725,10 @@ public class GenericEvents {
                }
             }
 
+            if (!event.entityPlayer.worldObj.isRemote && event.target != null) {
+               com.emoniph.witchery.integration.ModHookMCA.onInteractHuman(event.entityPlayer, event.target);
+            }
+
          }
       }
    }
@@ -776,6 +789,7 @@ public class GenericEvents {
             guard.setAttackTarget(player);
          }
       }
+      com.emoniph.witchery.integration.ModHookMCA.checkWitnesses(player, victim);
 
    }
 
@@ -1137,11 +1151,19 @@ public class GenericEvents {
             EntityPlayer player = (EntityPlayer)event.entityLiving;
             ExtendedPlayer playerEx = ExtendedPlayer.get(player);
             if (!playerEx.getUnbreakableVowID().isEmpty() && !event.entityLiving.getEntityData().getBoolean("VowHealing")) {
-                java.util.List<EntityPlayer> linkedPlayers = new java.util.ArrayList<EntityPlayer>();
+                java.util.List<net.minecraft.entity.EntityLivingBase> linkedPlayers = new java.util.ArrayList<net.minecraft.entity.EntityLivingBase>();
                 for (Object obj : net.minecraft.server.MinecraftServer.getServer().getConfigurationManager().playerEntityList) {
                     EntityPlayer p = (EntityPlayer) obj;
                     if (p != player && p.isEntityAlive() && !p.isDead && ExtendedPlayer.get(p) != null && ExtendedPlayer.get(p).getUnbreakableVowID().equals(playerEx.getUnbreakableVowID())) {
                         linkedPlayers.add(p);
+                    }
+                }
+                for (Object obj : player.worldObj.loadedEntityList) {
+                    if (obj instanceof net.minecraft.entity.EntityLivingBase && com.emoniph.witchery.integration.ModHookMCA.isMCAHuman((net.minecraft.entity.Entity)obj)) {
+                        net.minecraft.entity.EntityLivingBase h = (net.minecraft.entity.EntityLivingBase)obj;
+                        if (h.isEntityAlive() && playerEx.getUnbreakableVowID().equals(h.getEntityData().getString("UnbreakableVowID"))) {
+                            linkedPlayers.add(h);
+                        }
                     }
                 }
                 if (!linkedPlayers.isEmpty()) {
@@ -1149,7 +1171,7 @@ public class GenericEvents {
                     int totalPlayers = linkedPlayers.size() + 1;
                     float sharedHeal = totalHeal / totalPlayers;
                     event.amount = sharedHeal;
-                    for (EntityPlayer p : linkedPlayers) {
+                    for (net.minecraft.entity.EntityLivingBase p : linkedPlayers) {
                         try {
                             p.getEntityData().setBoolean("VowHealing", true);
                             p.heal(sharedHeal);
@@ -1173,18 +1195,72 @@ public class GenericEvents {
             event.entityLiving.extinguish();
             return;
          }
+
+         // Mirror Armor Deflection & Retaliation
+         if (com.emoniph.witchery.item.ItemMirrorArmor.isMirrorArmorWorn(event.entityLiving)) {
+            if (event.source.isProjectile() && event.entityLiving.worldObj.rand.nextFloat() < 0.50F) {
+               event.setCanceled(true);
+               SoundEffect.RANDOM_GLASS.playAt(event.entityLiving, 1.0F, 1.2F);
+               ParticleEffect.CRIT.send(SoundEffect.NONE, event.entityLiving, 0.5D, 1.5D, 16);
+               if (event.source.getEntity() != null) {
+                  event.source.getEntity().attackEntityFrom(DamageSource.causeThornsDamage(event.entityLiving), event.ammount);
+               }
+               return;
+            }
+         }
+
+         // Inquisitor Cloak: 40% reduction to magic and fire damage
+         if (com.emoniph.witchery.item.ItemInquisitorCloak.isInquisitorCloakWorn(event.entityLiving)) {
+            if (event.source.isMagicDamage() || event.source.isFireDamage()) {
+               event.ammount *= 0.60F;
+            }
+         }
+
+         // Inquisitor Bolt Hit: Silence + Holy Damage
+         if (event.source.getSourceOfDamage() != null && event.source.getSourceOfDamage().getEntityData().getBoolean("InquisitorBolt")) {
+            event.entityLiving.getEntityData().setLong("witchery_silenced_until", event.entityLiving.worldObj.getTotalWorldTime() + 120L);
+            if (CreatureUtil.isUndead(event.entityLiving) || CreatureUtil.isDemonic(event.entityLiving) || event.entityLiving instanceof net.minecraft.entity.monster.EntityWitch || CreatureUtil.isWerewolf(event.entityLiving) || CreatureUtil.isVampire(event.entityLiving)) {
+               event.ammount *= 1.50F;
+            }
+            SoundEffect.RANDOM_ORB.playAt(event.entityLiving, 1.0F, 1.4F);
+            ParticleEffect.INSTANT_SPELL.send(SoundEffect.NONE, event.entityLiving, 0.5D, 1.5D, 16);
+         }
+
          this.checkForChargeDamage(event);
+         if(com.emoniph.witchery.integration.ModHookMCA.isMCAHuman(event.entityLiving) && !event.source.getDamageType().equals("vow_share")) {
+            String mcaVow = event.entityLiving.getEntityData().getString("UnbreakableVowID");
+            if(!mcaVow.isEmpty()) {
+               for(Object obj : net.minecraft.server.MinecraftServer.getServer().getConfigurationManager().playerEntityList) {
+                  EntityPlayer p = (EntityPlayer) obj;
+                  if(p.isEntityAlive() && !p.isDead && ExtendedPlayer.get(p) != null && mcaVow.equals(ExtendedPlayer.get(p).getUnbreakableVowID())) {
+                     float shared = event.ammount / 2.0F;
+                     event.ammount = shared;
+                     p.attackEntityFrom(new net.minecraft.util.DamageSource("vow_share").setDamageBypassesArmor().setMagicDamage(), shared);
+                     break;
+                  }
+               }
+            }
+         }
+
          if(event.entityLiving instanceof EntityPlayer) {
             EntityPlayer player = (EntityPlayer)event.entityLiving;
             float playerHealth = player.getHealth();
             ExtendedPlayer playerEx = ExtendedPlayer.get(player);
 
             if (!playerEx.getUnbreakableVowID().isEmpty() && !event.source.getDamageType().equals("vow_share")) {
-                java.util.List<EntityPlayer> linkedPlayers = new java.util.ArrayList<EntityPlayer>();
+                java.util.List<net.minecraft.entity.EntityLivingBase> linkedPlayers = new java.util.ArrayList<net.minecraft.entity.EntityLivingBase>();
                 for (Object obj : net.minecraft.server.MinecraftServer.getServer().getConfigurationManager().playerEntityList) {
                     EntityPlayer p = (EntityPlayer) obj;
                     if (p != player && p.isEntityAlive() && !p.isDead && ExtendedPlayer.get(p) != null && ExtendedPlayer.get(p).getUnbreakableVowID().equals(playerEx.getUnbreakableVowID())) {
                         linkedPlayers.add(p);
+                    }
+                }
+                for (Object obj : player.worldObj.loadedEntityList) {
+                    if (obj instanceof net.minecraft.entity.EntityLivingBase && com.emoniph.witchery.integration.ModHookMCA.isMCAHuman((net.minecraft.entity.Entity)obj)) {
+                        net.minecraft.entity.EntityLivingBase h = (net.minecraft.entity.EntityLivingBase)obj;
+                        if (h.isEntityAlive() && playerEx.getUnbreakableVowID().equals(h.getEntityData().getString("UnbreakableVowID"))) {
+                            linkedPlayers.add(h);
+                        }
                     }
                 }
                 if (!linkedPlayers.isEmpty()) {
@@ -1192,7 +1268,7 @@ public class GenericEvents {
                     int totalPlayers = linkedPlayers.size() + 1;
                     float sharedDamage = totalDamage / totalPlayers;
                     event.ammount = sharedDamage;
-                    for (EntityPlayer p : linkedPlayers) {
+                    for (net.minecraft.entity.EntityLivingBase p : linkedPlayers) {
                         p.attackEntityFrom(new net.minecraft.util.DamageSource("vow_share").setDamageBypassesArmor().setMagicDamage(), sharedDamage);
                     }
                 }

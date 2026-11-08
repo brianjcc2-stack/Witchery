@@ -108,6 +108,11 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
    static final long COOLDOWN_ESCAPE_2_TICKS = (long)TimeUtil.minsToTicks(60);
    long mirrorWorldEscapeCooldown1;
    long mirrorWorldEscapeCooldown2;
+   private net.minecraft.inventory.InventoryBasic voidVault = new net.minecraft.inventory.InventoryBasic("Relicario del Vacío", false, 54);
+
+   public net.minecraft.inventory.InventoryBasic getVoidVault() {
+      return this.voidVault;
+   }
    private String unbreakableVowID = "";
 
 
@@ -193,6 +198,16 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
       if (this.unbreakableVowID != null && !this.unbreakableVowID.isEmpty()) {
          props.setString("UnbreakableVowID", this.unbreakableVowID);
       }
+      NBTTagList voidItems = new NBTTagList();
+      for (int v = 0; v < this.voidVault.getSizeInventory(); ++v) {
+         if (this.voidVault.getStackInSlot(v) != null) {
+            NBTTagCompound itemTag = new NBTTagCompound();
+            itemTag.setByte("Slot", (byte)v);
+            this.voidVault.getStackInSlot(v).writeToNBT(itemTag);
+            voidItems.appendTag(itemTag);
+         }
+      }
+      props.setTag("VoidVault", voidItems);
       compound.setTag("WitcheryExtendedPlayer", props);
    }
 
@@ -242,6 +257,18 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
 
          if(nbtRoot.hasKey("LastPlayerSkin")) {
             this.lastPlayerSkin = nbtRoot.getString("LastPlayerSkin");
+         }
+
+         if (nbtRoot.hasKey("VoidVault")) {
+            NBTTagList voidItems = nbtRoot.getTagList("VoidVault", 10);
+            this.voidVault = new net.minecraft.inventory.InventoryBasic("Relicario del Vacío", false, 54);
+            for (int v = 0; v < voidItems.tagCount(); ++v) {
+               NBTTagCompound itemTag = voidItems.getCompoundTagAt(v);
+               int slot = itemTag.getByte("Slot") & 255;
+               if (slot >= 0 && slot < this.voidVault.getSizeInventory()) {
+                  this.voidVault.setInventorySlotContents(slot, ItemStack.loadItemStackFromNBT(itemTag));
+               }
+            }
          }
 
          this.mirrorWorldEscapeCooldown1 = nbtRoot.getLong("MirrorEscape1");
@@ -375,6 +402,10 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
       return this.spiritLevel;
    }
 
+   public boolean isSupremeWitch() {
+      return this.player != null && SupremeWitchData.isPlayerSupreme(this.player);
+   }
+
    public void setSpiritLevel(int level) {
       if(this.spiritLevel != level && level >= 0 && level <= 10) {
          this.spiritLevel = level;
@@ -473,17 +504,32 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
    }
 
    public static boolean trySaySpiritForm(EntityPlayer player, String message) {
-      if(message != null && (message.equalsIgnoreCase("ex spiritus") || message.equalsIgnoreCase("spirit"))) {
+      if(message != null) {
          ExtendedPlayer playerEx = get(player);
-         if(playerEx != null && playerEx.getSpiritLevel() >= 4) {
-            if (playerEx.getCreatureType() == com.emoniph.witchery.util.TransformCreature.SPIRIT) {
-               com.emoniph.witchery.common.Shapeshift.INSTANCE.shiftTo(player, com.emoniph.witchery.util.TransformCreature.NONE);
+         if(playerEx == null) return false;
+
+         boolean isSupreme = SupremeWitchData.isPlayerSupreme(player);
+
+         if(message.equalsIgnoreCase("ex subduo") || message.equalsIgnoreCase("orbe") || message.equalsIgnoreCase("subdued")) {
+            if(playerEx.getSpiritLevel() >= 3 || isSupreme) {
+               if(playerEx.getCreatureType() == com.emoniph.witchery.util.TransformCreature.SUBDUED_SPIRIT) {
+                  com.emoniph.witchery.common.Shapeshift.INSTANCE.shiftTo(player, com.emoniph.witchery.util.TransformCreature.NONE);
+               } else {
+                  com.emoniph.witchery.common.Shapeshift.INSTANCE.shiftTo(player, com.emoniph.witchery.util.TransformCreature.SUBDUED_SPIRIT);
+               }
                com.emoniph.witchery.util.SoundEffect.RANDOM_FIZZ.playAtPlayer(player.worldObj, player);
-            } else if (playerEx.getCreatureType() == com.emoniph.witchery.util.TransformCreature.NONE) {
-               com.emoniph.witchery.common.Shapeshift.INSTANCE.shiftTo(player, com.emoniph.witchery.util.TransformCreature.SPIRIT);
-               com.emoniph.witchery.util.SoundEffect.RANDOM_FIZZ.playAtPlayer(player.worldObj, player);
+               return true;
             }
-            return true;
+         } else if(message.equalsIgnoreCase("ex spiritus") || message.equalsIgnoreCase("spirit")) {
+            if(playerEx.getSpiritLevel() >= 4) {
+               if(playerEx.getCreatureType() == com.emoniph.witchery.util.TransformCreature.SPIRIT) {
+                  com.emoniph.witchery.common.Shapeshift.INSTANCE.shiftTo(player, com.emoniph.witchery.util.TransformCreature.NONE);
+               } else {
+                  com.emoniph.witchery.common.Shapeshift.INSTANCE.shiftTo(player, com.emoniph.witchery.util.TransformCreature.SPIRIT);
+               }
+               com.emoniph.witchery.util.SoundEffect.RANDOM_FIZZ.playAtPlayer(player.worldObj, player);
+               return true;
+            }
          }
       }
       return false;
@@ -624,6 +670,11 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
 
    public int getVampireUltimateCharges() {
       return this.vampireUltimateCharges;
+   }
+
+   public void setVampireUltimateCharges(int charges) {
+      this.vampireUltimateCharges = Math.max(0, charges);
+      this.sync();
    }
 
    public ExtendedPlayer.VampirePower getSelectedVampirePower() {

@@ -343,12 +343,18 @@ public class ItemTaglockKit extends ItemBase {
    public void onEntityInteract(World world, EntityPlayer player, ItemStack stack, EntityInteractEvent event) {
       if(!world.isRemote && stack != null && stack.getItem() == Witchery.Items.TAGLOCK_KIT && event.target != null && event.target instanceof EntityLivingBase) {
          EntityLivingBase target = (EntityLivingBase)event.target;
-         if(target instanceof EntityPlayer && !this.isSneakSuccessful(player, target)) {
+         boolean isMCA = com.emoniph.witchery.integration.ModHookMCA.isMCAHuman(target);
+         if((target instanceof EntityPlayer || isMCA) && !this.isSneakSuccessful(player, target)) {
             ChatUtil.sendTranslated(EnumChatFormatting.RED, event.entityPlayer, "witchery.taglockkit.taglockfailed", new Object[0]);
             if(target instanceof EntityPlayer) {
                ChatUtil.sendTranslated(EnumChatFormatting.GREEN, (EntityPlayer)target, "witchery.taglockkit.taglockdiscovered", new Object[0]);
+            } else if(isMCA) {
+               com.emoniph.witchery.integration.ModHookMCA.onTaglockAttempt(target, player, false);
             }
          } else {
+            if(isMCA) {
+               com.emoniph.witchery.integration.ModHookMCA.onTaglockAttempt(target, player, true);
+            }
             if(target instanceof EntityTreefyd || target instanceof EntityImp || target instanceof EntityWingedMonkey && !player.isSneaking()) {
                return;
             }
@@ -430,7 +436,8 @@ public class ItemTaglockKit extends ItemBase {
          ((EntityLiving)entity).func_110163_bv();
          stack.getTagCompound().setLong("WITCEntityIDm" + index.toString(), id1.getMostSignificantBits());
          stack.getTagCompound().setLong("WITCEntityIDl" + index.toString(), id1.getLeastSignificantBits());
-         stack.getTagCompound().setString("WITCDisplayName" + index.toString(), entity.getCommandSenderName());
+         String displayName = com.emoniph.witchery.integration.ModHookMCA.isMCAHuman(entity) ? com.emoniph.witchery.integration.ModHookMCA.getHumanName(entity) : entity.getCommandSenderName();
+         stack.getTagCompound().setString("WITCDisplayName" + index.toString(), displayName);
       }
 
       if(playSoundAtPlayer) {

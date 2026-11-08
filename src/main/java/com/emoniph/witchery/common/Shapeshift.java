@@ -105,7 +105,8 @@ public class Shapeshift {
 
    public void updatePlayerState(EntityPlayer player, ExtendedPlayer playerEx) {
       boolean isGhost = WorldProviderDreamWorld.getPlayerIsGhost(com.emoniph.witchery.infusion.Infusion.getNBT(player));
-      if(playerEx.getCreatureType() == TransformCreature.BAT || playerEx.getCreatureType() == TransformCreature.SPIRIT || (isGhost && playerEx.getSpiritLevel() >= 1)) {
+      boolean isSpirit = playerEx.getCreatureType() == TransformCreature.SPIRIT || playerEx.getCreatureType() == TransformCreature.SUBDUED_SPIRIT || (isGhost && playerEx.getSpiritLevel() >= 1) || playerEx.isAstralProjecting();
+      if(playerEx.getCreatureType() == TransformCreature.BAT || isSpirit) {
          if(!player.capabilities.allowFlying) {
             player.capabilities.allowFlying = true;
          }
@@ -120,7 +121,7 @@ public class Shapeshift {
          }
       }
 
-      if (isGhost && playerEx.getSpiritLevel() >= 4) {
+      if (isSpirit && player.capabilities.isFlying && (playerEx.getSpiritLevel() >= 9 || playerEx.isAstralProjecting())) {
          player.noClip = true;
       } else if (!player.capabilities.isCreativeMode) {
          player.noClip = false;
@@ -379,6 +380,9 @@ public class Shapeshift {
       TransformCreature creature = playerEx.getCreatureType();
       if (creature == TransformCreature.SPIRIT) {
          return (new Shapeshift.StatBoost(-12.0F)).setFlying(true);
+      }
+      if (creature == TransformCreature.SUBDUED_SPIRIT) {
+         return (new Shapeshift.StatBoost(0.15F, 0.0D, 0.0D, -12, 0.0F, 0.4F, -1, 10.0F)).setFlying(true);
       }
       switch(Shapeshift.NamelessClass26779675.$SwitchMap$com$emoniph$witchery$util$TransformCreature[creature.ordinal()]) {
       case 1:

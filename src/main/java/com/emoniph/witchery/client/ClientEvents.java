@@ -14,6 +14,7 @@ import com.emoniph.witchery.client.renderer.RenderVillagerBed;
 import com.emoniph.witchery.common.ExtendedPlayer;
 import com.emoniph.witchery.common.ExtendedVillager;
 import com.emoniph.witchery.common.Shapeshift;
+import com.emoniph.witchery.common.SupremeWitchData;
 import com.emoniph.witchery.dimension.WorldProviderDreamWorld;
 import com.emoniph.witchery.entity.EntityVillageGuard;
 import com.emoniph.witchery.entity.EntityBanshee;
@@ -75,6 +76,7 @@ public class ClientEvents {
    TransformWolfman wolfman = new TransformWolfman();
    TransformBat bat = new TransformBat();
    TransformSpirit spirit = new TransformSpirit();
+   TransformSubduedSpirit subduedSpirit = new TransformSubduedSpirit();
    TransformOtherPlayer otherPlayer = new TransformOtherPlayer();
    RenderVillagerBed renderBed = new RenderVillagerBed();
    private static final ResourceLocation wolfSkin = new ResourceLocation("witchery", "textures/entities/werewolf_man.png");
@@ -276,7 +278,7 @@ public class ClientEvents {
          } else if(WorldProviderDreamWorld.getPlayerIsGhost(Infusion.getNBT(player1))) {
             RenderUtil.blend(true);
             GL11.glColor4f(1.0F, 1.0F, 1.0F, 0.51F);
-         } else if (playerEx != null && playerEx.getSpiritLevel() >= 7 && player1.isSneaking()) {
+         } else if (playerEx != null && playerEx.getSpiritLevel() >= 6 && player1.isSneaking()) {
             RenderUtil.blend(true);
             GL11.glColor4f(1.0F, 1.0F, 1.0F, 0.15F);
          }
@@ -304,6 +306,8 @@ public class ClientEvents {
                this.bat.render(event.entity.worldObj, event.entity, event.x, event.y, event.z, event.renderer, partialTicks, gui1);
             } else if(creatureType == 6) {
                this.spirit.render(event.entity.worldObj, event.entity, event.x, event.y, event.z, event.renderer, partialTicks, gui1);
+            } else if(creatureType == 7) {
+               this.subduedSpirit.render(event.entity.worldObj, event.entity, event.x, event.y, event.z, event.renderer, partialTicks, gui1);
             } else if(creatureType == 4 && playerEx.getOtherPlayerSkin() != null && !playerEx.getOtherPlayerSkin().equals("")) {
                this.otherPlayer.render(event.entity.worldObj, event.entity, event.x, event.y, event.z, event.renderer, partialTicks, gui1);
             }
@@ -441,8 +445,11 @@ public class ClientEvents {
       } else if(event.entity instanceof EntityPlayer) {
          EntityPlayer player = (EntityPlayer)event.entity;
          ExtendedPlayer playerEx = ExtendedPlayer.get(player);
-         if(WorldProviderDreamWorld.getPlayerIsGhost(Infusion.getNBT(player)) || (playerEx != null && playerEx.getSpiritLevel() >= 7 && player.isSneaking())) {
+         if(WorldProviderDreamWorld.getPlayerIsGhost(Infusion.getNBT(player)) || (playerEx != null && playerEx.getSpiritLevel() >= 6 && player.isSneaking())) {
             RenderUtil.blend(false);
+         }
+         if(SupremeWitchData.isPlayerSupreme(player) && player.worldObj.rand.nextInt(3) == 0) {
+            player.worldObj.spawnParticle("witchMagic", player.posX + (player.worldObj.rand.nextDouble() - 0.5D) * 0.8D, player.posY + player.worldObj.rand.nextDouble() * 2.0D, player.posZ + (player.worldObj.rand.nextDouble() - 0.5D) * 0.8D, 0.0D, 0.05D, 0.0D);
          }
       }
 
@@ -937,5 +944,44 @@ public class ClientEvents {
 
       }
 
+   }
+
+   @SubscribeEvent
+   public void onFogDensity(net.minecraftforge.client.event.EntityViewRenderEvent.FogDensity event) {
+      EntityLivingBase viewer = event.entity;
+      if (viewer instanceof EntityPlayer) {
+         EntityPlayer player = (EntityPlayer)viewer;
+         ExtendedPlayer playerEx = ExtendedPlayer.get(player);
+         if (playerEx != null && (playerEx.getCreatureType() == TransformCreature.SPIRIT || playerEx.getCreatureType() == TransformCreature.SUBDUED_SPIRIT || playerEx.isAstralProjecting() || player.noClip)) {
+            int bx = net.minecraft.util.MathHelper.floor_double(viewer.posX);
+            int by = net.minecraft.util.MathHelper.floor_double(viewer.posY + (double)viewer.getEyeHeight());
+            int bz = net.minecraft.util.MathHelper.floor_double(viewer.posZ);
+            Block block = viewer.worldObj.getBlock(bx, by, bz);
+            if (block.isOpaqueCube() || block.isNormalCube()) {
+               event.density = 0.95F;
+               event.setCanceled(true);
+            }
+         }
+      }
+   }
+
+   @SubscribeEvent
+   public void onFogColors(net.minecraftforge.client.event.EntityViewRenderEvent.FogColors event) {
+      EntityLivingBase viewer = event.entity;
+      if (viewer instanceof EntityPlayer) {
+         EntityPlayer player = (EntityPlayer)viewer;
+         ExtendedPlayer playerEx = ExtendedPlayer.get(player);
+         if (playerEx != null && (playerEx.getCreatureType() == TransformCreature.SPIRIT || playerEx.getCreatureType() == TransformCreature.SUBDUED_SPIRIT || playerEx.isAstralProjecting() || player.noClip)) {
+            int bx = net.minecraft.util.MathHelper.floor_double(viewer.posX);
+            int by = net.minecraft.util.MathHelper.floor_double(viewer.posY + (double)viewer.getEyeHeight());
+            int bz = net.minecraft.util.MathHelper.floor_double(viewer.posZ);
+            Block block = viewer.worldObj.getBlock(bx, by, bz);
+            if (block.isOpaqueCube() || block.isNormalCube()) {
+               event.red = 0.05F;
+               event.green = 0.02F;
+               event.blue = 0.08F;
+            }
+         }
+      }
    }
 }

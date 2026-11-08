@@ -213,6 +213,14 @@ public class BlockAltar extends BlockBaseContainer {
       private float maxPower;
       public float externalBonusPower = 0.0F;
 
+      public static final java.util.Map<Block, int[]> CUSTOM_POWER_SOURCES = new java.util.HashMap<Block, int[]>();
+
+      public static void registerCustomPowerSource(Block block, int factor, int limit) {
+         if(block != null) {
+            CUSTOM_POWER_SOURCES.put(block, new int[]{factor, limit});
+         }
+      }
+
       public float getMaxPower() {
          return this.maxPower + this.externalBonusPower;
       }
@@ -564,6 +572,9 @@ public class BlockAltar extends BlockBaseContainer {
             BlockAltar.TileEntityAltar.PowerSource.createInMap(powerObjectTable, Witchery.Blocks.GRASSPER, 2, 10);
             BlockAltar.TileEntityAltar.PowerSource.createInMap(powerObjectTable, Witchery.Blocks.WISPY_COTTON, 3, 20);
             BlockAltar.TileEntityAltar.PowerSource.createInMap(powerObjectTable, Witchery.Blocks.INFINITY_EGG, 1000, 1);
+            for(Map.Entry<Block, int[]> entry : CUSTOM_POWER_SOURCES.entrySet()) {
+               BlockAltar.TileEntityAltar.PowerSource.createInMap(powerObjectTable, entry.getKey(), entry.getValue()[0], entry.getValue()[1]);
+            }
             Block var14;
             if(this.extraNatureIDs == null) {
                try {

@@ -3,6 +3,7 @@ package com.emoniph.witchery.ritual.rites;
 import com.emoniph.witchery.Witchery;
 import com.emoniph.witchery.blocks.BlockCircle;
 import com.emoniph.witchery.common.ExtendedPlayer;
+import com.emoniph.witchery.common.SupremeWitchData;
 import com.emoniph.witchery.familiar.Familiar;
 import com.emoniph.witchery.ritual.Rite;
 import com.emoniph.witchery.ritual.RitualStep;
@@ -41,48 +42,49 @@ public class RiteRemoveVampirism extends Rite {
                boolean complete = false;
                boolean cursed = false;
                EntityPlayer curseMasterPlayer = ritual.getInitiatingPlayer(world);
-               if(!Familiar.hasActiveCurseMasteryFamiliar(curseMasterPlayer)) {
+               EntityLivingBase entity = null;
+               Iterator i$ = ritual.sacrificedItems.iterator();
+               while(i$.hasNext()) {
+                  RitualStep.SacrificedItem item = (RitualStep.SacrificedItem)i$.next();
+                  if(item.itemstack.getItem() == Witchery.Items.TAGLOCK_KIT && item.itemstack.getItemDamage() == 1) {
+                     entity = Witchery.Items.TAGLOCK_KIT.getBoundEntity(world, (Entity)null, item.itemstack, Integer.valueOf(1));
+                     break;
+                  }
+               }
+               if(entity == null) {
+                  entity = curseMasterPlayer;
+               }
+
+               boolean isSelf = (entity == curseMasterPlayer);
+               boolean isSupreme = SupremeWitchData.isPlayerSupreme(curseMasterPlayer);
+
+               if(!isSelf && !isSupreme && !Familiar.hasActiveCurseMasteryFamiliar(curseMasterPlayer)) {
                   ChatUtil.sendTranslated(EnumChatFormatting.RED, curseMasterPlayer, "witchery.rite.wolfcurse.requirescat", new Object[0]);
                   return RitualStep.Result.ABORTED_REFUND;
                }
 
-               if(ritual.covenSize < 6) {
+               if(!isSelf && !isSupreme && ritual.covenSize < 6 && ritual.covenSize < 3) {
                   ChatUtil.sendTranslated(EnumChatFormatting.RED, curseMasterPlayer, "witchery.rite.wolfcurse.requiresfullcoven", new Object[0]);
                   return RitualStep.Result.ABORTED_REFUND;
                }
 
-               Iterator i$ = ritual.sacrificedItems.iterator();
-
-               while(i$.hasNext()) {
-                  RitualStep.SacrificedItem item = (RitualStep.SacrificedItem)i$.next();
-                  if(item.itemstack.getItem() == Witchery.Items.TAGLOCK_KIT && item.itemstack.getItemDamage() == 1) {
-                     EntityLivingBase entity = Witchery.Items.TAGLOCK_KIT.getBoundEntity(world, (Entity)null, item.itemstack, Integer.valueOf(1));
-                     if(entity != null) {
-                        if(entity instanceof EntityPlayer) {
-                           EntityPlayer player = (EntityPlayer)entity;
-                           ExtendedPlayer playerEx = ExtendedPlayer.get(player);
-                           if(playerEx.isVampire()) {
-                              double MAX_RANGE_SQ = 64.0D;
-                              if(player.getDistanceSq(0.5D + (double)posX, 0.5D + (double)posY, 0.5D + (double)posZ) <= 64.0D) {
-                                 if(world.rand.nextInt(4) != 0) {
-                                    playerEx.setVampireLevel(0);
-                                 } else {
-                                    cursed = true;
-                                 }
-
-                                 complete = true;
-                              } else {
-                                 ChatUtil.sendTranslated(EnumChatFormatting.RED, curseMasterPlayer, "witchery.rite.wolfcurse.toofar", new Object[0]);
-                              }
-                           } else {
-                              ChatUtil.sendTranslated(EnumChatFormatting.RED, curseMasterPlayer, "witchery.rite.wolfcurse.notactive", new Object[0]);
-                           }
-                        } else {
-                           ChatUtil.sendTranslated(EnumChatFormatting.RED, curseMasterPlayer, "witchery.rite.wolfcurse.notactive", new Object[0]);
-                        }
+               if(entity != null && entity instanceof EntityPlayer) {
+                  EntityPlayer player = (EntityPlayer)entity;
+                  ExtendedPlayer playerEx = ExtendedPlayer.get(player);
+                  if(playerEx.isVampire()) {
+                     double MAX_RANGE_SQ = 64.0D;
+                     if(player.getDistanceSq(0.5D + (double)posX, 0.5D + (double)posY, 0.5D + (double)posZ) <= 64.0D) {
+                        playerEx.setVampireLevel(0);
+                        playerEx.setBloodPower(0);
+                        complete = true;
+                     } else {
+                        ChatUtil.sendTranslated(EnumChatFormatting.RED, curseMasterPlayer, "witchery.rite.wolfcurse.toofar", new Object[0]);
                      }
-                     break;
+                  } else {
+                     ChatUtil.sendTranslated(EnumChatFormatting.RED, curseMasterPlayer, "witchery.rite.wolfcurse.notactive", new Object[0]);
                   }
+               } else {
+                  ChatUtil.sendTranslated(EnumChatFormatting.RED, curseMasterPlayer, "witchery.rite.wolfcurse.notactive", new Object[0]);
                }
 
                if(!complete) {

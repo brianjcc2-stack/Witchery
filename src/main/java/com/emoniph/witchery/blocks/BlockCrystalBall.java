@@ -88,6 +88,7 @@ public class BlockCrystalBall extends BlockBaseContainer {
 
                   PredictionManager.instance().makePrediction(victim, player, true);
                   ball.onUsed();
+                  com.emoniph.witchery.common.WitchAdvisor.whisperProgression(player, "El Oráculo de Cristal");
                   ParticleEffect.EXPLODE.send(SoundEffect.RANDOM_LEVELUP, world, 0.5D + (double)x, 0.2D + (double)y, 0.5D + (double)z, 0.2D, 0.2D, 16);
                }
             } else {
