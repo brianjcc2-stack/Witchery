@@ -553,7 +553,10 @@ public class GenericEvents {
                      } else if(event.target instanceof IAnimals) {
                         EntityLivingBase var21 = (EntityLivingBase)event.target;
                         var21.attackEntityFrom(new EntityDamageSource(DamageSource.magic.getDamageType(), event.entityPlayer), 1.0F);
-                        playerEx.increaseBloodPower(2, (int)Math.ceil((double)((float)playerEx.getMaxBloodPower() * 0.25F)));
+                        boolean isTwilightCreature = var21.getClass().getName().contains("twilightforest");
+                        int bloodAmount = isTwilightCreature ? 6 : 2;
+                        float capFactor = isTwilightCreature ? 0.60F : 0.25F;
+                        playerEx.increaseBloodPower(bloodAmount, (int)Math.ceil((double)((float)playerEx.getMaxBloodPower() * capFactor)));
                         ParticleEffect.REDDUST.send(SoundEffect.WITCHERY_RANDOM_DRINK, event.entityPlayer.worldObj, var21.posX, var21.posY + (double)var21.height * 0.8D, var21.posZ, 0.5D, 0.2D, 16);
                      }
                   }
@@ -2005,6 +2008,56 @@ public class GenericEvents {
    public void onExplosionStart(net.minecraftforge.event.world.ExplosionEvent.Start event) {
       if (com.emoniph.witchery.blocks.BlockBrazier.TileEntityBrazier.isAreaWarded(event.world, event.explosion.explosionX, event.explosion.explosionY, event.explosion.explosionZ)) {
          event.setCanceled(true);
+      }
+   }
+
+   @SubscribeEvent
+   public void onItemPickup(net.minecraftforge.event.entity.player.EntityItemPickupEvent event) {
+      if (event.entityPlayer != null && !event.entityPlayer.worldObj.isRemote && event.item != null && event.item.getEntityItem() != null) {
+         ItemStack drop = event.item.getEntityItem();
+         for (int i = 0; i < event.entityPlayer.inventory.mainInventory.length; ++i) {
+            ItemStack satchelStack = event.entityPlayer.inventory.mainInventory[i];
+            if (satchelStack != null && satchelStack.getItem() instanceof com.emoniph.witchery.item.ItemBottomlessSatchel) {
+               if (satchelStack.hasTagCompound() && satchelStack.getTagCompound().getBoolean("AutoCollect")) {
+                  com.emoniph.witchery.item.ItemBottomlessSatchel.InventorySatchel satchelInv = new com.emoniph.witchery.item.ItemBottomlessSatchel.InventorySatchel(satchelStack, event.entityPlayer);
+                  boolean changed = false;
+                  for (int slot = 0; slot < satchelInv.getSizeInventory(); ++slot) {
+                     ItemStack inside = satchelInv.getStackInSlot(slot);
+                     if (inside != null && inside.isItemEqual(drop) && ItemStack.areItemStackTagsEqual(inside, drop)) {
+                        int max = Math.min(inside.getMaxStackSize(), satchelInv.getInventoryStackLimit());
+                        int canAdd = max - inside.stackSize;
+                        if (canAdd > 0) {
+                           int toAdd = Math.min(canAdd, drop.stackSize);
+                           inside.stackSize += toAdd;
+                           drop.stackSize -= toAdd;
+                           changed = true;
+                           if (drop.stackSize <= 0) break;
+                        }
+                     }
+                  }
+                  if (drop.stackSize > 0) {
+                     for (int slot = 0; slot < satchelInv.getSizeInventory(); ++slot) {
+                        if (satchelInv.getStackInSlot(slot) == null) {
+                           satchelInv.setInventorySlotContents(slot, drop.copy());
+                           drop.stackSize = 0;
+                           changed = true;
+                           break;
+                        }
+                     }
+                  }
+                  if (changed) {
+                     satchelInv.markDirty();
+                     satchelInv.closeInventory();
+                     if (drop.stackSize <= 0) {
+                        event.item.setDead();
+                        event.setCanceled(true);
+                        event.entityPlayer.worldObj.playSoundAtEntity(event.entityPlayer, "random.pop", 0.2F, ((event.entityPlayer.getRNG().nextFloat() - event.entityPlayer.getRNG().nextFloat()) * 0.7F + 1.0F) * 2.0F);
+                        break;
+                     }
+                  }
+               }
+            }
+         }
       }
    }
 

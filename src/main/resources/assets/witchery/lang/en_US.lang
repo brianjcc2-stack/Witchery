@@ -1969,3 +1969,19 @@ witchery.inquisitorcloak.tip2=-40% damage taken from fire and magic.
 witchery.pott.speculummutatio=Speculum Mutatio
 witchery.rite.inquisitiontrial=Heretic's Trial
 witchery.rite.heretictrial.summoned=The Holy Inquisition has arrived to purge your sins!
+
+# Storage Expansion
+item.witchery:bottomlesssatchel.name=Witch's Bottomless Satchel
+witchery.satchel.tip1=54 slots of portable extradimensional storage.
+witchery.satchel.tip2=Sneak + Right Click in air to toggle Auto-Collect.
+witchery.satchel.tip.autocollect.active=[Auto-Collect: ACTIVE]
+witchery.satchel.tip.autocollect.inactive=[Auto-Collect: INACTIVE]
+witchery.satchel.autocollect.on=Satchel Auto-Collect: ACTIVE!
+witchery.satchel.autocollect.off=Satchel Auto-Collect: DEACTIVATED!
+item.witchery:voidlocket.name=Void Locket
+witchery.voidlocket.tip1=Personal 54-slot extradimensional pocket vault.
+witchery.voidlocket.tip2=Soulbound: Contents are never lost upon death!
+witchery.voidlocket.tip3=Right-click to access your private vault.
+item.witchery:apothecarypouch.name=Grand Apothecary Pouch
+witchery.apothecarypouch.tip1=27 slots specialized for potions, brews, herbs and alchemy supplies.
+witchery.apothecarypouch.tip2=Right-click to organize your potions and reagents.

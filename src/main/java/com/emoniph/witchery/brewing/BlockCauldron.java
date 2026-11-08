@@ -359,6 +359,14 @@ public class BlockCauldron extends BlockBaseContainer {
             result = Witchery.Items.GENERIC.itemTearOfTheGoddess.createStack();
          }
       }
+      // 6. BOSQUE DEL CREPUSCULO / MAGIA FEERICA
+      else if (cpw.mods.fml.common.Loader.isModLoaded("TwilightForest")) {
+         com.emoniph.witchery.integration.TwilightForestCauldron.Result tfRes = com.emoniph.witchery.integration.TwilightForestCauldron.getTransmutation(stack, rand);
+         if (tfRes != null) {
+            result = tfRes.itemStack;
+            powerCost = tfRes.powerCost;
+         }
+      }
 
       if (result != null) {
          if (!power.consumePower((float) powerCost)) {

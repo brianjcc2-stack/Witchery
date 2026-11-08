@@ -121,7 +121,7 @@ public class ItemApothecaryPouch extends Item {
          if (item instanceof ItemPotion || item == Items.glass_bottle || item == Items.potionitem) return true;
          if (item == Witchery.Items.BREW || Witchery.Items.GENERIC.isBrew(stack)) return true;
          if (item instanceof ItemWitchSeeds || item instanceof ItemChalk || item instanceof ItemGeneral) return true;
-         if (item == Witchery.Items.CHALICE || item == Witchery.Items.ARTHANA) return true;
+         if (item == Item.getItemFromBlock(Witchery.Blocks.CHALICE) || item == Witchery.Items.ARTHANA) return true;
          // Plants, alchemy herbs and mob drops used in brewing
          if (item == Items.nether_wart || item == Items.spider_eye || item == Items.fermented_spider_eye || item == Items.blaze_powder || item == Items.magma_cream || item == Items.ghast_tear || item == Items.speckled_melon || item == Items.golden_carrot || item == Items.sugar || item == Items.redstone || item == Items.glowstone_dust || item == Items.gunpowder || item == Items.slime_ball) return true;
          return false;

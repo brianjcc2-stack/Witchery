@@ -1120,3 +1120,19 @@ witchery.inquisitorcloak.tip2=-40% daño recibido de fuego y magia.
 witchery.pott.speculummutatio=Speculum Mutatio
 witchery.rite.inquisitiontrial=Juicio del Hereje
 witchery.rite.heretictrial.summoned=¡La Santa Inquisición ha llegado para purgar tus pecados!
+
+# Storage Expansion
+item.witchery:bottomlesssatchel.name=Zurrón Sin Fondo de la Bruja
+witchery.satchel.tip1=54 casillas de almacenamiento extradimensional portátil.
+witchery.satchel.tip2=Agáchate + Clic Derecho al aire para alternar Auto-Recolección.
+witchery.satchel.tip.autocollect.active=[Auto-Recolección: ACTIVADA]
+witchery.satchel.tip.autocollect.inactive=[Auto-Recolección: DESACTIVADA]
+witchery.satchel.autocollect.on=¡Auto-recolección del Zurrón: ACTIVADA!
+witchery.satchel.autocollect.off=¡Auto-recolección del Zurrón: DESACTIVADA!
+item.witchery:voidlocket.name=Relicario del Vacío
+witchery.voidlocket.tip1=Bóveda dimensional personal de 54 casillas.
+witchery.voidlocket.tip2=Vinculado al Alma: ¡Sus contenidos nunca se pierden al morir!
+witchery.voidlocket.tip3=Clic derecho para acceder a tu bóveda privada.
+item.witchery:apothecarypouch.name=Gran Bolsa del Boticario
+witchery.apothecarypouch.tip1=27 casillas especializadas para pociones, brebajes, hierbas y reactivos.
+witchery.apothecarypouch.tip2=Clic derecho para organizar tus pócimas y reactivos.

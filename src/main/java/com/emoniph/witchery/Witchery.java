@@ -251,6 +251,7 @@ public class Witchery {
       modHooks.register(ModHookMorph.class);
       modHooks.register(ModHookBaubles.class);
       modHooks.register(com.emoniph.witchery.integration.ModHookMCA.class);
+      modHooks.register(com.emoniph.witchery.integration.ModHookTwilightForest.class);
       modHooks.init();
       Potions.init();
       Recipes.init();
