@@ -755,6 +755,8 @@ witchery.brazier.potionaura.name=Aura of the Cauldron
 witchery.brazier.potionaura.desc=Spread the effects of a thrown potion to those near the brazier.
 witchery.brazier.poltergeist.name=Summon Poltergeist
 witchery.brazier.poltergeist.desc=Conjure a mischievous poltergeist from beyond.
+witchery.brazier.warding.name=Warding Sanctuary Smoke
+witchery.brazier.warding.desc=Creates a sacred warded zone preventing creeper explosions, extinguishing fires, weakening monsters and alarming of intruders.
 
 witchery.book.burning1={o{lWitchcraft: Conjuration & Fetishes{r{r||A witch may use a Brazier to burn materials with magical purpose, and conjure that which is no longer of this world.||Place the ingredients into the brazier and ignite with a flint and tinder.
 witchery.book.burning2={o{lFetish Binding{r{r||A witch may use the Rite of Binding to bind spectral creatures to a fetish to create permanent effects.||The following pages show which beings must be bound for which effect.
@@ -1920,3 +1922,7 @@ witchery:potion.etherealchains=Ethereally Chained
 witchery:potion.marionette=Marionetted
 witchery:potion.sirensong=Siren's Aura
 witchery:potion.silence=Silenced
+
+witchery.floo.travelsuccess=You travelled to %s via the Floo Network!
+witchery.floo.notfound=Unknown Floo Network destination: "%s".
+witchery.floo.registered=Fireplace registered on the Floo Network: "%s"!

@@ -230,7 +230,9 @@ public class EntitySpellEffect extends Entity {
 
          SymbolEffect var21 = EffectRegistry.instance().getEffect(this.getEffectID());
          if(var21 == null) {
-            this.setDead();
+            if(!super.worldObj.isRemote || super.ticksExisted > 5) {
+               this.setDead();
+            }
          } else {
             if(var21.fallsToEarth() && this.getEffectLevel() == 1) {
                this.accelerationX *= 0.8D;

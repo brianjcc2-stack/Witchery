@@ -1416,6 +1416,16 @@ public class ItemGeneral extends ItemBase {
             return this.useSubduedSpirit(world, player, itemstack, posX, posY, posZ, side);
          }
       } else {
+         if(isWaystoneBound(itemstack) && !player.isSneaking()) {
+            if(!world.isRemote) {
+               if(this.teleportToLocation(world, itemstack, player, 0, true)) {
+                  world.playSoundAtEntity(player, "mob.endermen.portal", 1.0F, 1.0F);
+               } else {
+                  SoundEffect.NOTE_SNARE.playAtPlayer(world, player);
+               }
+            }
+            return true;
+         }
          return this.placeBlock(Witchery.Blocks.CHALICE, itemstack, player, world, posX, posY, posZ, side, par8, par9, par10);
       }
    }
@@ -1998,6 +2008,12 @@ public class ItemGeneral extends ItemBase {
                      BlockChalice.TileEntityChalice tileEntity = (BlockChalice.TileEntityChalice)world.getTileEntity(posX, posY, posZ);
                      if(tileEntity != null) {
                         tileEntity.setFilled(this.itemChaliceFull.isMatch(itemstack));
+                        if(itemstack.hasTagCompound()) {
+                           NBTTagCompound tag = itemstack.getTagCompound();
+                           if(tag.hasKey("PosX") && tag.hasKey("PosY")) {
+                              tileEntity.setLocation(tag.getInteger("PosX"), tag.getInteger("PosY"), tag.getInteger("PosZ"), tag.getInteger("PosD"));
+                           }
+                        }
                      }
                   }
                }

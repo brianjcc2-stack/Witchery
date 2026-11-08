@@ -4,6 +4,7 @@ import com.emoniph.witchery.Witchery;
 import com.emoniph.witchery.WitcheryCreativeTab;
 import com.emoniph.witchery.item.ItemGeneral;
 import com.emoniph.witchery.util.BlockUtil;
+import com.emoniph.witchery.util.FlooNetwork;
 import com.emoniph.witchery.util.ParticleEffect;
 import com.emoniph.witchery.util.SoundEffect;
 import cpw.mods.fml.relauncher.Side;
@@ -65,9 +66,20 @@ public class BlockFlooFire extends BlockFire {
 
    public void onBlockAdded(World world, int x, int y, int z) {
       world.scheduleBlockUpdate(x, y, z, this, this.tickRate(world));
+      if(!world.isRemote) {
+         String signName = FlooNetwork.findNearbySignName(world, x, y, z);
+         if(signName != null && !signName.isEmpty()) {
+            FlooNetwork network = FlooNetwork.get(world);
+            if(network != null) {
+               network.addFireplace(signName, world.provider.dimensionId, x, y, z);
+               ParticleEffect.SPELL_COLORED.send(SoundEffect.RANDOM_ORB, world, (double)x + 0.5D, (double)y + 1.0D, (double)z + 0.5D, 0.5D, 1.0D, 16, 0x00FF88);
+            }
+         }
+      }
    }
 
    public void onEntityCollidedWithBlock(World world, int x, int y, int z, Entity entity) {
+      entity.extinguish();
       if(!world.isRemote && entity instanceof EntityPlayer) {
          EntityPlayer player = (EntityPlayer)entity;
          ItemStack held = player.getHeldItem();

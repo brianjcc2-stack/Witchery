@@ -31,11 +31,13 @@ import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.IRangedAttackMob;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIArrowAttack;
+import net.minecraft.entity.ai.EntityAIFollowOwner;
 import net.minecraft.entity.ai.EntityAIHurtByTarget;
 import net.minecraft.entity.ai.EntityAILookIdle;
 import net.minecraft.entity.ai.EntityAIMoveIndoors;
 import net.minecraft.entity.ai.EntityAIMoveTowardsRestriction;
 import net.minecraft.entity.ai.EntityAIOpenDoor;
+import net.minecraft.entity.ai.EntityAIOwnerHurtByTarget;
 import net.minecraft.entity.ai.EntityAIOwnerHurtTarget;
 import net.minecraft.entity.ai.EntityAIRestrictOpenDoor;
 import net.minecraft.entity.ai.EntityAISit;
@@ -92,6 +94,7 @@ public class EntityCovenWitch extends EntityTameable implements IRangedAttackMob
       super.tasks.addTask(1, super.aiSit);
       super.tasks.addTask(2, new EntityAIMoveToRestrictionAndSit(this, 0.6D));
       super.tasks.addTask(2, new EntityAIArrowAttack(this, 1.0D, 60, 10.0F));
+      super.tasks.addTask(3, new EntityAIFollowOwner(this, 1.0D, 10.0F, 2.0F));
       super.tasks.addTask(4, new EntityAIMoveIndoors(this));
       super.tasks.addTask(5, new EntityAIRestrictOpenDoor(this));
       super.tasks.addTask(6, new EntityAIOpenDoor(this, true));
@@ -101,7 +104,8 @@ public class EntityCovenWitch extends EntityTameable implements IRangedAttackMob
       super.tasks.addTask(10, new EntityAILookIdle(this));
       super.targetTasks.addTask(1, new EntityAIHurtByTarget(this, false));
       super.targetTasks.addTask(2, new EntityAIOwnerHurtTarget(this));
-      super.targetTasks.addTask(3, new EntityAIHurtByTarget(this, true));
+      super.targetTasks.addTask(3, new EntityAIOwnerHurtByTarget(this));
+      super.targetTasks.addTask(4, new EntityAIHurtByTarget(this, true));
       this.setTameSkin(super.rand.nextInt(5));
       this.setTamed(false);
    }
@@ -312,6 +316,21 @@ public class EntityCovenWitch extends EntityTameable implements IRangedAttackMob
 
          if(super.rand.nextFloat() < 7.5E-4F) {
             super.worldObj.setEntityState(this, (byte)15);
+         }
+
+         if(this.isTamed() && this.getOwner() instanceof EntityPlayer) {
+            EntityPlayer owner = (EntityPlayer)this.getOwner();
+            if(owner.getHealth() < 8.0F && this.getDistanceSqToEntity(owner) < 64.0D && super.ticksExisted % 60 == 0) {
+               EntityPotion potion = new EntityPotion(super.worldObj, this, new ItemStack(Items.potionitem, 1, 16421));
+               double dx = owner.posX - this.posX;
+               double dy = owner.posY + (double)owner.getEyeHeight() - 1.1D - this.posY;
+               double dz = owner.posZ - this.posZ;
+               float dist = MathHelper.sqrt_double(dx * dx + dz * dz);
+               potion.setThrowableHeading(dx, dy + (double)(dist * 0.2F), dz, 0.75F, 8.0F);
+               super.worldObj.spawnEntityInWorld(potion);
+               ParticleEffect.HEART.send(SoundEffect.RANDOM_ORB, owner, 1.0D, 1.0D, 8);
+               this.swingItem();
+            }
          }
       }
 
@@ -763,6 +782,13 @@ public class EntityCovenWitch extends EntityTameable implements IRangedAttackMob
 
    public void standStill() {
       super.aiSit.setSitting(true);
+   }
+
+   public void setSitting(boolean sitting) {
+      super.aiSit.setSitting(sitting);
+      if (sitting) {
+         this.getNavigator().clearPathEntity();
+      }
    }
 
    // $FF: synthetic method

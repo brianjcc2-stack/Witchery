@@ -2,6 +2,8 @@ package com.emoniph.witchery.blocks;
 
 import com.emoniph.witchery.Witchery;
 import com.emoniph.witchery.blocks.BlockBaseContainer;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -40,7 +42,7 @@ public class BlockBarrier extends BlockBaseContainer {
 
    public BlockBarrier() {
       super(Material.glass, BlockBarrier.TileEntityBarrier.class);
-      super.registerWithCreateTab = false;
+      super.registerWithCreateTab = true;
       this.setBlockUnbreakable();
       this.setResistance(1000.0F);
       this.setLightOpacity(0);
@@ -50,13 +52,16 @@ public class BlockBarrier extends BlockBaseContainer {
       TileEntity te = world.getTileEntity(posX, posY, posZ);
       if(te != null && te instanceof BlockBarrier.TileEntityBarrier) {
          BlockBarrier.TileEntityBarrier f = (BlockBarrier.TileEntityBarrier)te;
-         AxisAlignedBB bounds = AxisAlignedBB.getBoundingBox((double)posX, (double)posY, (double)posZ, (double)(posX + 1), (double)posY + 0.9D, (double)(posZ + 1));
+         if(!f.getBlocksPlayers()) {
+            return null;
+         }
+         AxisAlignedBB bounds = AxisAlignedBB.getBoundingBox((double)posX, (double)posY, (double)posZ, (double)(posX + 1), (double)(posY + 1), (double)(posZ + 1)).expand(1.2D, 1.2D, 1.2D);
          List players = world.getEntitiesWithinAABB(EntityPlayer.class, bounds);
          Iterator i$ = players.iterator();
 
          while(i$.hasNext()) {
             EntityPlayer player = (EntityPlayer)i$.next();
-            if(player != null && (!f.getBlocksPlayers() || player.capabilities.isCreativeMode && player.isSneaking() || f.isOwner(player))) {
+            if(player != null && (player.capabilities.isCreativeMode && player.isSneaking() || f.isOwner(player))) {
                return null;
             }
          }
@@ -74,25 +79,37 @@ public class BlockBarrier extends BlockBaseContainer {
       return 0;
    }
 
-   public int getRenderBlockPass() {
+   @Override
+   public int getRenderType() {
       return 0;
    }
 
-   public boolean shouldSideBeRendered(IBlockAccess blockAccess, int posX, int posY, int posZ, int side) {
-      Block i1 = blockAccess.getBlock(posX, posY, posZ);
-      return i1 == this?false:super.shouldSideBeRendered(blockAccess, posX, posY, posZ, side);
+   @SideOnly(Side.CLIENT)
+   @Override
+   public int getRenderBlockPass() {
+      return 1;
    }
 
+   @SideOnly(Side.CLIENT)
+   @Override
+   public boolean shouldSideBeRendered(IBlockAccess blockAccess, int posX, int posY, int posZ, int side) {
+      Block i1 = blockAccess.getBlock(posX, posY, posZ);
+      return i1 == this ? false : true;
+   }
+
+   @Override
    public boolean isOpaqueCube() {
       return false;
    }
 
+   @Override
    public boolean renderAsNormalBlock() {
       return false;
    }
 
+   @Override
    public ItemStack getPickBlock(MovingObjectPosition target, World world, int x, int y, int z) {
-      return null;
+      return new ItemStack(this);
    }
 
    public static class TileEntityBarrier extends TileEntity {

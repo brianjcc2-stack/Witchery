@@ -29,6 +29,11 @@ import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
+import com.emoniph.witchery.entity.EntityCovenWitch;
+import com.emoniph.witchery.util.Coord;
+import net.minecraft.entity.monster.EntityCreeper;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.DamageSource;
 import net.minecraftforge.common.EnumPlantType;
 import net.minecraftforge.common.IPlantable;
 
@@ -348,6 +353,83 @@ public class BrazierRecipes {
          return 0;
       }
    };
+
+
+    public static final BrazierRecipes.BrazierRecipe WARDING = new BrazierRecipes.BrazierRecipe("witchery.brazier.warding", true, -1, new ItemStack[]{Witchery.Items.GENERIC.itemRowanBerries.createStack(), Witchery.Items.GENERIC.itemWormwood.createStack(), Witchery.Items.GENERIC.itemTearOfTheGoddess.createStack()}, null) {
+       @Override
+       protected boolean isMatch(ItemStack[] availableItems) {
+          boolean hasBerries = false;
+          boolean hasWormwood = false;
+          boolean hasPurity = false;
+          for (ItemStack item : availableItems) {
+             if (item != null) {
+                if (item.isItemEqual(Witchery.Items.GENERIC.itemRowanBerries.createStack()) || item.isItemEqual(Witchery.Items.GENERIC.itemBranchEnt.createStack())) hasBerries = true;
+                else if (item.isItemEqual(Witchery.Items.GENERIC.itemWormwood.createStack())) hasWormwood = true;
+                else if (item.isItemEqual(Witchery.Items.GENERIC.itemTearOfTheGoddess.createStack()) || item.getItem() == Items.ghast_tear || item.isItemEqual(Witchery.Items.GENERIC.itemPurifiedMilk.createStack())) hasPurity = true;
+             }
+          }
+          return hasBerries && hasWormwood && hasPurity;
+       }
+
+       @Override
+       public int onBurning(World world, int x, int y, int z, long ticks, BlockBrazier.TileEntityBrazier tile) {
+          BlockBrazier.TileEntityBrazier.WARDED_BRAZIERS.add(new Coord(x, y, z));
+          if (!world.isRemote) {
+             if (ticks % 20L == 0L) {
+                for (int dx = -16; dx <= 16; dx += 4) {
+                   for (int dy = -4; dy <= 6; dy += 2) {
+                      for (int dz = -16; dz <= 16; dz += 4) {
+                         if (world.getBlock(x + dx, y + dy, z + dz) == Blocks.fire) {
+                            world.setBlockToAir(x + dx, y + dy, z + dz);
+                         }
+                      }
+                   }
+                }
+             }
+
+             AxisAlignedBB bb = AxisAlignedBB.getBoundingBox((double)(x - 24), (double)(y - 10), (double)(z - 24), (double)(x + 24), (double)(y + 10), (double)(z + 24));
+
+             List creepers = world.getEntitiesWithinAABB(EntityCreeper.class, bb);
+             for (Object obj : creepers) {
+                EntityCreeper c = (EntityCreeper)obj;
+                c.setCreeperState(-1);
+             }
+
+             List mobs = world.getEntitiesWithinAABB(net.minecraft.entity.monster.IMob.class, bb);
+             for (Object obj : mobs) {
+                if (obj instanceof EntityLivingBase && !(obj instanceof EntityCovenWitch)) {
+                   EntityLivingBase mob = (EntityLivingBase)obj;
+                   mob.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, 60, 2));
+                   mob.addPotionEffect(new PotionEffect(Potion.blindness.id, 60, 0));
+                   mob.addPotionEffect(new PotionEffect(Potion.weakness.id, 60, 1));
+                   if (ticks % 40L == 0L) {
+                      mob.attackEntityFrom(DamageSource.magic, 2.0F);
+                      ParticleEffect.FLAME.send(SoundEffect.FIRE_IGNITE, world, mob.posX, mob.posY + 1.0D, mob.posZ, 0.5D, 0.5D, 5);
+                   }
+                }
+             }
+
+             if (ticks % 100L == 0L && tile.owner != null && !tile.owner.isEmpty()) {
+                List players = world.getEntitiesWithinAABB(EntityPlayer.class, bb);
+                for (Object obj : players) {
+                   EntityPlayer p = (EntityPlayer)obj;
+                   if (!p.getCommandSenderName().equals(tile.owner) && !p.capabilities.isCreativeMode) {
+                      EntityPlayer ownerPlayer = world.getPlayerEntityByName(tile.owner);
+                      if (ownerPlayer != null) {
+                         ownerPlayer.addChatMessage(new ChatComponentText("\u00a7c\u00a7l[Santuario]\u00a7r \u00a7e\u00a1Intruso detectado en tu base por el humo del brasero: \u00a7f" + p.getCommandSenderName() + "\u00a7e!\u00a7r"));
+                         SoundEffect.NOTE_HARP.playAtPlayer(world, ownerPlayer);
+                      }
+                      p.addChatMessage(new ChatComponentText("\u00a74\u00a7oHas entrado a un santuario protegido por un brasero m\u00edstico...\u00a7r"));
+                      SoundEffect.NOTE_SNARE.playAtPlayer(world, p);
+                   }
+                }
+             }
+          } else if (ticks % 10L == 0L) {
+             ParticleEffect.INSTANT_SPELL.send(SoundEffect.NONE, world, (double)x + 0.5D, (double)y + 1.2D, (double)z + 0.5D, 0.5D, 1.0D, 6);
+          }
+          return 0;
+       }
+    };
 
 
    public static BrazierRecipes instance() {

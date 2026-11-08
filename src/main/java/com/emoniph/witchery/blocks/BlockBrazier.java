@@ -93,6 +93,17 @@ public class BlockBrazier extends BlockBaseContainer {
       super.breakBlock(world, x, y, z, oldBlockID, oldBlockMetadata);
    }
 
+   @Override
+   public void onBlockPlacedBy(World world, int x, int y, int z, net.minecraft.entity.EntityLivingBase entity, ItemStack stack) {
+      super.onBlockPlacedBy(world, x, y, z, entity, stack);
+      if (entity instanceof EntityPlayer) {
+         TileEntity te = world.getTileEntity(x, y, z);
+         if (te instanceof BlockBrazier.TileEntityBrazier) {
+            ((BlockBrazier.TileEntityBrazier)te).owner = ((EntityPlayer)entity).getCommandSenderName();
+         }
+      }
+   }
+
    private void dropItemFromBrokenBlock(World world, int x, int y, int z, ItemStack itemstack) {
       if(itemstack != null) {
          float f = world.rand.nextFloat() * 0.8F + 0.1F;
@@ -225,6 +236,32 @@ public class BlockBrazier extends BlockBaseContainer {
    }
 
    public static class TileEntityBrazier extends TileEntityBase implements ISidedInventory {
+
+      public String owner = "";
+      public static final java.util.Set<Coord> WARDED_BRAZIERS = new java.util.HashSet<Coord>();
+
+      public static boolean isAreaWarded(World world, double x, double y, double z) {
+         if (world == null) return false;
+         java.util.Iterator<Coord> it = WARDED_BRAZIERS.iterator();
+         while (it.hasNext()) {
+            Coord c = it.next();
+            TileEntity te = c.getBlockTileEntity(world);
+            if (te instanceof TileEntityBrazier && ((TileEntityBrazier)te).isBurning()) {
+               if (Coord.distanceSq((double)c.x + 0.5D, (double)c.y + 0.5D, (double)c.z + 0.5D, x, y, z) <= 576.0D) {
+                  return true;
+               }
+            } else {
+               it.remove();
+            }
+         }
+         return false;
+      }
+
+      @Override
+      public void invalidate() {
+         super.invalidate();
+         WARDED_BRAZIERS.remove(new Coord(this));
+      }
 
       private ItemStack[] slots = new ItemStack[4];
       private int furnaceCookTime = 0;
@@ -371,6 +408,9 @@ public class BlockBrazier extends BlockBaseContainer {
          this.furnaceCookTime = nbtRoot.getShort("CookTime");
          this.powerLevel = nbtRoot.getShort("PowerLevel");
          this.storage = nbtRoot.getLong("PowerStorage");
+         if (nbtRoot.hasKey("WITCOwner")) {
+            this.owner = nbtRoot.getString("WITCOwner");
+         }
       }
 
       public void writeToNBT(NBTTagCompound nbtRoot) {
@@ -378,6 +418,9 @@ public class BlockBrazier extends BlockBaseContainer {
          nbtRoot.setShort("CookTime", (short)this.furnaceCookTime);
          nbtRoot.setShort("PowerLevel", (short)this.powerLevel);
          nbtRoot.setLong("PowerStorage", this.storage);
+         if (this.owner != null && !this.owner.isEmpty()) {
+            nbtRoot.setString("WITCOwner", this.owner);
+         }
          NBTTagList nbtSlotList = new NBTTagList();
 
          for(int i = 0; i < this.slots.length; ++i) {

@@ -23,6 +23,13 @@ public class TameableUtil {
    }
 
    public static boolean isOwner(EntityTameable tameable, EntityPlayer player) {
+      if(tameable == null || player == null) return false;
+      String ownerId = tameable.func_152113_b();
+      if(ownerId != null && !ownerId.isEmpty()) {
+         if(ownerId.equals(player.getUniqueID().toString()) || ownerId.equalsIgnoreCase(player.getCommandSenderName())) {
+            return true;
+         }
+      }
       return tameable.func_152114_e(player);
    }
 

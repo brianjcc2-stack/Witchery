@@ -20,6 +20,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockCrops;
 import net.minecraft.command.IEntitySelector;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
@@ -41,16 +43,20 @@ import net.minecraft.entity.ai.EntityAISwimming;
 import net.minecraft.entity.ai.EntityAIWander;
 import net.minecraft.entity.ai.EntityAIWatchClosest;
 import net.minecraft.entity.ai.EntityAIWatchClosest2;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemPickaxe;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.tileentity.TileEntity;
@@ -88,6 +94,8 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
    public boolean isTamed = false;
    public boolean isSitting = false;
    public boolean isFollowing = false;
+   public boolean isWorking = false;
+   public InventoryBasic goblinInventory = new InventoryBasic("Mochila de Hobgoblin", false, 9);
 
 
    public EntityGoblin(World par1World) {
@@ -284,7 +292,155 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
          }
       }
 
+      if(this.isTamed && this.isWorking && !this.isSitting && !super.worldObj.isRemote) {
+         if(super.ticksExisted % 25 == 0) {
+            this.performHobgoblinWork();
+         }
+      }
+
       super.updateAITick();
+   }
+
+   private void performHobgoblinWork() {
+      int gx = MathHelper.floor_double(super.posX);
+      int gy = MathHelper.floor_double(super.posY);
+      int gz = MathHelper.floor_double(super.posZ);
+
+      // 1. Recoger items del suelo
+      AxisAlignedBB itemBB = AxisAlignedBB.getBoundingBox(super.posX - 3.0D, super.posY - 1.5D, super.posZ - 3.0D, super.posX + 3.0D, super.posY + 1.5D, super.posZ + 3.0D);
+      java.util.List items = super.worldObj.getEntitiesWithinAABB(EntityItem.class, itemBB);
+      for (Object obj : items) {
+         EntityItem eItem = (EntityItem)obj;
+         if (eItem != null && !eItem.isDead) {
+            ItemStack stack = eItem.getEntityItem();
+            if (stack != null) {
+               for (int slot = 0; slot < this.goblinInventory.getSizeInventory(); slot++) {
+                  ItemStack inSlot = this.goblinInventory.getStackInSlot(slot);
+                  if (inSlot == null) {
+                     this.goblinInventory.setInventorySlotContents(slot, stack.copy());
+                     eItem.setDead();
+                     super.worldObj.playSoundAtEntity(this, "random.pop", 0.5F, 1.2F);
+                     break;
+                  } else if (inSlot.isItemEqual(stack) && inSlot.stackSize < inSlot.getMaxStackSize()) {
+                     int canAdd = Math.min(stack.stackSize, inSlot.getMaxStackSize() - inSlot.stackSize);
+                     inSlot.stackSize += canAdd;
+                     stack.stackSize -= canAdd;
+                     if (stack.stackSize <= 0) eItem.setDead();
+                     super.worldObj.playSoundAtEntity(this, "random.pop", 0.5F, 1.2F);
+                     break;
+                  }
+               }
+            }
+         }
+      }
+
+      // 2. Depositar en cofre cercano si hay cosechas
+      boolean hasHarvest = false;
+      for (int slot = 0; slot < this.goblinInventory.getSizeInventory(); slot++) {
+         ItemStack inSlot = this.goblinInventory.getStackInSlot(slot);
+         if (inSlot != null && !(inSlot.getItem() instanceof net.minecraft.item.ItemTool)) {
+            hasHarvest = true;
+            break;
+         }
+      }
+
+      if (hasHarvest) {
+         for (int dy = -2; dy <= 2; dy++) {
+            for (int dz = -5; dz <= 5; dz++) {
+               for (int dx = -5; dx <= 5; dx++) {
+                  TileEntity te = super.worldObj.getTileEntity(gx + dx, gy + dy, gz + dz);
+                  if (te instanceof IInventory && !(te instanceof com.emoniph.witchery.blocks.BlockKettle.TileEntityKettle) && !(te instanceof com.emoniph.witchery.blocks.BlockBrazier.TileEntityBrazier)) {
+                     IInventory chest = (IInventory)te;
+                     for (int slot = 0; slot < this.goblinInventory.getSizeInventory(); slot++) {
+                        ItemStack inSlot = this.goblinInventory.getStackInSlot(slot);
+                        if (inSlot != null && !(inSlot.getItem() instanceof net.minecraft.item.ItemTool)) {
+                           for (int cSlot = 0; cSlot < chest.getSizeInventory(); cSlot++) {
+                              ItemStack cItem = chest.getStackInSlot(cSlot);
+                              if (cItem == null) {
+                                 chest.setInventorySlotContents(cSlot, inSlot.copy());
+                                 this.goblinInventory.setInventorySlotContents(slot, null);
+                                 break;
+                              } else if (cItem.isItemEqual(inSlot) && cItem.stackSize < cItem.getMaxStackSize()) {
+                                 int add = Math.min(inSlot.stackSize, cItem.getMaxStackSize() - cItem.stackSize);
+                                 cItem.stackSize += add;
+                                 inSlot.stackSize -= add;
+                                 if (inSlot.stackSize <= 0) {
+                                    this.goblinInventory.setInventorySlotContents(slot, null);
+                                    break;
+                                 }
+                              }
+                           }
+                        }
+                     }
+                     chest.markDirty();
+                     this.swingItem();
+                     super.worldObj.playSoundAtEntity(this, "random.chestclosed", 0.5F, 1.0F);
+                     return;
+                  }
+               }
+            }
+         }
+      }
+
+      // 3. Cosechar cultivos maduros en radio 10
+      int r = 10;
+      for (int dy = -2; dy <= 2; dy++) {
+         for (int dz = -r; dz <= r; dz++) {
+            for (int dx = -r; dx <= r; dx++) {
+               int bx = gx + dx;
+               int by = gy + dy;
+               int bz = gz + dz;
+               Block block = super.worldObj.getBlock(bx, by, bz);
+               int meta = super.worldObj.getBlockMetadata(bx, by, bz);
+               boolean ripe = false;
+
+               if (block instanceof BlockCrops && meta >= 7) ripe = true;
+               else if (block == Blocks.carrots && meta >= 7) ripe = true;
+               else if (block == Blocks.potatoes && meta >= 7) ripe = true;
+               else if (block == Blocks.nether_wart && meta >= 3) ripe = true;
+               else if ((block == Witchery.Blocks.CROP_BELLADONNA || block == Witchery.Blocks.CROP_MANDRAKE || block == Witchery.Blocks.CROP_ARTICHOKE || block == Witchery.Blocks.CROP_SNOWBELL) && meta >= 4) ripe = true;
+
+               if (ripe) {
+                  double distSq = this.getDistanceSq((double)bx + 0.5D, (double)by, (double)bz + 0.5D);
+                  if (distSq > 4.5D) {
+                     this.getNavigator().tryMoveToXYZ((double)bx + 0.5D, (double)by, (double)bz + 0.5D, 0.8D);
+                     return;
+                  } else {
+                     this.swingItem();
+                     super.worldObj.func_147480_a(bx, by, bz, true);
+                     if (super.worldObj.getBlock(bx, by - 1, bz) == Blocks.farmland) {
+                        super.worldObj.setBlock(bx, by, bz, block, 0, 3);
+                     }
+                     com.emoniph.witchery.util.ParticleEffect.INSTANT_SPELL.send(com.emoniph.witchery.util.SoundEffect.RANDOM_POP, super.worldObj, (double)bx + 0.5D, (double)by + 0.5D, (double)bz + 0.5D, 0.5D, 0.5D, 6);
+                     return;
+                  }
+               }
+            }
+         }
+      }
+
+      // 4. Mineria si tiene pico en mano o inventario
+      ItemStack held = this.getHeldItem();
+      if (held != null && held.getItem() instanceof net.minecraft.item.ItemPickaxe) {
+         for (int dy = -1; dy <= 2; dy++) {
+            for (int dz = -2; dz <= 2; dz++) {
+               for (int dx = -2; dx <= 2; dx++) {
+                  int bx = gx + dx;
+                  int by = gy + dy;
+                  int bz = gz + dz;
+                  Block block = super.worldObj.getBlock(bx, by, bz);
+                  if (block == Blocks.coal_ore || block == Blocks.iron_ore || block == Blocks.gold_ore || block == Blocks.stone) {
+                     this.swingItem();
+                     super.worldObj.func_147480_a(bx, by, bz, true);
+                     if (super.rand.nextFloat() < 0.10F) {
+                        this.entityDropItem(Witchery.Items.GENERIC.itemKobolditeDust.createStack(), 0.0F);
+                     }
+                     return;
+                  }
+               }
+            }
+         }
+      }
    }
 
    protected void updateLeashedState() {
@@ -438,6 +594,18 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
       nbtRoot.setBoolean("IsTamed", this.isTamed);
       nbtRoot.setBoolean("IsSitting", this.isSitting);
       nbtRoot.setBoolean("IsFollowing", this.isFollowing);
+      nbtRoot.setBoolean("IsWorking", this.isWorking);
+      NBTTagList invList = new NBTTagList();
+      for (int i = 0; i < this.goblinInventory.getSizeInventory(); ++i) {
+         ItemStack stack = this.goblinInventory.getStackInSlot(i);
+         if (stack != null) {
+            NBTTagCompound itemTag = new NBTTagCompound();
+            itemTag.setByte("Slot", (byte)i);
+            stack.writeToNBT(itemTag);
+            invList.appendTag(itemTag);
+         }
+      }
+      nbtRoot.setTag("GoblinInv", invList);
    }
 
    public void readEntityFromNBT(NBTTagCompound nbtRoot) {
@@ -458,6 +626,17 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
       this.isTamed = nbtRoot.getBoolean("IsTamed");
       this.isSitting = nbtRoot.getBoolean("IsSitting");
       this.isFollowing = nbtRoot.getBoolean("IsFollowing");
+      this.isWorking = nbtRoot.getBoolean("IsWorking");
+      if (nbtRoot.hasKey("GoblinInv", 9)) {
+         NBTTagList invList = nbtRoot.getTagList("GoblinInv", 10);
+         for (int i = 0; i < invList.tagCount(); ++i) {
+            NBTTagCompound itemTag = invList.getCompoundTagAt(i);
+            byte slot = itemTag.getByte("Slot");
+            if (slot >= 0 && slot < this.goblinInventory.getSizeInventory()) {
+               this.goblinInventory.setInventorySlotContents(slot, ItemStack.loadItemStackFromNBT(itemTag));
+            }
+         }
+      }
    }
 
    protected float getSoundPitch() {

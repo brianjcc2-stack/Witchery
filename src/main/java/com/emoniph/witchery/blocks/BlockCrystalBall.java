@@ -1,5 +1,6 @@
 package com.emoniph.witchery.blocks;
 
+import com.emoniph.witchery.Witchery;
 import com.emoniph.witchery.blocks.BlockBaseContainer;
 import com.emoniph.witchery.common.IPowerSource;
 import com.emoniph.witchery.common.PowerSources;
@@ -16,12 +17,14 @@ import java.util.Random;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
 import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
@@ -46,6 +49,25 @@ public class BlockCrystalBall extends BlockBaseContainer {
          TileEntity tile = world.getTileEntity(x, y, z);
          if(tile != null && tile instanceof BlockCrystalBall.TileEntityCrystalBall) {
             BlockCrystalBall.TileEntityCrystalBall ball = (BlockCrystalBall.TileEntityCrystalBall)tile;
+
+            if (player.isSneaking()) {
+               ball.updateAltarLink();
+               ball.scanNatureSiphon();
+               BlockAltar.TileEntityAltar altar = ball.getLinkedAltar();
+               player.addChatMessage(new ChatComponentText("\u00a75\u00a7l[Nexo de Cristal de Altar]\u00a7r"));
+               if (altar != null && ball.linkedAltarCoord != null) {
+                  double dist = Math.sqrt(player.getDistanceSq(ball.linkedAltarCoord.x, ball.linkedAltarCoord.y, ball.linkedAltarCoord.z));
+                  player.addChatMessage(new ChatComponentText("\u00a7a\u2714 Altar vinculado en: \u00a7f" + ball.linkedAltarCoord.x + ", " + ball.linkedAltarCoord.y + ", " + ball.linkedAltarCoord.z + " \u00a77(" + (int)dist + "m de distancia)"));
+                  player.addChatMessage(new ChatComponentText("\u00a7b\u26a1 Energ\u00eda retransmitida: \u00a7f" + (int)altar.getCurrentPower() + " \u00a77/ \u00a7f" + (int)(altar.getMaxPower() * altar.getPowerScale())));
+                  player.addChatMessage(new ChatComponentText("\u00a72\u273f Sif\u00f3n de Naturaleza: \u00a7f+" + (int)ball.gatheredNaturePower + " \u00a77poder aportado al Altar desde este jard\u00edn."));
+                  ParticleEffect.INSTANT_SPELL.send(SoundEffect.RANDOM_ORB, world, (double)x + 0.5D, (double)y + 0.5D, (double)z + 0.5D, 0.5D, 0.5D, 8);
+               } else {
+                  player.addChatMessage(new ChatComponentText("\u00a7c\u2716 No se detect\u00f3 ning\u00fan Altar en un radio de 36 bloques. Coloca un Altar m\u00e1s cerca para vincular este cristal."));
+                  SoundEffect.NOTE_SNARE.playAtPlayer(world, player);
+               }
+               return true;
+            }
+
             if(ball.canBeUsed()) {
                if(tryConsumePower(world, player, x, y, z)) {
                   AxisAlignedBB bounds = AxisAlignedBB.getBoundingBox(0.5D + (double)x - 5.0D, 0.5D + (double)y - 2.0D, 0.5D + (double)z - 5.0D, 0.5D + (double)x + 5.0D, 0.5D + (double)y + 2.0D, 0.5D + (double)z + 5.0D);
@@ -136,13 +158,141 @@ public class BlockCrystalBall extends BlockBaseContainer {
    @SideOnly(Side.CLIENT)
    public void randomDisplayTick(World world, int x, int y, int z, Random rand) {}
 
-   public static class TileEntityCrystalBall extends TileEntity {
+   public static class TileEntityCrystalBall extends TileEntityBase implements IPowerSource {
 
       private long lastUsedTime = 0L;
+      public Coord linkedAltarCoord = null;
+      public float gatheredNaturePower = 0.0F;
+      private boolean registered = false;
 
-
+      @Override
       public boolean canUpdate() {
-         return false;
+         return true;
+      }
+
+      @Override
+      public void updateEntity() {
+         super.updateEntity();
+         if (super.worldObj != null && !super.worldObj.isRemote) {
+            if (super.ticks % 100L == 0L || this.linkedAltarCoord == null) {
+               this.updateAltarLink();
+               this.scanNatureSiphon();
+            }
+
+            if (!this.registered && this.linkedAltarCoord != null) {
+               PowerSources.instance().registerPowerSource(this);
+               this.registered = true;
+            }
+         }
+      }
+
+      public void updateAltarLink() {
+         ArrayList sources = PowerSources.instance() != null ? PowerSources.instance().get(super.worldObj, new Coord(this), 36) : null;
+         if (sources != null) {
+            for (Object obj : sources) {
+               PowerSources.RelativePowerSource rps = (PowerSources.RelativePowerSource)obj;
+               if (rps.source() instanceof BlockAltar.TileEntityAltar) {
+                  this.linkedAltarCoord = rps.source().getLocation();
+                  break;
+               }
+            }
+         }
+      }
+
+      public BlockAltar.TileEntityAltar getLinkedAltar() {
+         if (this.linkedAltarCoord != null && super.worldObj != null) {
+            TileEntity te = this.linkedAltarCoord.getBlockTileEntity(super.worldObj);
+            if (te instanceof BlockAltar.TileEntityAltar) {
+               return (BlockAltar.TileEntityAltar)te;
+            }
+         }
+         return null;
+      }
+
+      public void scanNatureSiphon() {
+         BlockAltar.TileEntityAltar altar = this.getLinkedAltar();
+         if (altar == null) {
+            this.gatheredNaturePower = 0.0F;
+            return;
+         }
+
+         float nature = 0.0F;
+         int r = 12;
+         for (int dy = -6; dy <= 6; ++dy) {
+            for (int dz = -r; dz <= r; dz += 2) {
+               for (int dx = -r; dx <= r; dx += 2) {
+                  Block b = super.worldObj.getBlock(super.xCoord + dx, super.yCoord + dy, super.zCoord + dz);
+                  if (b instanceof net.minecraft.block.BlockLeaves || b instanceof net.minecraft.block.BlockOldLeaf || b instanceof net.minecraft.block.BlockNewLeaf) {
+                     nature += 1.5F;
+                  } else if (b instanceof net.minecraft.block.BlockFlower || b instanceof net.minecraft.block.BlockCrops) {
+                     nature += 2.0F;
+                  } else if (b instanceof net.minecraft.block.BlockLog || b instanceof net.minecraft.block.BlockOldLog || b instanceof net.minecraft.block.BlockNewLog) {
+                     nature += 1.0F;
+                  } else if (b == Witchery.Blocks.CROP_BELLADONNA || b == Witchery.Blocks.CROP_MANDRAKE || b == Witchery.Blocks.CROP_ARTICHOKE || b == Witchery.Blocks.CROP_SNOWBELL || b == Witchery.Blocks.EMBER_MOSS) {
+                     nature += 3.0F;
+                  } else if (b == Blocks.tallgrass || b == Blocks.reeds || b == Blocks.cactus) {
+                     nature += 0.5F;
+                  }
+               }
+            }
+         }
+         this.gatheredNaturePower = Math.min(nature, 2500.0F);
+         altar.externalBonusPower = this.gatheredNaturePower;
+      }
+
+      @Override
+      public void invalidate() {
+         super.invalidate();
+         if (super.worldObj != null && !super.worldObj.isRemote) {
+            PowerSources.instance().removePowerSource(this);
+            BlockAltar.TileEntityAltar altar = this.getLinkedAltar();
+            if (altar != null) {
+               altar.externalBonusPower = 0.0F;
+            }
+         }
+      }
+
+      @Override
+      public World getWorld() {
+         return super.worldObj;
+      }
+
+      @Override
+      public Coord getLocation() {
+         return new Coord(this);
+      }
+
+      @Override
+      public boolean isLocationEqual(Coord c) {
+         return c != null && c.equals(new Coord(this));
+      }
+
+      @Override
+      public boolean consumePower(float amount) {
+         BlockAltar.TileEntityAltar altar = this.getLinkedAltar();
+         return altar != null && altar.consumePower(amount);
+      }
+
+      @Override
+      public float getCurrentPower() {
+         BlockAltar.TileEntityAltar altar = this.getLinkedAltar();
+         return altar != null ? altar.getCurrentPower() : 0.0F;
+      }
+
+      @Override
+      public float getRange() {
+         return 28.0F;
+      }
+
+      @Override
+      public int getEnhancementLevel() {
+         BlockAltar.TileEntityAltar altar = this.getLinkedAltar();
+         return altar != null ? altar.getEnhancementLevel() : 0;
+      }
+
+      @Override
+      public boolean isPowerInvalid() {
+         return this.isInvalid();
       }
 
       public void onUsed() {
@@ -156,11 +306,21 @@ public class BlockCrystalBall extends BlockBaseContainer {
       public void writeToNBT(NBTTagCompound nbtTag) {
          super.writeToNBT(nbtTag);
          nbtTag.setLong("LastUsedTime", this.lastUsedTime);
+         if (this.linkedAltarCoord != null) {
+            this.linkedAltarCoord.setNBT(nbtTag, "AltarCoord");
+         }
+         nbtTag.setFloat("GatheredNature", this.gatheredNaturePower);
       }
 
       public void readFromNBT(NBTTagCompound nbtTag) {
          super.readFromNBT(nbtTag);
          this.lastUsedTime = nbtTag.getLong("LastUsedTime");
+         if (nbtTag.hasKey("AltarCoordX")) {
+            this.linkedAltarCoord = Coord.createFrom(nbtTag, "AltarCoord");
+         }
+         if (nbtTag.hasKey("GatheredNature")) {
+            this.gatheredNaturePower = nbtTag.getFloat("GatheredNature");
+         }
       }
 
       public Packet getDescriptionPacket() {

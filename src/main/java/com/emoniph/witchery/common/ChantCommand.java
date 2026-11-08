@@ -18,6 +18,8 @@ public class ChantCommand implements ICommand {
 
    public ChantCommand() {
       this.aliases.add(this.getCommandName());
+      this.aliases.add("cantar");
+      this.aliases.add("recitar");
    }
 
    public String getCommandName() {
@@ -54,6 +56,11 @@ public class ChantCommand implements ICommand {
                }
 
                if(Witchery.Blocks.MIRROR.trySayMirrorMirrorSendMeHome(player, strings)) {
+                  return;
+               }
+
+               if(com.emoniph.witchery.util.FlooNetwork.isEntityInFlooFire(player)) {
+                  com.emoniph.witchery.util.FlooNetwork.travelFlooNetwork(player, strings);
                   return;
                }
             }

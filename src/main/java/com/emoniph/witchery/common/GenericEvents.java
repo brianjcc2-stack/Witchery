@@ -43,6 +43,7 @@ import com.emoniph.witchery.util.ChatUtil;
 import com.emoniph.witchery.util.Config;
 import com.emoniph.witchery.util.CreatureUtil;
 import com.emoniph.witchery.util.EntityUtil;
+import com.emoniph.witchery.util.FlooNetwork;
 import com.emoniph.witchery.util.Log;
 import com.emoniph.witchery.util.ParticleEffect;
 import com.emoniph.witchery.util.SoundEffect;
@@ -137,6 +138,12 @@ public class GenericEvents {
 
    @SubscribeEvent
    public void onServerChat(ServerChatEvent event) {
+      if(event.player != null && !event.player.worldObj.isRemote && FlooNetwork.isEntityInFlooFire(event.player)) {
+         FlooNetwork.travelFlooNetwork(event.player, event.message);
+         event.setCanceled(true);
+         return;
+      }
+
       boolean chatMasqueradeAllowed = Config.instance().allowChatMasquerading;
       ExtendedPlayer playerEx = ExtendedPlayer.get(event.player);
       if(playerEx != null && chatMasqueradeAllowed && playerEx.getCreatureType() == TransformCreature.PLAYER && playerEx.getOtherPlayerSkin() != null && !playerEx.getOtherPlayerSkin().isEmpty()) {
@@ -905,6 +912,14 @@ public class GenericEvents {
               }
               living.motionX = 0;
               living.motionZ = 0;
+          } else if (living instanceof net.minecraft.entity.EntityLiving && event.entity.ticksExisted % 20 == 0) {
+              EntityPlayer controller = com.emoniph.witchery.infusion.infusions.symbols.SymbolEffectImperio.IMPERIO_TARGETS.get(living);
+              if (controller != null && controller.isEntityAlive() && ((net.minecraft.entity.EntityLiving)living).getAttackTarget() == null) {
+                  double dSq = living.getDistanceSqToEntity(controller);
+                  if (dSq > 16.0D && dSq < 1600.0D) {
+                      ((net.minecraft.entity.EntityLiving)living).getNavigator().tryMoveToEntityLiving(controller, 1.0D);
+                  }
+              }
           }
       }
       
@@ -918,18 +933,23 @@ public class GenericEvents {
               java.util.List<EntityPlayer> linkedPlayers = new java.util.ArrayList<EntityPlayer>();
               for (Object obj : net.minecraft.server.MinecraftServer.getServer().getConfigurationManager().playerEntityList) {
                   EntityPlayer p = (EntityPlayer) obj;
-                  if (p != player && ExtendedPlayer.get(p).getUnbreakableVowID().equals(playerEx.getUnbreakableVowID())) {
+                  if (p != player && p.isEntityAlive() && !p.isDead && ExtendedPlayer.get(p) != null && ExtendedPlayer.get(p).getUnbreakableVowID().equals(playerEx.getUnbreakableVowID())) {
                       linkedPlayers.add(p);
                   }
               }
               if (!linkedPlayers.isEmpty()) {
+                  long currentTime = event.entity.worldObj.getTotalWorldTime();
                   java.util.Collection<net.minecraft.potion.PotionEffect> effects = player.getActivePotionEffects();
                   for (net.minecraft.potion.PotionEffect effect : effects) {
+                      if (player.getEntityData().getLong("VowPotionSync_" + effect.getPotionID()) > currentTime) {
+                          continue;
+                      }
                       if (effect.getDuration() > 20) {
                           for (EntityPlayer p : linkedPlayers) {
                               net.minecraft.potion.PotionEffect current = p.getActivePotionEffect(net.minecraft.potion.Potion.potionTypes[effect.getPotionID()]);
                               if (current == null || current.getAmplifier() < effect.getAmplifier() || (current.getAmplifier() == effect.getAmplifier() && current.getDuration() < effect.getDuration() - 10)) {
                                   p.addPotionEffect(new net.minecraft.potion.PotionEffect(effect.getPotionID(), effect.getDuration(), effect.getAmplifier(), effect.getIsAmbient()));
+                                  p.getEntityData().setLong("VowPotionSync_" + effect.getPotionID(), currentTime + (long)effect.getDuration());
                               }
                           }
                       }
@@ -1089,7 +1109,7 @@ public class GenericEvents {
                 java.util.List<EntityPlayer> linkedPlayers = new java.util.ArrayList<EntityPlayer>();
                 for (Object obj : net.minecraft.server.MinecraftServer.getServer().getConfigurationManager().playerEntityList) {
                     EntityPlayer p = (EntityPlayer) obj;
-                    if (p != player && ExtendedPlayer.get(p).getUnbreakableVowID().equals(playerEx.getUnbreakableVowID())) {
+                    if (p != player && p.isEntityAlive() && !p.isDead && ExtendedPlayer.get(p) != null && ExtendedPlayer.get(p).getUnbreakableVowID().equals(playerEx.getUnbreakableVowID())) {
                         linkedPlayers.add(p);
                     }
                 }
@@ -1099,9 +1119,12 @@ public class GenericEvents {
                     float sharedHeal = totalHeal / totalPlayers;
                     event.amount = sharedHeal;
                     for (EntityPlayer p : linkedPlayers) {
-                        p.getEntityData().setBoolean("VowHealing", true);
-                        p.heal(sharedHeal);
-                        p.getEntityData().setBoolean("VowHealing", false);
+                        try {
+                            p.getEntityData().setBoolean("VowHealing", true);
+                            p.heal(sharedHeal);
+                        } finally {
+                            p.getEntityData().setBoolean("VowHealing", false);
+                        }
                     }
                 }
             }
@@ -1114,6 +1137,11 @@ public class GenericEvents {
    )
    public void onLivingHurt(LivingHurtEvent event) {
       if(!event.entityLiving.worldObj.isRemote && !event.isCanceled()) {
+         if(event.source.isFireDamage() && FlooNetwork.isEntityInFlooFire(event.entityLiving)) {
+            event.setCanceled(true);
+            event.entityLiving.extinguish();
+            return;
+         }
          this.checkForChargeDamage(event);
          if(event.entityLiving instanceof EntityPlayer) {
             EntityPlayer player = (EntityPlayer)event.entityLiving;
@@ -1124,7 +1152,7 @@ public class GenericEvents {
                 java.util.List<EntityPlayer> linkedPlayers = new java.util.ArrayList<EntityPlayer>();
                 for (Object obj : net.minecraft.server.MinecraftServer.getServer().getConfigurationManager().playerEntityList) {
                     EntityPlayer p = (EntityPlayer) obj;
-                    if (p != player && ExtendedPlayer.get(p).getUnbreakableVowID().equals(playerEx.getUnbreakableVowID())) {
+                    if (p != player && p.isEntityAlive() && !p.isDead && ExtendedPlayer.get(p) != null && ExtendedPlayer.get(p).getUnbreakableVowID().equals(playerEx.getUnbreakableVowID())) {
                         linkedPlayers.add(p);
                     }
                 }
@@ -1596,7 +1624,11 @@ public class GenericEvents {
 
     @SubscribeEvent
     public void onLivingSetAttackTarget(net.minecraftforge.event.entity.living.LivingSetAttackTargetEvent event) {
-       if(event.target instanceof EntityPlayer && event.entityLiving != null) {
+       if (event.target == null || event.entityLiving == null) {
+          return;
+       }
+
+       if (event.target instanceof EntityPlayer) {
           EntityPlayer player = (EntityPlayer)event.target;
           
           EntityPlayer controller = com.emoniph.witchery.infusion.infusions.symbols.SymbolEffectImperio.IMPERIO_TARGETS.get(event.entityLiving);
@@ -1606,14 +1638,15 @@ public class GenericEvents {
           }
           
           ExtendedPlayer playerEx = ExtendedPlayer.get(player);
-          if(playerEx != null && playerEx.getSpiritLevel() >= 7 && player.isSneaking()) {
-             if(event.entityLiving.getDistanceSqToEntity(player) > 16.0D && event.entityLiving instanceof net.minecraft.entity.EntityLiving) {
+          if (playerEx != null && playerEx.getSpiritLevel() >= 7 && player.isSneaking()) {
+             if (event.entityLiving.getDistanceSqToEntity(player) > 16.0D && event.entityLiving instanceof net.minecraft.entity.EntityLiving) {
                 ((net.minecraft.entity.EntityLiving)event.entityLiving).setAttackTarget(null);
+                return;
              }
           }
        }
        
-       if (event.entityLiving != null && com.emoniph.witchery.infusion.infusions.symbols.SymbolEffectImperio.IMPERIO_STAYING_TARGETS.contains(event.entityLiving)) {
+       if (com.emoniph.witchery.infusion.infusions.symbols.SymbolEffectImperio.IMPERIO_STAYING_TARGETS.contains(event.entityLiving)) {
            if (event.entityLiving instanceof net.minecraft.entity.EntityLiving) {
                ((net.minecraft.entity.EntityLiving)event.entityLiving).setAttackTarget(null);
            }
@@ -1859,6 +1892,13 @@ public class GenericEvents {
          }
       }
 
+   }
+
+   @SubscribeEvent
+   public void onExplosionStart(net.minecraftforge.event.world.ExplosionEvent.Start event) {
+      if (com.emoniph.witchery.blocks.BlockBrazier.TileEntityBrazier.isAreaWarded(event.world, event.explosion.explosionX, event.explosion.explosionY, event.explosion.explosionZ)) {
+         event.setCanceled(true);
+      }
    }
 
    // $FF: synthetic class

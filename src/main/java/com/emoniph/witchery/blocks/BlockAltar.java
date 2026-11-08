@@ -211,6 +211,15 @@ public class BlockAltar extends BlockBaseContainer {
       private Coord core;
       private float power;
       private float maxPower;
+      public float externalBonusPower = 0.0F;
+
+      public float getMaxPower() {
+         return this.maxPower + this.externalBonusPower;
+      }
+
+      public int getPowerScale() {
+         return this.powerScale;
+      }
       private int powerScale;
       private int rechargeScale;
       private int enhancementLevel;
@@ -252,7 +261,7 @@ public class BlockAltar extends BlockBaseContainer {
       public void updateEntity() {
          super.updateEntity();
          if(!super.worldObj.isRemote) {
-            float maxPowerScaled = this.maxPower * (float)this.powerScale;
+            float maxPowerScaled = (this.maxPower + this.externalBonusPower) * (float)this.powerScale;
             if(this.isCore()) {
                if(this.power < maxPowerScaled) {
                   float basePowerPerUpdate = 10.0F;

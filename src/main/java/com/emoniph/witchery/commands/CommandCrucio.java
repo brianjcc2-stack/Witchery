@@ -11,11 +11,16 @@ import java.util.Map;
 public class CommandCrucio extends CommandBase {
 
     // Mapa para almacenar cuántos corazones de daño configuró cada jugador para su próximo hechizo Crucio.
-    public static final Map<EntityPlayer, Integer> CRUCIO_POWER = new HashMap<EntityPlayer, Integer>();
+    public static final Map<String, Integer> CRUCIO_POWER = new HashMap<String, Integer>();
 
     @Override
     public String getCommandName() {
         return "crucio";
+    }
+
+    @Override
+    public java.util.List getCommandAliases() {
+        return java.util.Arrays.asList("cruciatus");
     }
 
     @Override
@@ -30,7 +35,7 @@ public class CommandCrucio extends CommandBase {
 
     @Override
     public boolean canCommandSenderUseCommand(ICommandSender sender) {
-        return sender instanceof EntityPlayer;
+        return true;
     }
 
     @Override
@@ -53,7 +58,7 @@ public class CommandCrucio extends CommandBase {
                 player.addChatMessage(new ChatComponentText("No puedes torturar por más de 10 corazones. ¡Para matar instantáneamente debes usar Avada Kedavra!"));
             }
 
-            CRUCIO_POWER.put(player, corazones);
+            CRUCIO_POWER.put(player.getCommandSenderName(), corazones);
             player.addChatMessage(new ChatComponentText("Has configurado tu próxima Maldición Cruciatus a " + corazones + " corazones de agonía progresiva."));
 
         } catch (NumberFormatException e) {

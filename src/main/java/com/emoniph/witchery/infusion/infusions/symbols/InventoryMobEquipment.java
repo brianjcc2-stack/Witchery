@@ -7,6 +7,7 @@ import net.minecraft.item.ItemStack;
 
 public class InventoryMobEquipment implements IInventory {
     private final EntityLivingBase target;
+    private final ItemStack[] extraSlots = new ItemStack[4];
 
     public InventoryMobEquipment(EntityLivingBase target) {
         this.target = target;
@@ -14,13 +15,15 @@ public class InventoryMobEquipment implements IInventory {
 
     @Override
     public int getSizeInventory() {
-        return 5;
+        return 9;
     }
 
     @Override
     public ItemStack getStackInSlot(int slot) {
         if (slot >= 0 && slot <= 4) {
             return target.getEquipmentInSlot(slot);
+        } else if (slot >= 5 && slot <= 8) {
+            return extraSlots[slot - 5];
         }
         return null;
     }
@@ -57,12 +60,14 @@ public class InventoryMobEquipment implements IInventory {
     public void setInventorySlotContents(int slot, ItemStack stack) {
         if (slot >= 0 && slot <= 4) {
             target.setCurrentItemOrArmor(slot, stack);
+        } else if (slot >= 5 && slot <= 8) {
+            extraSlots[slot - 5] = stack;
         }
     }
 
     @Override
     public String getInventoryName() {
-        return "Imperio: " + target.getCommandSenderName();
+        return "Equipamiento: " + target.getCommandSenderName();
     }
 
     @Override
@@ -94,6 +99,6 @@ public class InventoryMobEquipment implements IInventory {
 
     @Override
     public boolean isItemValidForSlot(int slot, ItemStack stack) {
-        return true;
+        return slot >= 0 && slot <= 8;
     }
 }
