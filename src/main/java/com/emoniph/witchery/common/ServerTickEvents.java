@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.potion.PotionEffect;
@@ -213,7 +214,18 @@ public class ServerTickEvents {
          World var7 = event.player.worldObj;
          Shapeshift.INSTANCE.initCurrentShift(var6);
          Infusion.syncPlayer(var7, var6);
-         ExtendedPlayer.get(var6).scheduleSync();
+         ExtendedPlayer playerEx = ExtendedPlayer.get(var6);
+         if(playerEx != null) {
+            playerEx.scheduleSync();
+            if(!playerEx.getPreservedDeathItems().isEmpty()) {
+               for(ItemStack stack : playerEx.getPreservedDeathItems()) {
+                  if(!var6.inventory.addItemStackToInventory(stack)) {
+                     var6.entityDropItem(stack, 0.5F);
+                  }
+               }
+               playerEx.getPreservedDeathItems().clear();
+            }
+         }
          Witchery.packetPipeline.sendToDimension(new PacketPlayerStyle(var6), var7.provider.dimensionId);
       }
 

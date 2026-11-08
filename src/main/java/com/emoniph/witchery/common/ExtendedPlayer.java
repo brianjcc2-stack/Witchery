@@ -208,6 +208,15 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
          }
       }
       props.setTag("VoidVault", voidItems);
+      NBTTagList nbtPreserved = new NBTTagList();
+      for(ItemStack stack : this.preservedDeathItems) {
+         if(stack != null) {
+            NBTTagCompound itemTag = new NBTTagCompound();
+            stack.writeToNBT(itemTag);
+            nbtPreserved.appendTag(itemTag);
+         }
+      }
+      props.setTag("PreservedDeathItems", nbtPreserved);
       compound.setTag("WitcheryExtendedPlayer", props);
    }
 
@@ -278,6 +287,17 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
          } else {
             this.unbreakableVowID = "";
          }
+
+         this.preservedDeathItems.clear();
+         if(nbtRoot.hasKey("PreservedDeathItems")) {
+            NBTTagList nbtPreservedList = nbtRoot.getTagList("PreservedDeathItems", 10);
+            for(int p = 0; p < nbtPreservedList.tagCount(); ++p) {
+               ItemStack savedStack = ItemStack.loadItemStackFromNBT(nbtPreservedList.getCompoundTagAt(p));
+               if(savedStack != null) {
+                  this.preservedDeathItems.add(savedStack);
+               }
+            }
+         }
       }
 
    }
@@ -347,6 +367,18 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
          this.cachedInventory = null;
       }
 
+   }
+
+   private ArrayList<ItemStack> preservedDeathItems = new ArrayList<ItemStack>();
+
+   public void addPreservedDeathItem(ItemStack stack) {
+      if(stack != null) {
+         this.preservedDeathItems.add(stack);
+      }
+   }
+
+   public ArrayList<ItemStack> getPreservedDeathItems() {
+      return this.preservedDeathItems;
    }
 
    public int getSkillPotionBottling() {

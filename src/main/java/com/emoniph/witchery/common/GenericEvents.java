@@ -250,6 +250,9 @@ public class GenericEvents {
       ExtendedPlayer newPlayerEx = ExtendedPlayer.get(event.entityPlayer);
       newPlayerEx.loadNBTData(oldPlayerNBT);
       newPlayerEx.restorePlayerInventoryFrom(oldPlayerEx);
+      if(oldPlayerEx != null && newPlayerEx != null) {
+         newPlayerEx.getPreservedDeathItems().addAll(oldPlayerEx.getPreservedDeathItems());
+      }
    }
 
    private static boolean isDisallowedEntity(Entity entity) {
@@ -462,12 +465,36 @@ public class GenericEvents {
       priority = EventPriority.HIGH
    )
    public void onPlayerDrops(PlayerDropsEvent event) {
-      if(!event.entityPlayer.worldObj.isRemote && !event.isCanceled() && ExtendedPlayer.get(event.entityPlayer).isVampire()) {
-         int ticks = TimeUtil.minsToTicks(MathHelper.clamp_int(Config.instance().vampireDeathItemKeepAliveMins, 5, 30));
+      if(!event.entityPlayer.worldObj.isRemote && !event.isCanceled()) {
+         if(ExtendedPlayer.get(event.entityPlayer).isVampire()) {
+            int ticks = TimeUtil.minsToTicks(MathHelper.clamp_int(Config.instance().vampireDeathItemKeepAliveMins, 5, 30));
 
-         EntityItem item;
-         for(Iterator i$ = event.drops.iterator(); i$.hasNext(); item.lifespan = ticks) {
-            item = (EntityItem)i$.next();
+            EntityItem item;
+            for(Iterator i$ = event.drops.iterator(); i$.hasNext(); item.lifespan = ticks) {
+               item = (EntityItem)i$.next();
+            }
+         }
+
+         ExtendedPlayer playerEx = ExtendedPlayer.get(event.entityPlayer);
+         if(playerEx != null) {
+            Iterator i$ = event.drops.iterator();
+            while(i$.hasNext()) {
+               EntityItem entityItem = (EntityItem)i$.next();
+               if(entityItem != null && entityItem.getEntityItem() != null) {
+                  ItemStack stack = entityItem.getEntityItem();
+                  if(stack.getItem() != null) {
+                     String clsName = stack.getItem().getClass().getName().toLowerCase();
+                     String unlocName = stack.getItem().getUnlocalizedName();
+                     if(unlocName != null) {
+                        unlocName = unlocName.toLowerCase();
+                     }
+                     if(clsName.contains("atlas") || (unlocName != null && unlocName.contains("atlas"))) {
+                        playerEx.addPreservedDeathItem(stack.copy());
+                        i$.remove();
+                     }
+                  }
+               }
+            }
          }
       }
 
