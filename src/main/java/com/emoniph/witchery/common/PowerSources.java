@@ -189,6 +189,9 @@ public class PowerSources {
          List players = world.getEntitiesWithinAABB(net.minecraft.entity.player.EntityPlayer.class, bb);
          for (Object pObj : players) {
             net.minecraft.entity.player.EntityPlayer player = (net.minecraft.entity.player.EntityPlayer)pObj;
+            if (SupremeWitchData.isPlayerSupreme(player)) {
+               return new BabaYagaMobilePowerSource(world, posX, posY, posZ);
+            }
             if (player.inventory.armorItemInSlot(3) != null && player.inventory.armorItemInSlot(3).getItem() == Witchery.Items.BABAS_HAT) {
                return new BabaYagaMobilePowerSource(world, posX, posY, posZ);
             }

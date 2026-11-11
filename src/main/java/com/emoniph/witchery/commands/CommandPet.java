@@ -32,7 +32,7 @@ public class CommandPet extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/pet <follow [all]|stay [all]|attack|summon [all]|list|rename <name>|release|inventory>";
+        return "/pet <follow [all]|stay [all]|attack|summon [all]|bind|familiar|list|rename <name>|release|inventory|guia>";
     }
 
     @Override
@@ -48,8 +48,8 @@ public class CommandPet extends CommandBase {
     @Override
     public List addTabCompletionOptions(ICommandSender sender, String[] args) {
         if (args.length == 1) {
-            return getListOfStringsMatchingLastWord(args, "follow", "stay", "attack", "summon", "list", "rename", "release", "inventory",
-                    "seguir", "quieto", "atacar", "invocar", "lista", "renombrar", "liberar", "inventario");
+            return getListOfStringsMatchingLastWord(args, "follow", "stay", "attack", "summon", "bind", "familiar", "list", "rename", "release", "inventory", "guia", "help", "ayuda",
+                    "seguir", "quieto", "atacar", "invocar", "vincular", "guardar", "lista", "renombrar", "liberar", "inventario");
         } else if (args.length == 2 && (args[0].equalsIgnoreCase("stay") || args[0].equalsIgnoreCase("follow") || args[0].equalsIgnoreCase("summon")
                 || args[0].equalsIgnoreCase("quieto") || args[0].equalsIgnoreCase("seguir") || args[0].equalsIgnoreCase("invocar"))) {
             return getListOfStringsMatchingLastWord(args, "all");
@@ -97,19 +97,99 @@ public class CommandPet extends CommandBase {
 
         if (args.length == 0) {
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "=== Control de Mascotas y Familiares ==="));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "/pet bind" + EnumChatFormatting.GRAY + " (o vincular) - Vincula a tu Gato, Sapo o Búho como Familiar Arcano."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "/pet familiar" + EnumChatFormatting.GRAY + " (o guardar) - Invoca o guarda a tu Familiar en el plano espiritual."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/pet follow [all]" + EnumChatFormatting.GRAY + " (o seguir) - Te sigue y defiende."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/pet stay [all]" + EnumChatFormatting.GRAY + " (o quieto) - Se sienta y espera."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/pet attack" + EnumChatFormatting.GRAY + " (o atacar) - Ataca al objetivo que estás mirando."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/pet summon [all]" + EnumChatFormatting.GRAY + " (o invocar) - Teletransporta tus mascotas a tu lado."));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/pet list" + EnumChatFormatting.GRAY + " (o lista) - Muestra tus mascotas cercanas y su salud."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/pet list" + EnumChatFormatting.GRAY + " (o lista) - Muestra tus mascotas cercanas y tu Familiar."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/pet inventory" + EnumChatFormatting.GRAY + " (o inv) - Abre su equipamiento."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/pet rename <nombre>" + EnumChatFormatting.GRAY + " - Asigna un nombre a la mascota."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/pet release" + EnumChatFormatting.GRAY + " (o liberar) - Libera la mascota."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/pet guia" + EnumChatFormatting.GRAY + " (o help) - Guía de control táctico y poderes de Familiares."));
             return;
         }
 
         String subCommand = args[0].toLowerCase();
+
+        if (subCommand.equals("guia") || subCommand.equals("help") || subCommand.equals("ayuda")) {
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "╔════════════════════════════════════════════╗"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "  ★ GUÍA DE MASCOTAS Y FAMILIARES ★"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "╚════════════════════════════════════════════╝"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "• Vínculo de Familiar (/pet bind): " + EnumChatFormatting.WHITE + "Mira a un Gato/Ocelote, Sapo o Búho domesticado para consagrarlo como tu Familiar (50 HP y absorbe 10% de tu daño)."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "• Bolsillo Espiritual (/pet familiar): " + EnumChatFormatting.WHITE + "Invoca o guarda a tu Familiar en cualquier momento para protegerlo."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "  ↳ Gato Familiar: " + EnumChatFormatting.GRAY + "Debilita agresores, Nueve Vidas (te salva de morir) y -25% coste en Maldiciones."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "  ↳ Sapo Familiar: " + EnumChatFormatting.GRAY + "Envenena agresores, bono de pociones y 25% prob. de hechizo gratis con la Rama Mística."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "  ↳ Búho Familiar: " + EnumChatFormatting.GRAY + "Ciega agresores, reduce 50% daño de caída y -25% cooldown en hechizos."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "• Órdenes Tácticas: " + EnumChatFormatting.WHITE + "Usa /pet attack mirando a un enemigo, o /pet follow all y /pet stay all."));
+            return;
+        }
         EntityLivingBase lookedAtEntity = getLookedAtEntity(player, 30.0D);
+
+        // --- SUBCOMMAND: BIND FAMILIAR ---
+        if (subCommand.equals("bind") || subCommand.equals("vincular")) {
+            EntityTameable candidate = null;
+            if (lookedAtEntity instanceof EntityTameable) {
+                candidate = (EntityTameable) lookedAtEntity;
+            } else {
+                AxisAlignedBB searchBB = AxisAlignedBB.getBoundingBox(player.posX - 8.0D, player.posY - 4.0D, player.posZ - 8.0D, player.posX + 8.0D, player.posY + 4.0D, player.posZ + 8.0D);
+                List<EntityTameable> nearby = player.worldObj.getEntitiesWithinAABB(EntityTameable.class, searchBB);
+                for (EntityTameable p : nearby) {
+                    if (com.emoniph.witchery.familiar.Familiar.canBecomeFamiliar(p) && TameableUtil.isOwner(p, player)) {
+                        candidate = p;
+                        break;
+                    }
+                }
+            }
+
+            if (candidate == null || !candidate.isTamed() || !TameableUtil.isOwner(candidate, player)) {
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Debes mirar o estar junto a un Gato/Ocelote, Sapo o Búho domesticado por ti."));
+                return;
+            }
+            if (!com.emoniph.witchery.familiar.Familiar.canBecomeFamiliar(candidate)) {
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Solo un Gato/Ocelote, un Sapo o un Búho pueden convertirse en un Familiar Arcano."));
+                return;
+            }
+
+            com.emoniph.witchery.familiar.Familiar.bindToPlayer(player, candidate);
+            String famName = com.emoniph.witchery.familiar.Familiar.getFamiliarName(player);
+            int famType = com.emoniph.witchery.familiar.Familiar.getActiveFamiliarType(player);
+            String typeLabel = famType == 1 ? "Gato Brujo (Maldiciones y Nueve Vidas)" : (famType == 2 ? "Sapo Alquímico (Pociones y Maná)" : "Búho Astral (Viento y Ceguera)");
+            ParticleEffect.PORTAL.send(SoundEffect.RANDOM_LEVELUP, player, 1.0D, 2.0D, 24);
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "✦ " + EnumChatFormatting.LIGHT_PURPLE + "¡Has forjado un pacto de sangre y alma con " + EnumChatFormatting.GOLD + famName + EnumChatFormatting.LIGHT_PURPLE + " [" + typeLabel + "]!"));
+            return;
+        }
+
+        // --- SUBCOMMAND: FAMILIAR TOGGLE (SUMMON / DISMISS) ---
+        if (subCommand.equals("familiar") || subCommand.equals("guardar") || subCommand.equals("dismiss") || subCommand.equals("invoke")) {
+            net.minecraft.nbt.NBTTagCompound nbtTag = com.emoniph.witchery.infusion.Infusion.getNBT(player);
+            if (nbtTag == null || !nbtTag.hasKey("WITCFamiliar")) {
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Aún no tienes un Familiar vinculado. Domestica un Gato, Sapo o Búho y usa /pet bind."));
+                return;
+            }
+            net.minecraft.nbt.NBTTagCompound nbtFamiliar = nbtTag.getCompoundTag("WITCFamiliar");
+            String famName = nbtFamiliar.getString("FamiliarName");
+            byte summoned = nbtFamiliar.getByte("FamiliarSummoned");
+
+            if (summoned == 1) {
+                EntityTameable activeEntity = com.emoniph.witchery.familiar.Familiar.getFamiliarEntity(player);
+                if (activeEntity != null) {
+                    com.emoniph.witchery.familiar.Familiar.dismissFamiliar(player, activeEntity);
+                } else {
+                    nbtFamiliar.setByte("FamiliarSummoned", (byte) 0);
+                }
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "✦ Has resguardado a tu Familiar " + EnumChatFormatting.GOLD + famName + EnumChatFormatting.LIGHT_PURPLE + " en el plano espiritual."));
+            } else {
+                EntityTameable spawned = com.emoniph.witchery.familiar.Familiar.summonFamiliar(player, player.posX, player.posY, player.posZ);
+                if (spawned != null) {
+                    player.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "✦ ¡Has invocado a tu Familiar " + EnumChatFormatting.GOLD + famName + EnumChatFormatting.GREEN + " desde el plano espiritual!"));
+                } else {
+                    player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "No se pudo invocar al Familiar."));
+                }
+            }
+            return;
+        }
 
         // --- SUBCOMMAND: ATTACK ---
         if (subCommand.equals("attack") || subCommand.equals("atacar")) {
@@ -195,7 +275,12 @@ public class CommandPet extends CommandBase {
             AxisAlignedBB bb = AxisAlignedBB.getBoundingBox(player.posX - 128.0D, player.posY - 64.0D, player.posZ - 128.0D, player.posX + 128.0D, player.posY + 64.0D, player.posZ + 128.0D);
             List<EntityTameable> pets = player.worldObj.getEntitiesWithinAABB(EntityTameable.class, bb);
             int count = 0;
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "=== Tus Mascotas Cercanas ==="));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "=== Tus Mascotas y Familiar ==="));
+            String famName = com.emoniph.witchery.familiar.Familiar.getFamiliarName(player);
+            if (famName != null && !famName.isEmpty()) {
+                boolean activeFam = com.emoniph.witchery.familiar.Familiar.hasActiveFamiliar(player);
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "★ Familiar Vinculado: " + EnumChatFormatting.GOLD + famName + " " + (activeFam ? EnumChatFormatting.GREEN + "[Invocado]" : EnumChatFormatting.AQUA + "[En Bolsillo Espiritual - usa /pet familiar]")));
+            }
             for (EntityTameable pet : pets) {
                 if (pet.isTamed() && TameableUtil.isOwner(pet, player)) {
                     String name = pet.hasCustomNameTag() ? pet.getCustomNameTag() : pet.getCommandSenderName();

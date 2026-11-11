@@ -57,6 +57,7 @@ public class Config {
    public int percentageOfPlayersSleepingForBuff;
    public boolean render3dGlintEffect;
    public boolean renderHuntsmanGlintEffect;
+   public boolean renderSupremeAnimation;
    public boolean allowMystcraft;
    public boolean restrictPoppetShelvesToVanillaAndSpiritDimensions;
    public boolean allowBlockBreakEvents;
@@ -164,6 +165,7 @@ public class Config {
       this.percentageOfPlayersSleepingForBuff = Math.max(Math.min(this.configuration.get("general", "PercentageOfPlayersSleepingForBuff", 100).getInt(), 100), 1);
       this.render3dGlintEffect = this.configuration.get("general", "Render3dGlintEffect", true).getBoolean(true);
       this.renderHuntsmanGlintEffect = this.configuration.get("general", "RenderHuntsmanGlintEffect", true).getBoolean(true);
+      this.renderSupremeAnimation = this.configuration.get("general", "RenderSupremeAnimation", true, "Render subtle ambient visual aura and particle effects for the Supreme Witch.").getBoolean(true);
       this.allowMystcraft = this.configuration.get("general", "AllowModMystcraft", true).getBoolean(true);
       this.allowArsMagica2 = this.configuration.get("general", "AllowModArsMagica2", true).getBoolean(true);
       this.restrictPoppetShelvesToVanillaAndSpiritDimensions = this.configuration.get("general", "RestrictPoppetShelvesToVanillaAndSpiritDimensions", true).getBoolean(true);

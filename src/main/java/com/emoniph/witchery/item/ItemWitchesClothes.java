@@ -41,6 +41,68 @@ import net.minecraft.world.World;
 
 public class ItemWitchesClothes extends ItemArmor {
 
+   public static final int STYLE_CLASSIC = 0;
+   public static final int STYLE_ARCHMAGE = 1;
+   public static final int STYLE_DRUID = 2;
+   public static final int STYLE_VOID = 3;
+   public static final int STYLE_GOTHIC = 4;
+   public static final int NUM_STYLES = 5;
+
+   public static int getStyle(ItemStack stack) {
+      if(stack != null && stack.hasTagCompound() && stack.getTagCompound().hasKey("WitchStyle")) {
+         return Math.abs(stack.getTagCompound().getInteger("WitchStyle")) % NUM_STYLES;
+      }
+      return STYLE_CLASSIC;
+   }
+
+   public static void setStyle(ItemStack stack, int style) {
+      if(stack != null) {
+         if(!stack.hasTagCompound()) {
+            stack.setTagCompound(new NBTTagCompound());
+         }
+         stack.getTagCompound().setInteger("WitchStyle", Math.abs(style) % NUM_STYLES);
+      }
+   }
+
+   @Override
+   public ItemStack onItemRightClick(ItemStack stack, World world, EntityPlayer player) {
+      if(player.isSneaking()) {
+         if(!world.isRemote) {
+            int currentStyle = getStyle(stack);
+            int newStyle = (currentStyle + 1) % NUM_STYLES;
+            setStyle(stack, newStyle);
+            String typeKey;
+            String styleKey;
+            if(this.armorType == 0) {
+               typeKey = "witchery.style.hat";
+               styleKey = "witchery.style.hat." + newStyle;
+            } else if(this.armorType == 1) {
+               typeKey = "witchery.style.robe";
+               styleKey = "witchery.style.robe." + newStyle;
+            } else if(this.armorType == 2) {
+               typeKey = "witchery.style.belt";
+               styleKey = "witchery.style.belt." + newStyle;
+            } else {
+               typeKey = "witchery.style.shoe";
+               styleKey = "witchery.style.shoe." + newStyle;
+            }
+
+            player.addChatMessage(new net.minecraft.util.ChatComponentText(
+               EnumChatFormatting.LIGHT_PURPLE + "[Witchery] " + 
+               EnumChatFormatting.GRAY + StatCollector.translateToLocal(typeKey) + ": " +
+               EnumChatFormatting.GOLD + StatCollector.translateToLocal(styleKey)
+            ));
+         } else {
+            world.playSound(player.posX, player.posY, player.posZ, "witchery:random.spell", 0.7F, 1.2F, false);
+            for(int i = 0; i < 8; ++i) {
+               world.spawnParticle("enchantmenttable", player.posX + (world.rand.nextDouble() - 0.5D), player.posY + 1.2D + (world.rand.nextDouble() - 0.5D), player.posZ + (world.rand.nextDouble() - 0.5D), (world.rand.nextDouble() - 0.5D) * 0.2D, 0.1D, (world.rand.nextDouble() - 0.5D) * 0.2D);
+            }
+         }
+         return stack;
+      }
+      return super.onItemRightClick(stack, world, player);
+   }
+
    private static final int CHARGE_PER_PIECE = 2;
    @SideOnly(Side.CLIENT)
    private ModelWitchesClothes modelClothesChest;
@@ -48,6 +110,8 @@ public class ItemWitchesClothes extends ItemArmor {
    private ModelWitchesClothes modelNecroChest;
    @SideOnly(Side.CLIENT)
    private ModelWitchesClothes modelClothesLegs;
+   @SideOnly(Side.CLIENT)
+   private ModelWitchesClothes modelClothesFeet;
    private static final String BIBLIOCRAFT_ARMOR_STAND_ENTITY_NAME = "AbstractSteve";
    private static String noPlaceLikeHome = null;
    private static final double WILD_EFFECT_CHANCE = 0.01D;
@@ -101,35 +165,39 @@ public class ItemWitchesClothes extends ItemArmor {
    }
 
    public boolean hasColor(ItemStack stack) {
-      return stack == null || stack.getItem() != Witchery.Items.BABAS_HAT;
+      if(stack == null || stack.getItem() == Witchery.Items.BABAS_HAT) {
+         return false;
+      }
+      return super.hasColor(stack);
    }
 
    public int getColor(ItemStack stack) {
-      if(!this.hasColor(stack)) {
+      if(stack == null || stack.getItem() == Witchery.Items.BABAS_HAT) {
          return super.getColor(stack);
-      } else if(stack.getItem() == Witchery.Items.RUBY_SLIPPERS) {
+      }
+      if(super.hasColor(stack)) {
+         return super.getColor(stack);
+      }
+      if(stack.getItem() == Witchery.Items.RUBY_SLIPPERS) {
          return 14483456;
+      } else if(stack.getItem() == Witchery.Items.ICY_SLIPPERS) {
+         return 7842303;
+      } else if(stack.getItem() == Witchery.Items.SEEPING_SHOES) {
+         return 2254387;
+      } else if(stack.getItem() == Witchery.Items.BARK_BELT) {
+         return 6968628;
       } else {
-         int color = super.getColor(stack);
-         if(color == 10511680) {
-            if(this == Witchery.Items.ICY_SLIPPERS) {
-               color = 7842303;
-            } else if(this == Witchery.Items.SEEPING_SHOES) {
-               color = 2254387;
-            } else if(this == Witchery.Items.BARK_BELT) {
-               color = 6968628;
-            } else {
-               color = 2628115;
-            }
-         }
-
-         return color;
+         return 2628115;
       }
    }
 
    @SideOnly(Side.CLIENT)
    public int getColorFromItemStack(ItemStack stack, int par2) {
-      return super.getColorFromItemStack(stack, par2);
+      if(par2 > 0) {
+         return 16777215;
+      }
+      int color = this.getColor(stack);
+      return color < 0 ? 16777215 : color;
    }
 
    @SideOnly(Side.CLIENT)
@@ -168,16 +236,41 @@ public class ItemWitchesClothes extends ItemArmor {
          this.modelClothesLegs = new ModelWitchesClothes(0.45F, false);
       }
 
+      if(this.modelClothesFeet == null) {
+         this.modelClothesFeet = new ModelWitchesClothes(0.48F, false);
+      }
+
       ModelWitchesClothes armorModel = null;
       if(stack != null && stack.getItem() instanceof ItemWitchesClothes) {
          int type = ((ItemArmor)stack.getItem()).armorType;
-         if(type != 1 && type != 3) {
+         if(type == 3) {
+            armorModel = this.modelClothesFeet;
+         } else if(type == 2) {
             armorModel = this.modelClothesLegs;
-         } else {
+         } else if(type == 1) {
             armorModel = stack.getItem() == Witchery.Items.NECROMANCERS_ROBES?this.modelNecroChest:this.modelClothesChest;
+         } else {
+            armorModel = this.modelClothesChest;
          }
 
          if(armorModel != null) {
+            armorModel.isHatSlot = (armorSlot == 0);
+            armorModel.isRobeSlot = (armorSlot == 1);
+            armorModel.isBeltSlot = (armorSlot == 2);
+            armorModel.isShoeSlot = (armorSlot == 3);
+
+            int style = getStyle(stack);
+            if(armorSlot == 0) {
+               armorModel.hatStyle = style;
+               armorModel.isBabasHat = (stack.getItem() == Witchery.Items.BABAS_HAT);
+            } else if(armorSlot == 1) {
+               armorModel.robeStyle = style;
+            } else if(armorSlot == 2) {
+               armorModel.beltStyle = style;
+            } else if(armorSlot == 3) {
+               armorModel.shoeStyle = style;
+            }
+
             boolean isVisible = true;
             if(entityLiving != null && entityLiving.isInvisible()) {
                String heldStack = entityLiving.getClass().getSimpleName();
@@ -189,8 +282,8 @@ public class ItemWitchesClothes extends ItemArmor {
             armorModel.bipedBody.showModel = isVisible && (armorSlot == 1 || armorSlot == 2);
             armorModel.bipedRightArm.showModel = isVisible && armorSlot == 1;
             armorModel.bipedLeftArm.showModel = isVisible && armorSlot == 1;
-            armorModel.bipedRightLeg.showModel = isVisible && armorSlot == 3;
-            armorModel.bipedLeftLeg.showModel = isVisible && armorSlot == 3;
+            armorModel.bipedRightLeg.showModel = isVisible && (armorSlot == 2 || armorSlot == 3);
+            armorModel.bipedLeftLeg.showModel = isVisible && (armorSlot == 2 || armorSlot == 3);
             armorModel.isSneak = entityLiving.isSneaking();
             armorModel.isRiding = entityLiving.isRiding();
             armorModel.isChild = entityLiving.isChild();
@@ -224,6 +317,19 @@ public class ItemWitchesClothes extends ItemArmor {
    }
 
    public void addInformation(ItemStack stack, EntityPlayer player, List list, boolean advancedTooltips) {
+      int style = getStyle(stack);
+      String styleName;
+      if(this.armorType == 0) {
+         styleName = StatCollector.translateToLocal("witchery.style.hat." + style);
+      } else if(this.armorType == 1) {
+         styleName = StatCollector.translateToLocal("witchery.style.robe." + style);
+      } else if(this.armorType == 2) {
+         styleName = StatCollector.translateToLocal("witchery.style.belt." + style);
+      } else {
+         styleName = StatCollector.translateToLocal("witchery.style.shoe." + style);
+      }
+      list.add(EnumChatFormatting.GRAY + StatCollector.translateToLocal("witchery.style.label") + ": " + EnumChatFormatting.GOLD + styleName);
+      list.add(EnumChatFormatting.DARK_GRAY + "(" + StatCollector.translateToLocal("witchery.style.sneak_click_tip") + ")");
       String localText = Witchery.resource(this.getUnlocalizedName() + ".tip");
       String s1;
       if(localText != null) {
@@ -320,7 +426,7 @@ public class ItemWitchesClothes extends ItemArmor {
                         }
 
                         int var26 = ItemGeneral.getWaystoneDimension(waystoneStack);
-                        if(Infusion.aquireEnergy(player.worldObj, player, nbtPlayer, var26 != player.dimension?80:40, true)) {
+                        if(Infusion.aquireEnergy(player.worldObj, player, nbtPlayer, var26 != player.dimension?35:20, true)) {
                            world.setDead();
                            nbtPlayer.setLong("WITCLastRubySlipperWayTime", MinecraftServer.getSystemTimeMillis());
                            if(player.worldObj.rand.nextDouble() < 0.01D) {
@@ -338,9 +444,9 @@ public class ItemWitchesClothes extends ItemArmor {
                      long var22 = nbtPlayer.getLong("WITCLastRubySlipperTime");
                      long var24 = MinecraftServer.getSystemTimeMillis();
                      timeSince = var24 - var22;
-                     COOLDOWN = 1800000L;
-                     if(timeSince < 1800000L && !player.capabilities.isCreativeMode) {
-                        int var27 = Math.max(1, (int)(1800000L - timeSince) / '\uea60');
+                     COOLDOWN = 180000L;
+                     if(timeSince < 180000L && !player.capabilities.isCreativeMode) {
+                        int var27 = Math.max(1, (int)(180000L - timeSince) / 60000);
                         ChatUtil.sendTranslated(EnumChatFormatting.RED, player, "witchery.rite.slippersoncooldown", new Object[]{Integer.valueOf(var27).toString()});
                         return true;
                      }
@@ -364,7 +470,7 @@ public class ItemWitchesClothes extends ItemArmor {
                      nbtPlayer.setLong("WITCLastRubySlipperTime", MinecraftServer.getSystemTimeMillis());
                      var21 = Blocks.bed.getBedSpawnPosition((IBlockAccess)var25, var21.posX, var21.posY, var21.posZ, (EntityPlayer)null);
                      if(var21 != null) {
-                        if(Infusion.aquireEnergy(player.worldObj, player, nbtPlayer, var23 != player.dimension?120:80, true)) {
+                        if(Infusion.aquireEnergy(player.worldObj, player, nbtPlayer, var23 != player.dimension?50:25, true)) {
                            ItemGeneral var10000 = Witchery.Items.GENERIC;
                            ItemGeneral.teleportToLocation(player.worldObj, (double)var21.posX, (double)(var21.posY + 1), (double)var21.posZ, var23, player, true);
                         }

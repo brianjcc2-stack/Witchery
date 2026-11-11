@@ -28,7 +28,7 @@ public class CommandHobgoblin extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/hobgoblin <follow|stay|work|attack|release|inventory> [all] (o <seguir|quieto|trabajar|atacar|liberar|mochila>)";
+        return "/hobgoblin <follow|stay|work|attack|release|inventory|guia> [all]";
     }
 
     @Override
@@ -44,7 +44,7 @@ public class CommandHobgoblin extends CommandBase {
     @Override
     public List addTabCompletionOptions(ICommandSender sender, String[] args) {
         if (args.length == 1) {
-            return getListOfStringsMatchingLastWord(args, "follow", "stay", "work", "attack", "release", "inventory",
+            return getListOfStringsMatchingLastWord(args, "follow", "stay", "work", "attack", "release", "inventory", "guia", "help", "ayuda",
                     "seguir", "quieto", "trabajar", "atacar", "liberar", "mochila");
         } else if (args.length == 2 && (args[0].equalsIgnoreCase("stay") || args[0].equalsIgnoreCase("follow") || args[0].equalsIgnoreCase("work")
                 || args[0].equalsIgnoreCase("quieto") || args[0].equalsIgnoreCase("seguir") || args[0].equalsIgnoreCase("trabajar"))) {
@@ -99,10 +99,21 @@ public class CommandHobgoblin extends CommandBase {
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/hobgoblin attack" + EnumChatFormatting.GRAY + " (o atacar) - Ataca al objetivo que estás mirando."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/hobgoblin inventory" + EnumChatFormatting.GRAY + " (o mochila) - Abre su mochila o equipo (con sneak)."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/hobgoblin release" + EnumChatFormatting.GRAY + " (o liberar) - Libera al hobgoblin."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/hobgoblin guia" + EnumChatFormatting.GRAY + " (o help) - Guía de automatización y trabajo con Hobgoblins."));
             return;
         }
 
         String subCommand = args[0].toLowerCase();
+
+        if (subCommand.equals("guia") || subCommand.equals("help") || subCommand.equals("ayuda")) {
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "╔════════════════════════════════════════════╗"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "  ★ GUÍA DE HOBGOBLINS Y AUTOMATIZACIÓN ★"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "╚════════════════════════════════════════════╝"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "• Cosecha y Replantado (/hobgoblin work [all]): " + EnumChatFormatting.WHITE + "Los hobgoblins en modo trabajo cosechan cultivos maduros, replantan las semillas y depositan el excedente en cofres cercanos."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "• Minería con Correa: " + EnumChatFormatting.WHITE + "Ata a un hobgoblin a una valla y dale un pico (o usa /hobgoblin inventory agachado) para que mine bloques cercanos."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "• Mochila y Equipo (/hobgoblin inventory): " + EnumChatFormatting.WHITE + "De pie abre su mochila de carga; agachado (Shift) abre sus ranuras de armadura y herramienta."));
+            return;
+        }
         EntityLivingBase lookedAtEntity = getLookedAtEntity(player, 30.0D);
 
         if (subCommand.equals("attack") || subCommand.equals("atacar")) {

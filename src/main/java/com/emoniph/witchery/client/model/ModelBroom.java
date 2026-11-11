@@ -92,7 +92,22 @@ public class ModelBroom extends ModelBase {
    public void render(Entity entity, float f, float f1, float f2, float f3, float f4, float f5) {
       super.render(entity, f, f1, f2, f3, f4, f5);
       this.setRotationAngles(f, f1, f2, f3, f4, f5, entity);
+      
+      if(entity != null && entity instanceof EntityBroom) {
+         int wood = ((EntityBroom)entity).getWoodType();
+         if(wood == 0) {
+            GL11.glColor3f(0.85F, 0.45F, 0.32F);
+         } else if(wood == 1) {
+            GL11.glColor3f(0.65F, 0.38F, 0.22F);
+         } else {
+            GL11.glColor3f(0.92F, 0.90F, 0.82F);
+         }
+      } else {
+         GL11.glColor3f(1.0F, 1.0F, 1.0F);
+      }
       this.handle.render(f5);
+      GL11.glColor3f(1.0F, 1.0F, 1.0F);
+
       if(entity != null && entity instanceof EntityBroom) {
          int j = ((EntityBroom)entity).getBrushColor();
          if(j < 0 || j > 15) {
@@ -111,6 +126,7 @@ public class ModelBroom extends ModelBase {
       this.bristle7.render(f5);
       this.bristle8.render(f5);
       this.bristle9.render(f5);
+      GL11.glColor3f(1.0F, 1.0F, 1.0F);
    }
 
    private void setRotation(ModelRenderer model, float x, float y, float z) {

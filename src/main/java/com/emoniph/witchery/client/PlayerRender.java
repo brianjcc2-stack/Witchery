@@ -28,6 +28,11 @@ import cpw.mods.fml.relauncher.SideOnly;
 import java.lang.reflect.Field;
 import java.util.Iterator;
 import java.util.List;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockBush;
+import net.minecraft.block.BlockCrops;
+import net.minecraft.block.BlockFlower;
+import net.minecraft.block.BlockLeaves;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityClientPlayerMP;
@@ -43,6 +48,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -50,6 +56,14 @@ import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.World;
+import net.minecraftforge.common.IPlantable;
+import com.emoniph.witchery.client.particle.NaturePowerFX;
+import com.emoniph.witchery.common.ExtendedPlayer;
+import com.emoniph.witchery.common.SupremeWitchData;
+import com.emoniph.witchery.util.TransformCreature;
+import java.util.Random;
+import net.minecraft.util.Vec3;
 import org.lwjgl.opengl.GL11;
 
 @SideOnly(Side.CLIENT)
@@ -61,6 +75,10 @@ public class PlayerRender {
    public static long ticksSinceActive = 0L;
    public static boolean moveCameraActive = false;
    public static int moveCameraToEntityID = 0;
+   private static boolean wasAirborneSubdued = false;
+   private static int subduedDashCooldown = 0;
+   private static int subduedAirFlightTicks = 0;
+   private static boolean prevSubduedJumpState = false;
    private static final ResourceLocation RADIAL_LOCATION = new ResourceLocation("witchery", "textures/gui/radial.png");
    EntityRenderer prevRender;
    RenderEntityViewer renderer;
@@ -219,10 +237,21 @@ public class PlayerRender {
 
                   SymbolEffect var47 = EffectRegistry.instance().getEffect(var39);
                   if(var47 != null) {
-                     String var49 = var47.getLocalizedName();
+                     int spellLevel = player.getEntityData().getInteger("WITCSpellChargeLevel");
+                     if(spellLevel < 1 || spellLevel > 3) {
+                        spellLevel = 1;
+                     }
+                     int drawnLevel = EffectRegistry.instance().getLevel(var39);
+                     spellLevel = Math.max(spellLevel, drawnLevel);
+                     if(var47.isCurse() && com.emoniph.witchery.item.ItemMysticBranch.getWoodType(var44) == 1) {
+                        spellLevel += 1;
+                     }
+                     String roman = spellLevel == 1 ? "I" : (spellLevel == 2 ? "II" : (spellLevel == 3 ? "III" : "IV"));
+                     int textColor = spellLevel == 1 ? 0x55FF55 : (spellLevel == 2 ? 0xFFAA00 : 0xFF55FF);
+                     String var49 = var47.getLocalizedName() + " [" + roman + "]";
                      int tx = var30.getScaledWidth() / 2 - (int)(getStringWidth(var49) / 2.0D);
                      int ty = var30.getScaledHeight() / 2 + 20;
-                     drawString(var49, (double)tx, (double)ty, 16777215);
+                     drawString(var49, (double)tx, (double)ty, textColor);
                   }
                } finally {
                   GL11.glPopMatrix();
@@ -418,8 +447,17 @@ public class PlayerRender {
       int var18;
       if(event.phase == Phase.START) {
          minecraft = Minecraft.getMinecraft();
+         if(!minecraft.isGamePaused() && minecraft.theWorld != null) {
+            for(int pIdx = 0; pIdx < minecraft.theWorld.playerEntities.size(); ++pIdx) {
+               EntityPlayer p = (EntityPlayer)minecraft.theWorld.playerEntities.get(pIdx);
+               if(p != null && SupremeWitchData.isSupremeAuraActive(p)) {
+                  spawnSupremeAltarParticles(minecraft.theWorld, p);
+               }
+            }
+         }
          player = minecraft.thePlayer;
          if(player != null) {
+            updateSubduedSpiritFlight(minecraft, player);
             boolean e = true;
             int arr$ = CreaturePower.getCreaturePowerID(player);
             if(arr$ > 0) {
@@ -525,6 +563,356 @@ public class PlayerRender {
          }
       }
 
+   }
+
+   public static void spawnSupremeAltarParticles(World world, EntityPlayer player) {
+      if(world == null || player == null || !world.isRemote) {
+         return;
+      }
+
+      int particleSetting = Minecraft.getMinecraft().gameSettings.particleSetting;
+      if(particleSetting == 2) {
+         return;
+      }
+
+      int amount = SupremeWitchData.getSupremeAuraAmount(player);
+      if(particleSetting == 1) {
+         amount = Math.max(1, amount / 2);
+      }
+
+      int particlesToSpawn = 0;
+      if(amount <= 1) {
+         if(player.ticksExisted % 3 == 0) particlesToSpawn = 1;
+      } else if(amount == 2) {
+         if(player.ticksExisted % 2 == 0) particlesToSpawn = 1;
+      } else if(amount == 3) {
+         particlesToSpawn = 1;
+      } else {
+         particlesToSpawn = amount - 2; // amount 4 -> 2, amount 5 -> 3, amount 10 -> 8
+      }
+
+      if(particlesToSpawn <= 0) {
+         return;
+      }
+
+      int colorHex = SupremeWitchData.getSupremeAuraColor(player);
+      float baseR = (float)(colorHex >> 16 & 255) / 255.0F;
+      float baseG = (float)(colorHex >> 8 & 255) / 255.0F;
+      float baseB = (float)(colorHex & 255) / 255.0F;
+
+      // Objetivo exacto: el centro del torso / pecho del jugador (no arriba en la cabeza)
+      double targetX = player.posX;
+      double targetY = player.boundingBox.minY + (double)player.height * 0.40D;
+      double targetZ = player.posZ;
+
+      int px = MathHelper.floor_double(player.posX);
+      int py = MathHelper.floor_double(player.posY);
+      int pz = MathHelper.floor_double(player.posZ);
+
+      for(int pCount = 0; pCount < particlesToSpawn; ++pCount) {
+         double sourceX = 0.0D;
+         double sourceY = 0.0D;
+         double sourceZ = 0.0D;
+         boolean foundSource = false;
+
+         // Buscar vegetación a ras de suelo (hierba, flores, cultivos, arbustos)
+         for(int attempt = 0; attempt < 3; ++attempt) {
+            int plantX = px - 12 + world.rand.nextInt(25);
+            int plantY = py - 1 + world.rand.nextInt(3); // Solo al nivel del suelo/pies, nunca copas altas
+            int plantZ = pz - 12 + world.rand.nextInt(25);
+            Block block = world.getBlock(plantX, plantY, plantZ);
+            if(block instanceof BlockFlower || block instanceof BlockLeaves || block instanceof BlockCrops || block instanceof IPlantable || block instanceof BlockBush) {
+               sourceX = 0.5D + (double)plantX;
+               sourceY = 0.5D + (double)plantY;
+               sourceZ = 0.5D + (double)plantZ;
+               foundSource = true;
+               break;
+            }
+         }
+
+         // Si no hay vegetación cercana, generar en un anillo horizontal alrededor del torso
+         if(!foundSource) {
+            double angle = world.rand.nextDouble() * Math.PI * 2.0D;
+            double dist = 2.0D + world.rand.nextDouble() * 3.0D;
+            sourceX = targetX + Math.cos(angle) * dist;
+            sourceY = targetY + (world.rand.nextDouble() - 0.5D) * 0.5D; // A la altura del torso (±0.25 bloques)
+            sourceZ = targetZ + Math.sin(angle) * dist;
+         }
+
+         double speed = 0.22D + world.rand.nextDouble() * 0.06D;
+         double rawDirX = targetX - sourceX;
+         double rawDirY = targetY - sourceY;
+         double rawDirZ = targetZ - sourceZ;
+         double approxDist = Math.sqrt(rawDirX * rawDirX + rawDirY * rawDirY + rawDirZ * rawDirZ);
+
+         // Compensación de inercia si el jugador está en movimiento para que impacten directamente en su cuerpo
+         double lead = Math.min(approxDist / speed, 12.0D) * 0.45D;
+         double destX = targetX + player.motionX * lead;
+         double destY = targetY + player.motionY * lead;
+         double destZ = targetZ + player.motionZ * lead;
+
+         double dir_x = destX - sourceX;
+         double dir_y = destY - sourceY;
+         double dir_z = destZ - sourceZ;
+         double distance = Math.sqrt(dir_x * dir_x + dir_y * dir_y + dir_z * dir_z);
+
+         if(distance > 0.35D) {
+            double factor = speed / distance;
+            double vel_x = dir_x * factor;
+            double vel_y = dir_y * factor;
+            double vel_z = dir_z * factor;
+
+            NaturePowerFX sparkle = new NaturePowerFX(world, sourceX, sourceY, sourceZ);
+            sparkle.setMaxAge(Math.max(6, (int)(distance / speed)));
+            sparkle.setGravity(0.0F);
+            sparkle.setScale(0.9F + world.rand.nextFloat() * 0.3F);
+            sparkle.setCanMove(true);
+            sparkle.motionX = vel_x;
+            sparkle.motionY = vel_y;
+            sparkle.motionZ = vel_z;
+
+            // Variación sutil de brillo en el color elegido para efecto mágico vibrante
+            float cr = Math.max(0.0F, Math.min(1.0F, baseR + (world.rand.nextFloat() - 0.5F) * 0.06F));
+            float cg = Math.max(0.0F, Math.min(1.0F, baseG + (world.rand.nextFloat() - 0.5F) * 0.06F));
+            float cb = Math.max(0.0F, Math.min(1.0F, baseB + (world.rand.nextFloat() - 0.5F) * 0.06F));
+            sparkle.setRBGColorF(cr, cg, cb);
+
+            Minecraft.getMinecraft().effectRenderer.addEffect(sparkle);
+         }
+      }
+   }
+
+   private static boolean canPerformSubduedFlight(EntityPlayer player, int cost) {
+      if (player.capabilities.isCreativeMode) return true;
+
+      // Exhaustion limit: if hunger <= 6 (3 drumsticks), player is too exhausted
+      if (player.getFoodStats().getFoodLevel() <= 6) {
+         return false;
+      }
+
+      // Infusion energy limit
+      if (Infusion.getInfusionID(player) > 0) {
+         int current = Infusion.getCurrentEnergy(player);
+         boolean isSupreme = SupremeWitchData.isPlayerSupreme(player);
+         int effectiveCost = isSupreme ? Math.max(1, cost / 2) : cost;
+         if (current < effectiveCost) {
+            return false;
+         }
+      }
+      return true;
+   }
+
+   private static boolean consumeSubduedEnergy(EntityPlayer player, int cost) {
+      if (player.capabilities.isCreativeMode) return true;
+
+      player.addExhaustion(0.15F);
+
+      if (Infusion.getInfusionID(player) > 0) {
+         return Infusion.aquireEnergy(player.worldObj, player, cost, false);
+      }
+      return true;
+   }
+
+   private static void updateSubduedSpiritFlight(Minecraft mc, EntityClientPlayerMP player) {
+      ExtendedPlayer playerEx = ExtendedPlayer.get(player);
+      if (playerEx == null || playerEx.getCreatureType() != TransformCreature.SUBDUED_SPIRIT) {
+         wasAirborneSubdued = false;
+         subduedDashCooldown = 0;
+         subduedAirFlightTicks = 0;
+         prevSubduedJumpState = false;
+         player.getEntityData().setBoolean("WITCSubduedDashing", false);
+         return;
+      }
+
+      // 1. Creative Flight is forbidden: free hovering is strictly for brooms
+      if (!player.capabilities.isCreativeMode) {
+         if (player.capabilities.isFlying) {
+            player.capabilities.isFlying = false;
+         }
+         player.capabilities.allowFlying = false;
+      }
+      player.fallDistance = 0.0F;
+
+      boolean forwardKey = mc.gameSettings.keyBindForward.getIsKeyPressed();
+      boolean sprintKey = mc.gameSettings.keyBindSprint.getIsKeyPressed() || player.isSprinting();
+      boolean jumpKey = mc.gameSettings.keyBindJump.getIsKeyPressed();
+      boolean sneakKey = mc.gameSettings.keyBindSneak.getIsKeyPressed();
+      boolean jumpNewlyDown = jumpKey && !prevSubduedJumpState;
+      prevSubduedJumpState = jumpKey;
+
+      if (subduedDashCooldown > 0) {
+         subduedDashCooldown--;
+      }
+
+      Vec3 look = player.getLookVec();
+      boolean isCurrentlyDashing = player.getEntityData().getBoolean("WITCSubduedDashing");
+
+      // Deactivation: Sneak (Shift) immediately cuts smoke flight, momentum, and lands
+      if (sneakKey && isCurrentlyDashing) {
+         player.getEntityData().setBoolean("WITCSubduedDashing", false);
+         subduedAirFlightTicks = 0;
+         player.motionX *= 0.25D;
+         player.motionZ *= 0.25D;
+         player.motionY = -0.9D;
+         player.worldObj.playSound(player.posX, player.posY, player.posZ, "random.fizz", 0.6F, 1.4F, false);
+         spawnSubduedBurst(player, 6);
+         return;
+      }
+
+      if (player.onGround) {
+         // Landing on ground: AUTOMATICALLY DEACTIVATE SMOKE! Character is 100% normal on ground!
+         if (wasAirborneSubdued || isCurrentlyDashing) {
+            player.motionX = 0.0D;
+            player.motionZ = 0.0D;
+            player.worldObj.playSound(player.posX, player.posY, player.posZ, "witchery:random.poof", 0.85F, 1.2F, false);
+            spawnSubduedBurst(player, 10);
+            player.getEntityData().setBoolean("WITCSubduedDashing", false);
+            subduedAirFlightTicks = 0;
+            wasAirborneSubdued = false;
+         }
+
+         // Launch into smoke flight: only when pressing Jump while moving forward / sprinting
+         if (jumpNewlyDown && (forwardKey || sprintKey)) {
+            // Check energy & exhaustion limits
+            if (!canPerformSubduedFlight(player, 15)) {
+               player.worldObj.playSound(player.posX, player.posY, player.posZ, "random.fizz", 0.8F, 0.8F, false);
+               return;
+            }
+
+            consumeSubduedEnergy(player, 15);
+            double launchSpeed = sprintKey ? 1.25D : 1.05D;
+            player.motionX = look.xCoord * launchSpeed;
+            player.motionY = Math.max(0.48D, look.yCoord * launchSpeed);
+            player.motionZ = look.zCoord * launchSpeed;
+
+            player.worldObj.playSound(player.posX, player.posY, player.posZ, "mob.bat.takeoff", 1.0F, 0.65F, false);
+            player.worldObj.playSound(player.posX, player.posY, player.posZ, "mob.ghast.fireball", 0.5F, 1.8F, false);
+            spawnSubduedBurst(player, 12);
+            subduedDashCooldown = 8;
+            subduedAirFlightTicks = 0;
+            wasAirborneSubdued = true;
+            player.getEntityData().setBoolean("WITCSubduedDashing", true);
+         }
+      } else {
+         // In air
+         wasAirborneSubdued = true;
+
+         // Mid-air burst dash: tap Jump while airborne
+         if (jumpNewlyDown && subduedDashCooldown <= 0) {
+            if (canPerformSubduedFlight(player, 15)) {
+               consumeSubduedEnergy(player, 15);
+               subduedDashCooldown = 12; // ~0.6s cooldown
+               double dashSpeed = 1.85D;
+               player.motionX = look.xCoord * dashSpeed;
+               player.motionY = look.yCoord * dashSpeed;
+               player.motionZ = look.zCoord * dashSpeed;
+
+               player.worldObj.playSound(player.posX, player.posY, player.posZ, "mob.bat.takeoff", 1.0F, 0.55F, false);
+               player.worldObj.playSound(player.posX, player.posY, player.posZ, "mob.ghast.fireball", 0.6F, 1.9F, false);
+               spawnSubduedBurst(player, 16);
+               player.getEntityData().setBoolean("WITCSubduedDashing", true);
+            } else {
+               player.worldObj.playSound(player.posX, player.posY, player.posZ, "random.fizz", 0.7F, 0.9F, false);
+            }
+         }
+
+         if (isCurrentlyDashing) {
+            subduedAirFlightTicks++;
+            int maxTicks = SupremeWitchData.isPlayerSupreme(player) ? 120 : 80;
+
+            // Check flight duration limit or energy exhaustion
+            if (subduedAirFlightTicks >= maxTicks || !canPerformSubduedFlight(player, 2)) {
+               // Limit or energy reached: smoke dissipates!
+               player.getEntityData().setBoolean("WITCSubduedDashing", false);
+               player.worldObj.playSound(player.posX, player.posY, player.posZ, "random.fizz", 0.9F, 1.2F, false);
+               spawnSubduedBurst(player, 8);
+               return;
+            }
+
+            // Drain infusion energy every 5 ticks while flying
+            if (player.ticksExisted % 5 == 0) {
+               consumeSubduedEnergy(player, 2);
+            }
+
+            if (forwardKey || sprintKey) {
+               // Continuous High-Speed Smoke Sprint in Look Direction
+               double speed = sprintKey ? 1.35D : 1.05D;
+               player.motionX = look.xCoord * speed;
+               player.motionY = look.yCoord * speed;
+               player.motionZ = look.zCoord * speed;
+
+               if (player.ticksExisted % 14 == 0) {
+                  player.worldObj.playSound(player.posX, player.posY, player.posZ, "mob.ghast.fireball", 0.25F, 1.9F, false);
+               }
+            } else {
+               // No keys held: cannot hover, forward drift with natural descent towards ground
+               player.motionX *= 0.94D;
+               player.motionZ *= 0.94D;
+               player.motionY -= 0.05D;
+            }
+
+            // Trailing smoke ribbon
+            spawnSubduedTrail(player, playerEx);
+         }
+      }
+   }
+
+   private static void spawnSubduedBurst(EntityPlayer player, int count) {
+      ExtendedPlayer playerEx = ExtendedPlayer.get(player);
+      boolean isDementor = isPlayerDementor(player, playerEx);
+      Random rand = player.worldObj.rand;
+      for (int i = 0; i < count; i++) {
+         double ox = (rand.nextDouble() - 0.5D) * 0.8D;
+         double oy = (rand.nextDouble() - 0.5D) * 0.8D + 0.9D;
+         double oz = (rand.nextDouble() - 0.5D) * 0.8D;
+         double vx = (rand.nextDouble() - 0.5D) * 0.3D - player.motionX * 0.2D;
+         double vy = (rand.nextDouble() - 0.5D) * 0.3D - player.motionY * 0.2D;
+         double vz = (rand.nextDouble() - 0.5D) * 0.3D - player.motionZ * 0.2D;
+
+         if (isDementor) {
+            player.worldObj.spawnParticle("largesmoke", player.posX + ox, player.posY + oy, player.posZ + oz, vx, vy, vz);
+            player.worldObj.spawnParticle("smoke", player.posX + ox, player.posY + oy, player.posZ + oz, -vx * 0.5D, -vy * 0.5D, -vz * 0.5D);
+            if (rand.nextInt(3) == 0) {
+               player.worldObj.spawnParticle("portal", player.posX + ox, player.posY + oy, player.posZ + oz, vx * 0.4D, vy * 0.4D, vz * 0.4D);
+            }
+         } else {
+            player.worldObj.spawnParticle("cloud", player.posX + ox, player.posY + oy, player.posZ + oz, vx, vy, vz);
+            player.worldObj.spawnParticle("snowshovel", player.posX + ox, player.posY + oy, player.posZ + oz, vx * 0.3D, vy * 0.3D + 0.02D, vz * 0.3D);
+         }
+      }
+   }
+
+   private static void spawnSubduedTrail(EntityPlayer player, ExtendedPlayer playerEx) {
+      double speedSq = player.motionX * player.motionX + player.motionY * player.motionY + player.motionZ * player.motionZ;
+      if (speedSq < 0.015D) return;
+
+      boolean isDementor = isPlayerDementor(player, playerEx);
+      Random rand = player.worldObj.rand;
+      int count = isDementor ? 8 : 5;
+      for (int i = 0; i < count; i++) {
+         double t = (double)i * 0.15D;
+         double px = player.posX - player.motionX * t + (rand.nextDouble() - 0.5D) * 0.45D;
+         double py = player.posY + 0.85D - player.motionY * t + (rand.nextDouble() - 0.5D) * 0.45D;
+         double pz = player.posZ - player.motionZ * t + (rand.nextDouble() - 0.5D) * 0.45D;
+
+         if (isDementor) {
+            player.worldObj.spawnParticle("largesmoke", px, py, pz, -player.motionX * 0.12D, -player.motionY * 0.12D + 0.02D, -player.motionZ * 0.12D);
+            player.worldObj.spawnParticle("smoke", px, py, pz, (rand.nextDouble() - 0.5D) * 0.06D, 0.01D, (rand.nextDouble() - 0.5D) * 0.06D);
+            if (rand.nextInt(4) == 0) {
+               player.worldObj.spawnParticle("portal", px, py, pz, (rand.nextDouble() - 0.5D) * 0.08D, (rand.nextDouble() - 0.5D) * 0.08D, (rand.nextDouble() - 0.5D) * 0.08D);
+            }
+         } else {
+            player.worldObj.spawnParticle("cloud", px, py, pz, -player.motionX * 0.08D, 0.02D, -player.motionZ * 0.08D);
+            player.worldObj.spawnParticle("snowshovel", px, py, pz, (rand.nextDouble() - 0.5D) * 0.04D, 0.02D, (rand.nextDouble() - 0.5D) * 0.04D);
+         }
+      }
+   }
+
+   public static boolean isPlayerDementor(EntityPlayer player, ExtendedPlayer playerEx) {
+      if (playerEx == null) return true;
+      int style = playerEx.getSubduedSpiritStyle();
+      if (style == 2) return false; // Solo el estilo 2 es Auror (humo luminoso)
+      return true; // Dementor (Humo Oscuro) por defecto (0) y explícito (1)
    }
 
 }

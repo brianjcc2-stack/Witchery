@@ -44,6 +44,8 @@ import com.emoniph.witchery.entity.EntityOwl;
 import com.emoniph.witchery.entity.EntityParasyticLouse;
 import com.emoniph.witchery.entity.EntityPoltergeist;
 import com.emoniph.witchery.entity.EntityReflection;
+import com.emoniph.witchery.entity.EntityRivalFamiliar;
+import com.emoniph.witchery.entity.EntityRivalWitch;
 import com.emoniph.witchery.entity.EntitySoulfire;
 import com.emoniph.witchery.entity.EntitySpectre;
 import com.emoniph.witchery.entity.EntitySpellEffect;
@@ -131,6 +133,8 @@ public class WitcheryEntities {
    public final WitcheryEntities.EntityRef REFLECTION;
    public final WitcheryEntities.EntityRef MIRROR_CLONE;
    public final WitcheryEntities.EntityRef FLYING_MORTAR;
+   public final WitcheryEntities.EntityRef RIVAL_WITCH;
+   public final WitcheryEntities.EntityRef RIVAL_FAMILIAR;
 
 
    public WitcheryEntities() {
@@ -191,6 +195,8 @@ public class WitcheryEntities {
       this.REFLECTION = (new WitcheryEntities.LivingRef(146, EntityReflection.class, "reflection", this.entities)).setEgg(5596842, 6715391);
       this.MIRROR_CLONE = new WitcheryEntities.LivingRef(147, EntityMirrorClone.class, "mirrorclone", this.entities);
       this.FLYING_MORTAR = new WitcheryEntities.EntityRef(148, EntityFlyingMortar.class, "flyingmortar", 64, 1, this.entities);
+      this.RIVAL_WITCH = (new WitcheryEntities.LivingRef(149, EntityRivalWitch.class, "rivalwitch", this.entities)).setEgg(0x3B0B59, 0xC71585);
+      this.RIVAL_FAMILIAR = (new WitcheryEntities.LivingRef(150, EntityRivalFamiliar.class, "rivalfamiliar", this.entities)).setEgg(0x2E0854, 0x48D1CC);
    }
 
    public List getEntites() {

@@ -64,7 +64,38 @@ public class ItemBoline extends ItemSword {
             }
          }
       }
+      list.add(net.minecraft.util.EnumChatFormatting.DARK_GREEN + net.minecraft.util.StatCollector.translateToLocal("witchery.boline.tip.carve"));
+   }
 
+   @Override
+   public boolean onItemUse(ItemStack stack, EntityPlayer player, World world, int x, int y, int z, int side, float hitX, float hitY, float hitZ) {
+      Block block = world.getBlock(x, y, z);
+      if (block == Blocks.pumpkin) {
+         if (!world.isRemote) {
+            world.setBlock(x, y, z, Blocks.lit_pumpkin, 0, 3);
+            world.playSoundEffect((double) x + 0.5D, (double) y + 0.5D, (double) z + 0.5D, "step.wood", 1.0F, 1.2F);
+            world.spawnEntityInWorld(new EntityItem(world, (double) x + 0.5D, (double) y + 0.5D, (double) z + 0.5D, new ItemStack(net.minecraft.init.Items.pumpkin_seeds, 4)));
+            com.emoniph.witchery.util.ParticleEffect.CRIT.send(com.emoniph.witchery.util.SoundEffect.NONE, world, (double) x + 0.5D, (double) y + 0.5D, (double) z + 0.5D, 0.4D, 0.4D, 6);
+            stack.damageItem(1, player);
+         }
+         return true;
+      }
+
+      if (block == Witchery.Blocks.LOG || block == Blocks.log || block == Blocks.log2) {
+         if (!world.isRemote) {
+            world.playSoundEffect((double) x + 0.5D, (double) y + 0.5D, (double) z + 0.5D, "dig.wood", 1.0F, 1.4F);
+            com.emoniph.witchery.util.ParticleEffect.CRIT.send(com.emoniph.witchery.util.SoundEffect.NONE, world, (double) x + 0.5D, (double) y + 0.5D, (double) z + 0.5D, 0.3D, 0.3D, 5);
+            if (world.rand.nextFloat() <= 0.50F) {
+               ItemStack drop = (block == Witchery.Blocks.LOG) ? Witchery.Items.GENERIC.itemRowanBerries.createStack() : new ItemStack(net.minecraft.init.Items.stick, 1);
+               world.spawnEntityInWorld(new EntityItem(world, (double) x + 0.5D, (double) y + 0.8D, (double) z + 0.5D, drop));
+            }
+            com.emoniph.witchery.util.ChatUtil.sendTranslated(net.minecraft.util.EnumChatFormatting.DARK_GREEN, player, "witchery.boline.carved");
+            stack.damageItem(1, player);
+         }
+         return true;
+      }
+
+      return super.onItemUse(stack, player, world, x, y, z, side, hitX, hitY, hitZ);
    }
 
    public Multimap getItemAttributeModifiers() {
@@ -148,7 +179,7 @@ public class ItemBoline extends ItemSword {
                }
 
                return true;
-            } else if(block == Witchery.Blocks.BLOOD_ROSE) {
+            } else if(block == Witchery.Blocks.BLOOD_ROSE || block == Witchery.Blocks.MOON_ROSE || block == Witchery.Blocks.SUN_ROSE || block == Witchery.Blocks.GRAVE_ROSE || block == Witchery.Blocks.BANSHEE_ROSE || block == Witchery.Blocks.HECATES_TEARS) {
                target1 = world.getBlockMetadata(x, y, z);
                world.setBlockToAir(x, y, z);
                world.spawnEntityInWorld(new EntityItem(world, 0.5D + (double)x, 0.5D + (double)y, 0.5D + (double)z, new ItemStack(block, 1, target1)));

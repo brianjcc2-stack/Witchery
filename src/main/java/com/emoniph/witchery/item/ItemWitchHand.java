@@ -21,7 +21,6 @@ import com.emoniph.witchery.Witchery;
 import com.emoniph.witchery.entity.EntityCovenWitch;
 import com.emoniph.witchery.infusion.Infusion;
 import com.emoniph.witchery.item.ItemBase;
-import com.emoniph.witchery.item.WitchHandAbilities;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -54,15 +53,11 @@ extends ItemBase {
     }
 
     public boolean onLeftClickEntity(ItemStack itemstack, EntityPlayer player, Entity entity) {
-        if (!player.worldObj.isRemote && entity instanceof EntityLivingBase) {
-            WitchHandAbilities.onAttack(player, (EntityLivingBase)entity);
-        }
         Infusion.Registry.instance().get(player).onLeftClickEntity(itemstack, player.worldObj, player, entity);
         return true;
     }
 
     public ItemStack onItemRightClick(ItemStack itemstack, World world, EntityPlayer player) {
-        WitchHandAbilities.onRightClick(world, player);
         player.setItemInUse(itemstack, this.getMaxItemUseDuration(itemstack));
         return itemstack;
     }

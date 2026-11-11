@@ -52,6 +52,11 @@ public class RiteHorrocrux extends Rite {
                 Infusion.syncPlayer(world, initiator);
                 ChatUtil.sendTranslated(EnumChatFormatting.DARK_PURPLE, initiator, "witchery.rite.horrocrux.created", new Object[0]);
                 ParticleEffect.MOB_SPELL.send(SoundEffect.MOB_WITHER_SPAWN, initiator, 1.0D, 2.0D, 32);
+                com.emoniph.witchery.common.ExtendedPlayer pEx = com.emoniph.witchery.common.ExtendedPlayer.get(initiator);
+                if (pEx != null) {
+                    pEx.tryAdvanceSpiritMilestone(9, "Escindir tu alma en un Horrocrux");
+                }
+                com.emoniph.witchery.common.SupremeWitchData.completeWonder(initiator, com.emoniph.witchery.common.SupremeWitchData.WONDER_VITALUM_VITALIS);
             }
             return RitualStep.Result.COMPLETED;
         }

@@ -238,6 +238,11 @@ public class ModHookMCA extends ModHook {
       if (!isMCAPresent() || player == null) {
          return false;
       }
+      int chunkX = ((int)player.posX) >> 4;
+      int chunkZ = ((int)player.posZ) >> 4;
+      if (player.getEntityData().getBoolean("WITCVillageHero_" + chunkX + "_" + chunkZ)) {
+         return false;
+      }
       long lastTerror = player.getEntityData().getLong("WITCLastMCATerrorTick");
       long worldTime = player.worldObj.getTotalWorldTime();
       if (lastTerror > 0 && (worldTime - lastTerror) < 24000L) { // Within the last in-game day
@@ -269,7 +274,100 @@ public class ModHookMCA extends ModHook {
       }
       EntityHuman human = (EntityHuman)entity;
 
-      // 1. Supreme Witch Recognition
+      // 0. Mind-Controlled Village Trance check
+      if (isVillageMindControlled(human)) {
+         String[] tranceLines = new String[]{
+            "§5*con mirada perdida* §dGloria a la Gran Ama del Caldero... sus guisos huelen tan bien... todos debemos entregarle nuestras papas...",
+            "§5*ojos vidriosos* §dNo pienses... solo entrega tus tributos a Ella... Ella nos prometió pastel en la otra vida...",
+            "§5*sonrisa congelada* §d¿Quién eres tú? ¿Vienes a interrumpir la hora de la sopa? La Señora dice que los forasteros son buen ingrediente...",
+            "§5*murmura en trance* §dUno con el caldero... todos somos fideos en su caldo eterno...",
+            "§5*baila en círculos* §dBurbujas en el agua, ranas en el tejado... la Ama es bondadosa, la Ama nos ama..."
+         };
+         say(human, player, tranceLines[player.worldObj.rand.nextInt(tranceLines.length)]);
+         return;
+      }
+
+      // 1. Flying on Broom Reaction
+      if (player.ridingEntity instanceof com.emoniph.witchery.entity.EntityBroom) {
+         if (human.getProfessionEnum() == mca.enums.EnumProfession.Child) {
+            say(human, player, "§b¡Mamá, mira, alguien olvidó cómo funciona la gravedad!");
+         } else {
+            say(human, player, "§e¡Bájate de esa escoba antes de que me rompas las tejas del tejado!");
+         }
+         return;
+      }
+
+      // 2. Creature Transformations (Werewolf, Bat, Toad)
+      com.emoniph.witchery.common.ExtendedPlayer playerEx = com.emoniph.witchery.common.ExtendedPlayer.get(player);
+      if (playerEx != null) {
+         com.emoniph.witchery.util.TransformCreature creature = playerEx.getCreatureType();
+         if (creature == com.emoniph.witchery.util.TransformCreature.WOLF || creature == com.emoniph.witchery.util.TransformCreature.WOLFMAN) {
+            String[] wolfScreams = new String[]{
+               "§c¡UN HOMBRE LOBO! ¡CIERREN LAS PUERTAS Y ESCONDAN LAS OVEJAS!",
+               "§c¡Por los cielos, la bestia de la luna llena nos va a devorar! ¡Socorro!",
+               "§c¡No te comas a mi perro, por favor!"
+            };
+            say(human, player, wolfScreams[player.worldObj.rand.nextInt(wolfScreams.length)]);
+            human.addPotionEffect(new PotionEffect(Potion.moveSpeed.id, 200, 1));
+            return;
+         } else if (creature == com.emoniph.witchery.util.TransformCreature.BAT) {
+            String[] batLines = new String[]{
+               "§7¡Qué murciélago tan gordo y raro! ¡Que alguien traiga una escoba para espantarlo!",
+               "§7¡Fuera de aquí, bicho con alas! ¡Aléjate de mi huerto de frutas!"
+            };
+            say(human, player, batLines[player.worldObj.rand.nextInt(batLines.length)]);
+            return;
+         } else if (creature == com.emoniph.witchery.util.TransformCreature.TOAD) {
+            say(human, player, "§a¿Croac? ...Qué sapo tan misterioso. Si te beso, ¿te conviertes en príncipe o en verruga?");
+            return;
+         }
+      }
+
+      // 3. Held Items (Poppets, Seeds)
+      net.minecraft.item.ItemStack held = player.getHeldItem();
+      if (held != null) {
+         if (held.getItem() instanceof com.emoniph.witchery.item.ItemPoppet || held.getItem() instanceof com.emoniph.witchery.item.ItemTaglockKit) {
+            if (player.worldObj.rand.nextInt(2) == 0) {
+               String[] poppetLines = new String[]{
+                  "§e¡Oye! ¿Por qué ese muñeco de paja tiene mi misma ropa? ¡No me estés pinchando con alfileres!",
+                  "§e¡Aparta esa aguja de ese muñeco! ¡Sentí un escalofrío nada más verte!",
+                  "§e¿Eso es arcilla con pelo humano? ¡Qué perturbador!"
+               };
+               say(human, player, poppetLines[player.worldObj.rand.nextInt(poppetLines.length)]);
+               return;
+            }
+         }
+
+         if (held.getItem() == Witchery.Items.SEEDS_BELLADONNA || held.getItem() == Witchery.Items.SEEDS_MANDRAKE || held.getItem() == Witchery.Items.SEEDS_WOLFSBANE || held.getItem() == Witchery.Items.SEEDS_ARTICHOKE || held.getItem() == Witchery.Items.SEEDS_SNOWBELL) {
+            mca.enums.EnumProfession prof = human.getProfessionEnum();
+            mca.enums.EnumPersonality pers = human.getPersonality();
+            if (prof == mca.enums.EnumProfession.Librarian || pers == mca.enums.EnumPersonality.CURIOUS || pers == mca.enums.EnumPersonality.ODD) {
+               if (!player.capabilities.isCreativeMode) {
+                  --held.stackSize;
+                  if (held.stackSize <= 0) {
+                     player.inventory.setInventorySlotContents(player.inventory.currentItem, null);
+                  }
+               }
+               modifyHearts(human, player, 8);
+               say(human, player, "§d¡Hierbas raras del aquelarre! Las estudiaré para mis experimentos secretos... ¡prometo no hacer explotar el granero!");
+               human.worldObj.spawnParticle("happyVillager", human.posX, human.posY + 1.2D, human.posZ, 0.0D, 0.1D, 0.0D);
+               return;
+            } else if (prof == mca.enums.EnumProfession.Farmer) {
+               if (!player.capabilities.isCreativeMode) {
+                  --held.stackSize;
+                  if (held.stackSize <= 0) {
+                     player.inventory.setInventorySlotContents(player.inventory.currentItem, null);
+                  }
+               }
+               modifyHearts(human, player, 5);
+               say(human, player, "§2¡Vaya semilla más extraña! La plantaré en mi mejor parcela, ¡muchas gracias!");
+               human.worldObj.spawnParticle("happyVillager", human.posX, human.posY + 1.2D, human.posZ, 0.0D, 0.1D, 0.0D);
+               return;
+            }
+         }
+      }
+
+      // 4. Supreme Witch Recognition
       if (com.emoniph.witchery.common.SupremeWitchData.isPlayerSupreme(player)) {
          if (player.worldObj.rand.nextInt(3) == 0 && getHearts(human, player) >= 0) {
             String[] supremeReactions = new String[]{
@@ -279,17 +377,197 @@ public class ModHookMCA extends ModHook {
             };
             say(human, player, supremeReactions[player.worldObj.rand.nextInt(supremeReactions.length)]);
             modifyHearts(human, player, 3);
+            return;
          }
       }
 
-      // 2. Vampire / Werewolf atmospheric perception
-      com.emoniph.witchery.common.ExtendedPlayer playerEx = com.emoniph.witchery.common.ExtendedPlayer.get(player);
+      // 5. Vampire / Werewolf atmospheric perception
       if (playerEx != null) {
          if (playerEx.getVampireLevel() >= 5 && player.worldObj.rand.nextInt(4) == 0 && !isSleeping(human)) {
             say(human, player, "§7*retrocede un paso* §8Tu piel es fría como el mármol... y tus ojos tienen un brillo inquietante...");
+            return;
          } else if (playerEx.getWerewolfLevel() >= 5 && player.worldObj.rand.nextInt(4) == 0 && !isSleeping(human)) {
             say(human, player, "§7*olfatea el aire* §6Hueles a bosque salvaje y luna llena... ¿qué eres realmente?");
+            return;
          }
+      }
+
+      // 6. Personality & Profession Flavor Dialogues
+      mca.enums.EnumProfession prof = human.getProfessionEnum();
+      mca.enums.EnumPersonality pers = human.getPersonality();
+
+      if (prof == mca.enums.EnumProfession.Cleric) {
+         int chunkX = ((int)human.posX) >> 4;
+         int chunkZ = ((int)human.posZ) >> 4;
+         boolean isHero = player.getEntityData().getBoolean("WITCVillageHero_" + chunkX + "_" + chunkZ);
+         if (isHero) {
+            if (player.worldObj.rand.nextInt(3) == 0) {
+               say(human, player, "§a¡Que la luz bendiga tus pasos, protector de nuestro pueblo! Gracias a ti la magia ya no nos asusta tanto.");
+            }
+         } else {
+            int hearts = getHearts(human, player);
+            if (hearts < 0) {
+               if (hearts < -10 && player.worldObj.rand.nextInt(3) == 0) {
+                  say(human, player, "§c¡Por las sagradas escrituras! ¡Cazador de Brujas, auxilio, hay hechicería impía en la plaza!");
+                  summonWitchHunterNear(human, player);
+               } else {
+                  say(human, player, "§c¡Atrás, practicante de las artes oscuras! ¡Te lanzaré sal bendita y ristras de ajo si te acercas!");
+               }
+            } else if (player.worldObj.rand.nextInt(4) == 0) {
+               say(human, player, "§6Rezo todos los días para que las brujas del bosque no se roben las campanas de mi iglesia...");
+            }
+         }
+      } else if (prof == mca.enums.EnumProfession.Librarian || pers == mca.enums.EnumPersonality.CURIOUS || pers == mca.enums.EnumPersonality.ODD) {
+         if (player.worldObj.rand.nextInt(3) == 0) {
+            String[] bookLines = new String[]{
+               "§b¡Psst! Oye... ¿es cierto que puedes convertir a mi suegra en un sapo? ¡Tengo esmeraldas si me enseñas el truco!",
+               "§b¿Ese es un libro de sombras? Déjame echarle un vistazo... ¡prometo no pronunciar nada en latín al revés!",
+               "§bDicen que si dejas una ofrenda en una encrucijada a medianoche, una bruja te concede un deseo. ¿Es verdad o solo cuento de taberna?",
+               "§b¿Crees en la nigromancia? A mí me vendría genial un esqueleto asistente que ordene los estantes superiores..."
+            };
+            say(human, player, bookLines[player.worldObj.rand.nextInt(bookLines.length)]);
+         }
+      } else if (prof == mca.enums.EnumProfession.Farmer) {
+         if (player.worldObj.rand.nextInt(3) == 0) {
+            String[] farmLines = new String[]{
+               "§2Don hechicero, mis lechugas tienen plaga... ¿no tiene un encantamiento que no involucre invocar un demonio en mi huerto?",
+               "§2Por favor no hagas llover sapos este martes, ¡acabo de terminar de barrer el tejado!",
+               "§2Dicen que las brujas hacen crecer las calabazas al triple de tamaño... si me ayuda con mi cosecha, le regalo media tarta."
+            };
+            say(human, player, farmLines[player.worldObj.rand.nextInt(farmLines.length)]);
+         }
+      } else if (pers == mca.enums.EnumPersonality.FLIRTY) {
+         if (player.worldObj.rand.nextInt(3) == 0) {
+            String[] flirtyLines = new String[]{
+               "§d¿Me estás lanzando una poción de amor o es que eres naturalmente hechizante?",
+               "§dDicen que las brujas roban corazones... pero el mío te lo llevaste sin necesidad de calderos ni rituales.",
+               "§dCon esa mirada tuya, no necesitas varita para embrujar a nadie..."
+            };
+            say(human, player, flirtyLines[player.worldObj.rand.nextInt(flirtyLines.length)]);
+         }
+      } else if (prof == mca.enums.EnumProfession.Guard || prof == mca.enums.EnumProfession.Warrior) {
+         if (player.worldObj.rand.nextInt(3) == 0) {
+            say(human, player, "§6Tengo mi espada afilada y lista. No hagas trucos raros con calderos en la plaza del pueblo y nos llevaremos en paz.");
+         }
+      }
+   }
+
+   public static boolean isVillageMindControlled(EntityHuman human) {
+      if (human == null) {
+         return false;
+      }
+      if (human.getEntityData().getBoolean("WITCMindControlled")) {
+         return true;
+      }
+      AxisAlignedBB searchBox = human.boundingBox.expand(48.0D, 24.0D, 48.0D);
+      List witches = human.worldObj.getEntitiesWithinAABB(com.emoniph.witchery.entity.EntityCovenWitch.class, searchBox);
+      for (Object obj : witches) {
+         if (obj instanceof com.emoniph.witchery.entity.EntityCovenWitch) {
+            com.emoniph.witchery.entity.EntityCovenWitch w = (com.emoniph.witchery.entity.EntityCovenWitch)obj;
+            if (w.isEntityAlive() && w.getEntityData().getBoolean("WITCPuppeteerWitch")) {
+               human.getEntityData().setBoolean("WITCMindControlled", true);
+               return true;
+            }
+         }
+      }
+      return false;
+   }
+
+   public static void summonWitchHunterNear(EntityHuman human, EntityPlayer player) {
+      if (human == null || player == null || human.worldObj.isRemote) {
+         return;
+      }
+      long lastSummon = human.getEntityData().getLong("WITCLastHunterCall");
+      long time = human.worldObj.getTotalWorldTime();
+      if (time - lastSummon < 2400L) {
+         return;
+      }
+      human.getEntityData().setLong("WITCLastHunterCall", time);
+
+      double angle = human.worldObj.rand.nextDouble() * Math.PI * 2.0;
+      double dist = 16.0 + human.worldObj.rand.nextDouble() * 10.0;
+      double spawnX = human.posX + Math.cos(angle) * dist;
+      double spawnZ = human.posZ + Math.sin(angle) * dist;
+      int spawnY = human.worldObj.getTopSolidOrLiquidBlock((int)spawnX, (int)spawnZ);
+
+      com.emoniph.witchery.entity.EntityWitchHunter hunter = new com.emoniph.witchery.entity.EntityWitchHunter(human.worldObj);
+      hunter.setLocationAndAngles(spawnX, (double)spawnY, spawnZ, human.worldObj.rand.nextFloat() * 360.0F, 0.0F);
+      hunter.onSpawnWithEgg(null);
+      hunter.setAttackTarget(player);
+      human.worldObj.spawnEntityInWorld(hunter);
+   }
+
+   public static void triggerPuppeteerBattle(EntityLivingBase witch, EntityPlayer player) {
+      if (witch == null || player == null || witch.worldObj.isRemote) {
+         return;
+      }
+      if (witch instanceof com.emoniph.witchery.entity.EntityCovenWitch) {
+         com.emoniph.witchery.entity.EntityCovenWitch covenWitch = (com.emoniph.witchery.entity.EntityCovenWitch)witch;
+         covenWitch.setRevengeTarget(player);
+         covenWitch.setAttackTarget(player);
+         covenWitch.setTarget(player);
+         covenWitch.setAggressive(true);
+      }
+
+      if (!witch.getEntityData().getBoolean("WITCBattleStarted")) {
+         witch.getEntityData().setBoolean("WITCBattleStarted", true);
+         com.emoniph.witchery.util.ChatUtil.sendPlain(EnumChatFormatting.DARK_PURPLE, player, "<§5" + witch.getCommandSenderName() + "§r> §c¡¿Un intruso en mi aldea?! ¡Mis títeres me pertenecen, nadie arruina mi nuevo aquelarre doméstico!");
+
+         for (int i = 0; i < 2; i++) {
+            com.emoniph.witchery.entity.EntityIllusionSpider spider = new com.emoniph.witchery.entity.EntityIllusionSpider(witch.worldObj);
+            spider.setLocationAndAngles(witch.posX + (witch.worldObj.rand.nextDouble() - 0.5D) * 3.0D, witch.posY, witch.posZ + (witch.worldObj.rand.nextDouble() - 0.5D) * 3.0D, 0.0F, 0.0F);
+            spider.setAttackTarget(player);
+            witch.worldObj.spawnEntityInWorld(spider);
+         }
+
+         com.emoniph.witchery.entity.EntityToad toad = new com.emoniph.witchery.entity.EntityToad(witch.worldObj);
+         toad.setLocationAndAngles(witch.posX + (witch.worldObj.rand.nextDouble() - 0.5D) * 2.0D, witch.posY, witch.posZ + (witch.worldObj.rand.nextDouble() - 0.5D) * 2.0D, 0.0F, 0.0F);
+         witch.worldObj.spawnEntityInWorld(toad);
+
+         witch.worldObj.playSoundAtEntity(witch, "mob.witch.throw", 1.0F, 0.8F);
+      }
+   }
+
+   public static void onPuppeteerWitchDefeated(EntityLivingBase witch, EntityPlayer killer) {
+      if (witch == null || witch.worldObj.isRemote) {
+         return;
+      }
+
+      AxisAlignedBB bounds = witch.boundingBox.expand(64.0D, 32.0D, 64.0D);
+      List nearby = witch.worldObj.getEntitiesWithinAABB(EntityHuman.class, bounds);
+
+      int chunkX = ((int)witch.posX) >> 4;
+      int chunkZ = ((int)witch.posZ) >> 4;
+
+      if (killer != null) {
+         killer.getEntityData().setBoolean("WITCVillageHero_" + chunkX + "_" + chunkZ, true);
+         com.emoniph.witchery.util.ChatUtil.sendPlain(EnumChatFormatting.GOLD, killer, "§6§l[Aldea Liberada] §e¡Has roto el embrujo de la Bruja Manipuladora! Los aldeanos vuelven en sí.");
+         com.emoniph.witchery.util.SoundEffect.RANDOM_LEVELUP.playOnlyTo(killer);
+      }
+
+      String[] wakeLines = new String[]{
+         "§a¡Puaj! ¿Por qué tengo la boca llena de tierra de cementerio? ¡Esa anciana me dijo que era canela!",
+         "§a¿Qué rayos pasó? ¿Por qué estaba bailando descalzo en el pozo? ¡Dime que nadie me vio...!",
+         "§a¡Por todos los santos! ¡Nos salvaste de esa lunática! ¡Toma mi agradecimiento y bendiciones!",
+         "§a¡Mi cabeza! Sentía como si un sapo me estuviera cantando al oído durante tres días seguidos...",
+         "§a¡Somos libres! ¡El caldero ya no nos susurra órdenes!"
+      };
+
+      for (Object obj : nearby) {
+         if (obj instanceof EntityHuman) {
+            EntityHuman human = (EntityHuman)obj;
+            human.getEntityData().removeTag("WITCMindControlled");
+            if (killer != null) {
+               modifyHearts(human, killer, 60);
+               say(human, killer, wakeLines[human.worldObj.rand.nextInt(wakeLines.length)]);
+            }
+            human.worldObj.spawnParticle("happyVillager", human.posX, human.posY + 1.2D, human.posZ, 0.0D, 0.2D, 0.0D);
+         }
+      }
+
+      if (killer != null) {
+         witch.dropItem(net.minecraft.init.Items.emerald, 4 + witch.worldObj.rand.nextInt(5));
+         witch.dropItem(net.minecraft.init.Items.cake, 1);
       }
    }
 }

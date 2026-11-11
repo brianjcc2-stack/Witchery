@@ -253,6 +253,11 @@ public class GenericEvents {
       if(oldPlayerEx != null && newPlayerEx != null) {
          newPlayerEx.getPreservedDeathItems().addAll(oldPlayerEx.getPreservedDeathItems());
       }
+      if(event.wasDeath) {
+         newPlayerEx.setAstralProjecting(false);
+         NBTTagCompound nbt = com.emoniph.witchery.infusion.Infusion.getNBT(event.entityPlayer);
+         com.emoniph.witchery.dimension.WorldProviderDreamWorld.setPlayerIsGhost(nbt, false);
+      }
    }
 
    private static boolean isDisallowedEntity(Entity entity) {
@@ -504,22 +509,24 @@ public class GenericEvents {
       priority = EventPriority.HIGH
    )
    public void onEntityInteract(EntityInteractEvent event) {
-      if (com.emoniph.witchery.dimension.WorldProviderDreamWorld.getPlayerIsGhost(event.entityPlayer)) {
-         ExtendedPlayer playerEx = ExtendedPlayer.get(event.entityPlayer);
-         if (playerEx.getSpiritLevel() >= 6 && event.entityPlayer.getHeldItem() == null && event.entityPlayer.isSneaking() && event.target instanceof EntityLivingBase) {
-            if(!event.entityPlayer.worldObj.isRemote) {
-               event.entityPlayer.mountEntity(event.target);
-            }
-            event.setCanceled(true);
-            return;
+      ExtendedPlayer playerEx = ExtendedPlayer.get(event.entityPlayer);
+      if (playerEx != null && playerEx.isAstralProjecting() && event.entityPlayer.ridingEntity == null && event.entityPlayer.getHeldItem() == null && event.target instanceof EntityLivingBase && !(event.target instanceof EntityPlayer)) {
+         if (!event.entityPlayer.worldObj.isRemote) {
+            event.entityPlayer.mountEntity(event.target);
+            com.emoniph.witchery.util.ParticleEffect.SPELL_COLORED.send(com.emoniph.witchery.util.SoundEffect.WITCHERY_RANDOM_POOF, event.entityPlayer.worldObj, event.target.posX, event.target.posY + 1.0D, event.target.posZ, 0.5D, 1.0D, 16, 0x88CCFF);
+            com.emoniph.witchery.util.ChatUtil.sendTranslated(net.minecraft.util.EnumChatFormatting.LIGHT_PURPLE, event.entityPlayer, "witchery.spirit.possessing", new Object[]{event.target.getCommandSenderName()});
+            playerEx.tryAdvanceSpiritMilestone(10, "Poseer una criatura desde el plano astral");
+            SupremeWitchData.completeWonder(event.entityPlayer, SupremeWitchData.WONDER_DESCENSUM);
          }
+         event.setCanceled(true);
+         return;
       }
 
       PotionEffect effect = event.entityPlayer.getActivePotionEffect(Witchery.Potions.PARALYSED);
       if(effect != null && effect.getAmplifier() >= 4) {
          event.setCanceled(true);
       } else {
-         ExtendedPlayer playerEx = ExtendedPlayer.get(event.entityPlayer);
+         if (playerEx == null) playerEx = ExtendedPlayer.get(event.entityPlayer);
          ExtendedPlayer.VampirePower power = playerEx.getSelectedVampirePower();
          if(power != ExtendedPlayer.VampirePower.NONE) {
             if(power == ExtendedPlayer.VampirePower.DRINK && event.target instanceof EntityLivingBase) {
@@ -825,18 +832,39 @@ public class GenericEvents {
 
    @SubscribeEvent
    public void onAttackEntity(net.minecraftforge.event.entity.player.AttackEntityEvent event) {
-      if (event.entityPlayer != null && !event.entityPlayer.worldObj.isRemote && event.entityPlayer.getEntityData().getInteger("WITCLeviosaTicks") > 0) {
-         int entityId = event.entityPlayer.getEntityData().getInteger("WITCLeviosaEntity");
-         net.minecraft.entity.Entity target = event.entityPlayer.worldObj.getEntityByID(entityId);
-         if (target != null) {
-            net.minecraft.util.Vec3 look = event.entityPlayer.getLookVec();
-            target.motionX = look.xCoord * 2.2D;
-            target.motionY = look.yCoord * 2.2D + 0.2D;
-            target.motionZ = look.zCoord * 2.2D;
-            target.velocityChanged = true;
+      if (event.entityPlayer != null && !event.entityPlayer.worldObj.isRemote) {
+         if (event.entityPlayer.getEntityData().getInteger("WITCLeviosaTicks") > 0) {
+            int entityId = event.entityPlayer.getEntityData().getInteger("WITCLeviosaEntity");
+            net.minecraft.entity.Entity target = event.entityPlayer.worldObj.getEntityByID(entityId);
+            if (target != null) {
+               net.minecraft.util.Vec3 look = event.entityPlayer.getLookVec();
+               target.motionX = look.xCoord * 2.2D;
+               target.motionY = look.yCoord * 2.2D + 0.2D;
+               target.motionZ = look.zCoord * 2.2D;
+               target.velocityChanged = true;
+            }
+            event.entityPlayer.getEntityData().setInteger("WITCLeviosaTicks", 0);
+            event.setCanceled(true);
+            return;
          }
-         event.entityPlayer.getEntityData().setInteger("WITCLeviosaTicks", 0);
-         event.setCanceled(true);
+
+         ExtendedPlayer attackerEx = ExtendedPlayer.get(event.entityPlayer);
+         if (attackerEx != null && attackerEx.isAstralProjecting() && event.entityPlayer.ridingEntity instanceof EntityLivingBase && event.target != null) {
+            EntityLivingBase possessed = (EntityLivingBase)event.entityPlayer.ridingEntity;
+            if (possessed != event.target) {
+               possessed.attackEntityAsMob(event.target);
+               if (event.target instanceof EntityLivingBase) {
+                  float dmg = 4.0F;
+                  if (possessed.getEntityAttribute(net.minecraft.entity.SharedMonsterAttributes.attackDamage) != null) {
+                     dmg = (float)possessed.getEntityAttribute(net.minecraft.entity.SharedMonsterAttributes.attackDamage).getAttributeValue();
+                  }
+                  event.target.attackEntityFrom(net.minecraft.util.DamageSource.causeMobDamage(possessed), dmg);
+               }
+               possessed.swingItem();
+               event.setCanceled(true);
+               return;
+            }
+         }
       }
    }
 
@@ -939,7 +967,8 @@ public class GenericEvents {
    public void onLivingUpdate(LivingUpdateEvent event) {
       if (event.entity instanceof EntityLivingBase && event.entity.riddenByEntity instanceof EntityPlayer) {
          EntityPlayer rider = (EntityPlayer)event.entity.riddenByEntity;
-         if (com.emoniph.witchery.dimension.WorldProviderDreamWorld.getPlayerIsGhost(rider) && ExtendedPlayer.get(rider).getSpiritLevel() >= 6) {
+         ExtendedPlayer riderEx = ExtendedPlayer.get(rider);
+         if (riderEx != null && riderEx.isAstralProjecting()) {
              EntityLivingBase mount = (EntityLivingBase)event.entity;
              mount.rotationYaw = rider.rotationYaw;
              mount.rotationYawHead = rider.rotationYawHead;
@@ -1310,7 +1339,11 @@ public class GenericEvents {
                     net.minecraft.nbt.NBTTagCompound nbtPerm = com.emoniph.witchery.infusion.Infusion.getNBT(player);
                     if (nbtPerm != null && nbtPerm.hasKey("witcheryInfusionID") && nbtPerm.hasKey("witcheryInfusionCharges")) {
                         int charges = nbtPerm.getInteger("witcheryInfusionCharges");
-                        int blockCost = 2;
+                        boolean isSupreme = com.emoniph.witchery.common.SupremeWitchData.isPlayerSupreme(player);
+                        int blockCost = event.source.isProjectile() ? 5 : (event.source.isMagicDamage() ? 6 : Math.max(4, Math.min(10, (int)event.ammount)));
+                        if (isSupreme) {
+                            blockCost = Math.max(1, blockCost / 2);
+                        }
                         if (charges >= blockCost) {
                             com.emoniph.witchery.infusion.Infusion.setCurrentEnergy(player, charges - blockCost);
                             com.emoniph.witchery.util.ParticleEffect.INSTANT_SPELL.send(com.emoniph.witchery.util.SoundEffect.RANDOM_FIZZ, player, 1.0D, 2.0D, 16);
@@ -1400,7 +1433,10 @@ public class GenericEvents {
                   boolean belt = true;
                   MOB_SPAWN_CHANCE = 0.25D;
                   louseUsed = true;
-                  if(player.worldObj.rand.nextDouble() < 0.25D && Infusion.aquireEnergy(player.worldObj, player, 5, true)) {
+                  long lastBaba = player.getEntityData().getLong("WITCLastBabaEvade");
+                  long now = MinecraftServer.getSystemTimeMillis();
+                  if(now - lastBaba >= 2000L && player.worldObj.rand.nextDouble() < 0.25D && Infusion.aquireEnergy(player.worldObj, player, 12, true)) {
+                     player.getEntityData().setLong("WITCLastBabaEvade", now);
                      BlockVoidBramble.teleportRandomly(player.worldObj, MathHelper.floor_double(player.posX), MathHelper.floor_double(player.posY), MathHelper.floor_double(player.posZ), player, 6);
                      event.setCanceled(true);
                      return;

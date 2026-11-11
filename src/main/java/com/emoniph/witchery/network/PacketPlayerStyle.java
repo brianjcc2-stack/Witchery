@@ -21,6 +21,8 @@ public class PacketPlayerStyle implements IMessage {
    private int creatureType;
    private int blood;
    private String playerSkin;
+   private int subduedStyle;
+   private boolean isAstral;
 
 
    public PacketPlayerStyle() {}
@@ -35,6 +37,8 @@ public class PacketPlayerStyle implements IMessage {
       this.creatureType = playerEx.getCreatureTypeOrdinal();
       this.blood = playerEx.getHumanBlood();
       this.playerSkin = playerEx.getOtherPlayerSkin();
+      this.subduedStyle = playerEx.getSubduedSpiritStyle();
+      this.isAstral = playerEx.isAstralProjecting();
    }
 
    public void toBytes(ByteBuf buffer) {
@@ -45,6 +49,8 @@ public class PacketPlayerStyle implements IMessage {
       buffer.writeInt(this.creatureType);
       buffer.writeInt(this.blood);
       ByteBufUtils.writeUTF8String(buffer, this.playerSkin);
+      buffer.writeInt(this.subduedStyle);
+      buffer.writeBoolean(this.isAstral);
    }
 
    public void fromBytes(ByteBuf buffer) {
@@ -55,6 +61,16 @@ public class PacketPlayerStyle implements IMessage {
       this.creatureType = buffer.readInt();
       this.blood = buffer.readInt();
       this.playerSkin = ByteBufUtils.readUTF8String(buffer);
+      if (buffer.readableBytes() >= 4) {
+         this.subduedStyle = buffer.readInt();
+      } else {
+         this.subduedStyle = 0;
+      }
+      if (buffer.readableBytes() >= 1) {
+         this.isAstral = buffer.readBoolean();
+      } else {
+         this.isAstral = false;
+      }
    }
 
    public static class Handler implements IMessageHandler<PacketPlayerStyle, IMessage> {
@@ -76,6 +92,11 @@ public class PacketPlayerStyle implements IMessage {
             playerEx.setCreatureTypeOrdinal(message.creatureType);
             playerEx.setHumanBlood(message.blood);
             playerEx.setOtherPlayerSkin(message.playerSkin);
+            playerEx.setSubduedSpiritStyle(message.subduedStyle);
+            playerEx.setAstralProjecting(message.isAstral);
+            if(!message.isAstral && !message.ghost && message.creatureType == 0 && !otherPlayer.isPotionActive(net.minecraft.potion.Potion.invisibility)) {
+               otherPlayer.setInvisible(false);
+            }
          }
 
          return null;

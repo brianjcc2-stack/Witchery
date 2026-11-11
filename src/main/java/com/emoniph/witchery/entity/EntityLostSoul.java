@@ -95,13 +95,13 @@ public class EntityLostSoul extends EntitySpirit {
       super.dataWatcher.addObject(22, Integer.valueOf(super.worldObj.rand.nextInt(3)));
       switch(this.getSoulType()) {
       case 0:
-         this.setFeatherColor(16711680);
+         this.setFeatherColor(0xFF3333);
          break;
       case 1:
-         this.setFeatherColor('\uff00');
+         this.setFeatherColor(0x33FF55);
          break;
       case 2:
-         this.setFeatherColor(255);
+         this.setFeatherColor(0x3399FF);
       }
 
    }

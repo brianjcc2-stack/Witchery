@@ -259,8 +259,8 @@ public class ClientEvents {
 
       if(event.entity instanceof EntityVillager) {
          ExtendedVillager player = ExtendedVillager.get((EntityVillager)event.entity);
-         GL11.glPushMatrix();
          if(player != null && player.isSleeping()) {
+            GL11.glPushMatrix();
             GL11.glTranslated(event.x, event.y, event.z);
             this.renderBed.render((float)event.x, (float)event.y, (float)event.z, 0);
             GL11.glRotatef(90.0F, 0.0F, 1.0F, 0.0F);
@@ -274,18 +274,33 @@ public class ClientEvents {
          ExtendedPlayer playerEx = ExtendedPlayer.get(player1);
          if (playerEx != null && playerEx.isAstralProjecting()) {
             RenderUtil.blend(true);
-            GL11.glColor4f(1.0F, 1.0F, 1.0F, 0.4F);
+            if (player1.isSneaking()) {
+               GL11.glColor4f(1.0F, 1.0F, 1.0F, 0.12F);
+            } else {
+               GL11.glColor4f(1.0F, 1.0F, 1.0F, 0.45F);
+            }
          } else if(WorldProviderDreamWorld.getPlayerIsGhost(Infusion.getNBT(player1))) {
             RenderUtil.blend(true);
-            GL11.glColor4f(1.0F, 1.0F, 1.0F, 0.51F);
-         } else if (playerEx != null && playerEx.getSpiritLevel() >= 6 && player1.isSneaking()) {
-            RenderUtil.blend(true);
-            GL11.glColor4f(1.0F, 1.0F, 1.0F, 0.15F);
+            if (player1.isSneaking() && playerEx != null && playerEx.getEffectiveSpiritLevel() >= 6) {
+               GL11.glColor4f(1.0F, 1.0F, 1.0F, 0.15F);
+            } else {
+               GL11.glColor4f(1.0F, 1.0F, 1.0F, 0.51F);
+            }
          }
          
          int creatureType = playerEx != null ? playerEx.getCreatureTypeOrdinal() : 0;
          
-         if(creatureType > 0 && !(event.renderer instanceof RenderOtherPlayer)) {
+         boolean gui1 = player1.rotationYawHead == player1.rotationYaw && player1.prevRotationYawHead == player1.rotationYaw && RenderManager.instance.playerViewY == 180.0F && Minecraft.getMinecraft().currentScreen != null;
+         boolean shouldRenderAsCreature = creatureType > 0;
+         if (creatureType == 7) {
+            boolean isDashing = player1.getEntityData().getBoolean("WITCSubduedDashing");
+            // When touching ground, in inventory GUI, or not actively airborne & dashing: render normal player!
+            if (player1.onGround || gui1 || !isDashing) {
+               shouldRenderAsCreature = false;
+            }
+         }
+
+         if(shouldRenderAsCreature && !(event.renderer instanceof RenderOtherPlayer)) {
             event.setCanceled(true);
             PotionEffect pe = player1.getActivePotionEffect(Witchery.Potions.RESIZING);
             if(pe != null) {
@@ -296,7 +311,6 @@ public class ClientEvents {
                GL11.glTranslated(-event.x, -event.y, -event.z);
             }
 
-            boolean gui1 = player1.rotationYawHead == player1.rotationYaw && player1.prevRotationYawHead == player1.rotationYaw && RenderManager.instance.playerViewY == 180.0F && Minecraft.getMinecraft().currentScreen != null;
             float partialTicks = gui1?0.0F:ModelOverlayRenderer.getRenderPartialTicks();
             if(creatureType == 1) {
                this.wolf.render(event.entity.worldObj, event.entity, event.x, event.y, event.z, event.renderer, partialTicks, gui1);
@@ -441,16 +455,13 @@ public class ClientEvents {
    @SubscribeEvent
    public void onPlayerPostRender(Post event) {
       if(event.entity instanceof EntityVillager) {
-         GL11.glPopMatrix();
+         ExtendedVillager player = ExtendedVillager.get((EntityVillager)event.entity);
+         if(player != null && player.isSleeping()) {
+            GL11.glPopMatrix();
+         }
       } else if(event.entity instanceof EntityPlayer) {
-         EntityPlayer player = (EntityPlayer)event.entity;
-         ExtendedPlayer playerEx = ExtendedPlayer.get(player);
-         if(WorldProviderDreamWorld.getPlayerIsGhost(Infusion.getNBT(player)) || (playerEx != null && playerEx.getSpiritLevel() >= 6 && player.isSneaking())) {
-            RenderUtil.blend(false);
-         }
-         if(SupremeWitchData.isPlayerSupreme(player) && player.worldObj.rand.nextInt(3) == 0) {
-            player.worldObj.spawnParticle("witchMagic", player.posX + (player.worldObj.rand.nextDouble() - 0.5D) * 0.8D, player.posY + player.worldObj.rand.nextDouble() * 2.0D, player.posZ + (player.worldObj.rand.nextDouble() - 0.5D) * 0.8D, 0.0D, 0.05D, 0.0D);
-         }
+         RenderUtil.blend(false);
+         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
       }
 
    }
@@ -460,7 +471,13 @@ public class ClientEvents {
       Minecraft mc = Minecraft.getMinecraft();
       ExtendedPlayer playerEx = ExtendedPlayer.get(mc.thePlayer);
       TransformCreature creatureType = playerEx.getCreatureType();
-      if(creatureType != TransformCreature.NONE && (mc.thePlayer.getHeldItem() == null || creatureType != TransformCreature.WOLFMAN && creatureType != TransformCreature.PLAYER)) {
+      if (creatureType == TransformCreature.SUBDUED_SPIRIT) {
+         boolean isDashing = !mc.thePlayer.onGround && mc.thePlayer.getEntityData().getBoolean("WITCSubduedDashing");
+         if (isDashing) {
+            event.setCanceled(true);
+            return;
+         }
+      } else if(creatureType != TransformCreature.NONE && (mc.thePlayer.getHeldItem() == null || creatureType != TransformCreature.WOLFMAN && creatureType != TransformCreature.PLAYER)) {
          event.setCanceled(true);
          this.renderArm(event.renderPass, event.partialTicks, mc, mc.thePlayer.getHeldItem() != null, creatureType, playerEx);
       }

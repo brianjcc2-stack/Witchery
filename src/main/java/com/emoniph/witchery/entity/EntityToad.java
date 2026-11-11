@@ -23,6 +23,7 @@ import net.minecraft.entity.ai.EntityAISwimming;
 import net.minecraft.entity.ai.EntityAITempt;
 import net.minecraft.entity.ai.EntityAIWander;
 import net.minecraft.entity.ai.EntityAIWatchClosest;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.monster.EntityCreeper;
 import net.minecraft.entity.monster.EntityGhast;
 import net.minecraft.entity.passive.EntityAnimal;
@@ -46,6 +47,7 @@ public class EntityToad extends EntityTameable implements IFamiliar {
 
    private int timeToLive = -1;
    private boolean poisoned = false;
+   private long lastMilkTime = 0L;
 
 
    public EntityToad(World par1World) {
@@ -162,6 +164,7 @@ public class EntityToad extends EntityTameable implements IFamiliar {
       par1NBTTagCompound.setByte("Familiar", (byte)(this.isFamiliar()?1:0));
       par1NBTTagCompound.setInteger("SuicideIn", this.timeToLive);
       par1NBTTagCompound.setBoolean("Poisonous", this.poisoned);
+      par1NBTTagCompound.setLong("LastMilkTime", this.lastMilkTime);
    }
 
    public void readEntityFromNBT(NBTTagCompound par1NBTTagCompound) {
@@ -186,6 +189,9 @@ public class EntityToad extends EntityTameable implements IFamiliar {
          this.poisoned = false;
       }
 
+      if(par1NBTTagCompound.hasKey("LastMilkTime")) {
+         this.lastMilkTime = par1NBTTagCompound.getLong("LastMilkTime");
+      }
    }
 
    protected String getLivingSound() {
@@ -219,6 +225,73 @@ public class EntityToad extends EntityTameable implements IFamiliar {
          this.getJumpHelper().setJumping();
       }
 
+      if(this.isFamiliar() && !super.worldObj.isRemote) {
+         EntityLivingBase owner = this.getOwner();
+         if(owner instanceof EntityPlayer && this.getDistanceSqToEntity(owner) <= 256.0D) {
+            EntityPlayer player = (EntityPlayer)owner;
+            player.addPotionEffect(new PotionEffect(Potion.jump.id, 40, 1, true));
+            if(player.isInWater()) {
+               player.addPotionEffect(new PotionEffect(Potion.waterBreathing.id, 40, 0, true));
+            }
+            if(player.fallDistance > 2.0F) {
+               player.fallDistance = Math.max(0.0F, player.fallDistance - 0.4F);
+            }
+         }
+
+         if(this.ticksExisted % 20 == 0) {
+            List items = super.worldObj.getEntitiesWithinAABB(EntityItem.class, super.boundingBox.expand(8.0D, 3.0D, 8.0D));
+            if(items != null && !items.isEmpty()) {
+               for(int i = 0; i < items.size(); ++i) {
+                  EntityItem item = (EntityItem)items.get(i);
+                  if(!item.isDead && item.delayBeforeCanPickup <= 0) {
+                     double targetX = (owner instanceof EntityPlayer) ? owner.posX : super.posX;
+                     double targetY = (owner instanceof EntityPlayer) ? owner.posY + 0.5D : super.posY + 0.3D;
+                     double targetZ = (owner instanceof EntityPlayer) ? owner.posZ : super.posZ;
+                     double dx = targetX - item.posX;
+                     double dy = targetY - item.posY;
+                     double dz = targetZ - item.posZ;
+                     double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+                     if(dist > 0.6D) {
+                        item.motionX += (dx / dist) * 0.2D;
+                        item.motionY += 0.08D;
+                        item.motionZ += (dz / dist) * 0.2D;
+                     }
+                  }
+               }
+            }
+         }
+
+         if(this.ticksExisted % 30 == 0) {
+            EntityLivingBase combatTarget = null;
+            if(owner instanceof EntityPlayer) {
+               EntityPlayer p = (EntityPlayer)owner;
+               if(p.getAITarget() != null && p.getAITarget().isEntityAlive()) {
+                  combatTarget = p.getAITarget();
+               } else if(p.getLastAttacker() != null && p.getLastAttacker().isEntityAlive() && p.ticksExisted - p.getLastAttackerTime() < 80) {
+                  combatTarget = p.getLastAttacker();
+               }
+            }
+            if(combatTarget == null && this.getAITarget() != null && this.getAITarget().isEntityAlive()) {
+               combatTarget = this.getAITarget();
+            }
+            if(combatTarget != null && combatTarget != this && combatTarget != owner && !(combatTarget instanceof EntityTameable && ((EntityTameable)combatTarget).getOwner() == owner) && this.getDistanceSqToEntity(combatTarget) <= 100.0D) {
+               double dx = super.posX - combatTarget.posX;
+               double dz = super.posZ - combatTarget.posZ;
+               double dist = Math.sqrt(dx * dx + dz * dz);
+               if(dist > 1.5D) {
+                  combatTarget.motionX += (dx / dist) * 0.35D;
+                  combatTarget.motionY += 0.15D;
+                  combatTarget.motionZ += (dz / dist) * 0.35D;
+               }
+               combatTarget.attackEntityFrom(DamageSource.causeMobDamage(this), 3.0F);
+               combatTarget.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, 60, 1));
+               combatTarget.addPotionEffect(new PotionEffect(Potion.poison.id, 60, 0));
+               super.worldObj.playSoundAtEntity(this, "mob.slime.small", 0.8F, 1.2F);
+               ParticleEffect.SLIME.send(SoundEffect.MOB_SLIME_SMALL, combatTarget, 0.5D, 1.0D, 10);
+            }
+         }
+      }
+
    }
 
    public float getEyeHeight() {
@@ -242,7 +315,24 @@ public class EntityToad extends EntityTameable implements IFamiliar {
             par2 = (par2 + 1.0F) / 2.0F;
          }
 
-         return super.attackEntityFrom(par1DamageSource, par2);
+         boolean result = super.attackEntityFrom(par1DamageSource, par2);
+         if(this.isFamiliar() && !super.worldObj.isRemote) {
+            AxisAlignedBB aabb = super.boundingBox.expand(4.0D, 2.0D, 4.0D);
+            List nearby = super.worldObj.getEntitiesWithinAABB(EntityLivingBase.class, aabb);
+            if(nearby != null) {
+               EntityLivingBase owner = this.getOwner();
+               for(int i = 0; i < nearby.size(); ++i) {
+                  EntityLivingBase entityNear = (EntityLivingBase)nearby.get(i);
+                  if(entityNear != this && entityNear != owner && !(entityNear instanceof EntityTameable && ((EntityTameable)entityNear).getOwner() == owner)) {
+                     entityNear.addPotionEffect(new PotionEffect(Potion.poison.id, 80, 1));
+                     entityNear.addPotionEffect(new PotionEffect(Potion.weakness.id, 80, 0));
+                  }
+               }
+            }
+            ParticleEffect.SLIME.send(SoundEffect.MOB_SLIME_BIG, this, 1.0D, 1.0D, 16);
+         }
+
+         return result;
       }
    }
 
@@ -265,6 +355,31 @@ public class EntityToad extends EntityTameable implements IFamiliar {
             }
 
             if(itemstack != null) {
+               if(itemstack.getItem() == Items.glass_bottle && this.isFamiliar() && TameableUtil.isOwner(this, par1EntityPlayer)) {
+                  if(!super.worldObj.isRemote) {
+                     long currentTime = super.worldObj.getTotalWorldTime();
+                     if(currentTime - this.lastMilkTime >= 1200L || currentTime < this.lastMilkTime) {
+                        this.lastMilkTime = currentTime;
+                        if(!par1EntityPlayer.capabilities.isCreativeMode) {
+                           --itemstack.stackSize;
+                           if(itemstack.stackSize <= 0) {
+                              par1EntityPlayer.inventory.setInventorySlotContents(par1EntityPlayer.inventory.currentItem, (ItemStack)null);
+                           }
+                        }
+                        ItemStack venom = new ItemStack(Items.potionitem, 1, 16388);
+                        if(!par1EntityPlayer.inventory.addItemStackToInventory(venom)) {
+                           par1EntityPlayer.dropPlayerItemWithRandomChoice(venom, false);
+                        }
+                        this.playSound("mob.slime.small", 0.8F, 1.0F);
+                        ParticleEffect.SLIME.send(SoundEffect.MOB_SLIME_SMALL, this, 0.5D, 0.5D, 8);
+                     } else {
+                        this.playSound("witchery:mob.toad.toad_croak", 0.4F, 0.8F);
+                     }
+                  }
+
+                  return true;
+               }
+
                if(itemstack.getItem() == Items.rotten_flesh && this.getHealth() < this.getMaxHealth()) {
                   if(!par1EntityPlayer.capabilities.isCreativeMode) {
                      --itemstack.stackSize;

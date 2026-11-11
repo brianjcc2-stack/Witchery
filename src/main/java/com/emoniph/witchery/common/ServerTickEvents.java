@@ -39,6 +39,7 @@ public class ServerTickEvents {
             this.lastSupremeCheck = now;
             if(MinecraftServer.getServer() != null && MinecraftServer.getServer().worldServerForDimension(0) != null) {
                SupremeWitchData.updateSupremeStatus(MinecraftServer.getServer().worldServerForDimension(0));
+               CovenRaidManager.checkAndTriggerRaids(MinecraftServer.getServer().worldServerForDimension(0));
             }
          }
       }
@@ -71,7 +72,32 @@ public class ServerTickEvents {
          if(event.phase == Phase.START) {
             int mantleTicks = event.player.getEntityData().getInteger("WITCMantleTicks");
             if (mantleTicks > 0) {
-               event.player.getEntityData().setInteger("WITCMantleTicks", mantleTicks - 1);
+               if (mantleTicks - 1 <= 0) {
+                  event.player.getEntityData().removeTag("WITCMantleTicks");
+                  event.player.getEntityData().removeTag("WITCMantleBrew");
+               } else {
+                  event.player.getEntityData().setInteger("WITCMantleTicks", mantleTicks - 1);
+               }
+            }
+
+            if (Infusion.getInfusionID(event.player) > 0) {
+               if (SupremeWitchData.isPlayerSupreme(event.player)) {
+                  if (event.player.ticksExisted % 20 == 0) {
+                     int curEnergy = Infusion.getCurrentEnergy(event.player);
+                     int maxEnergy = Math.max(Infusion.getMaxEnergy(event.player), 3000);
+                     if (curEnergy < maxEnergy) {
+                        Infusion.setCurrentEnergy(event.player, Math.min(maxEnergy, curEnergy + 15));
+                     }
+                  }
+               } else {
+                  if (event.player.ticksExisted % 40 == 0) {
+                     int curEnergy = Infusion.getCurrentEnergy(event.player);
+                     int maxEnergy = Infusion.getMaxEnergy(event.player);
+                     if (curEnergy < maxEnergy) {
+                        Infusion.setCurrentEnergy(event.player, Math.min(maxEnergy, curEnergy + 1));
+                     }
+                  }
+               }
             }
 
             int selfLeviosa = event.player.getEntityData().getInteger("WITCLeviosaSelfTicks");
@@ -128,11 +154,56 @@ public class ServerTickEvents {
                if (isSpirit) {
                   event.player.fallDistance = 0.0F;
 
-                  if (event.player.isSneaking()) {
-                     event.player.setInvisible(true);
+                  if (playerExt1.getCreatureType() == com.emoniph.witchery.util.TransformCreature.SUBDUED_SPIRIT) {
+                     if (!event.player.capabilities.isCreativeMode) {
+                        if (event.player.capabilities.isFlying) {
+                           event.player.capabilities.isFlying = false;
+                        }
+                        if (event.player.capabilities.allowFlying) {
+                           event.player.capabilities.allowFlying = false;
+                           event.player.sendPlayerAbilities();
+                        }
+                     }
+
+                     if (event.player.onGround) {
+                        event.player.getEntityData().setBoolean("WITCSubduedDashing", false);
+                     } else {
+                        boolean isDashing = event.player.getEntityData().getBoolean("WITCSubduedDashing");
+                        if (isDashing) {
+                           // Server-side energy sync while flying in smoke form
+                           if (event.player.ticksExisted % 10 == 0 && com.emoniph.witchery.infusion.Infusion.getInfusionID(event.player) > 0) {
+                              boolean hasEnergy = com.emoniph.witchery.infusion.Infusion.aquireEnergy(event.player.worldObj, event.player, playerExt1.isSupremeWitch() ? 1 : 2, false);
+                              if (!hasEnergy) {
+                                 event.player.getEntityData().setBoolean("WITCSubduedDashing", false);
+                                 com.emoniph.witchery.util.SoundEffect.RANDOM_FIZZ.playAtPlayer(event.player.worldObj, event.player);
+                              }
+                           }
+
+                           double speedSq = event.player.motionX * event.player.motionX + event.player.motionY * event.player.motionY + event.player.motionZ * event.player.motionZ;
+                           if (speedSq > 0.02D && event.player.ticksExisted % 2 == 0) {
+                              int style = playerExt1.getSubduedSpiritStyle();
+                              boolean isDementor = style != 2;
+                              if (isDementor) {
+                                 com.emoniph.witchery.util.ParticleEffect.LARGE_SMOKE.send(com.emoniph.witchery.util.SoundEffect.NONE, event.player.worldObj, event.player.posX, event.player.posY + 0.9D, event.player.posZ, 0.4D, 0.4D, 32);
+                              } else {
+                                 com.emoniph.witchery.util.ParticleEffect.CLOUD.send(com.emoniph.witchery.util.SoundEffect.NONE, event.player.worldObj, event.player.posX, event.player.posY + 0.9D, event.player.posZ, 0.4D, 0.4D, 32);
+                              }
+                           }
+                        }
+                     }
                   }
 
-                  if ((playerExt1.getSpiritLevel() >= 9 || playerExt1.isAstralProjecting()) && (event.player.isCollidedHorizontally || (event.player.isSneaking() && (Math.abs(event.player.motionX) > 0.02 || Math.abs(event.player.motionZ) > 0.02)))) {
+                  if (event.player.isSneaking() && playerExt1.getCreatureType() != com.emoniph.witchery.util.TransformCreature.SUBDUED_SPIRIT && (playerExt1.getEffectiveSpiritLevel() >= 7 || playerExt1.isAstralProjecting())) {
+                     event.player.setInvisible(true);
+                  } else if (!event.player.isPotionActive(net.minecraft.potion.Potion.invisibility) && event.player.isInvisible()) {
+                     event.player.setInvisible(false);
+                  }
+
+                  if (playerExt1.isAstralProjecting() && event.player.ticksExisted % 6 == 0 && !event.player.isInvisible()) {
+                     com.emoniph.witchery.util.ParticleEffect.SPELL.send(com.emoniph.witchery.util.SoundEffect.NONE, event.player.worldObj, event.player.posX, event.player.posY + 0.8D, event.player.posZ, 0.3D, 0.5D, 4);
+                  }
+
+                  if ((playerExt1.getEffectiveSpiritLevel() >= 9 || playerExt1.isAstralProjecting()) && (event.player.isCollidedHorizontally || (event.player.isSneaking() && (Math.abs(event.player.motionX) > 0.02 || Math.abs(event.player.motionZ) > 0.02)))) {
                      double yawRad = Math.toRadians((double)event.player.rotationYaw);
                      double forwardX = -Math.sin(yawRad);
                      double forwardZ = Math.cos(yawRad);
@@ -154,6 +225,10 @@ public class ServerTickEvents {
                            break;
                         }
                      }
+                  }
+               } else {
+                  if (!event.player.isPotionActive(net.minecraft.potion.Potion.invisibility) && event.player.isInvisible()) {
+                     event.player.setInvisible(false);
                   }
                }
 

@@ -25,7 +25,15 @@ public class CommandCrucio extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/crucio <corazones>";
+        return "/crucio <1-10|guia>";
+    }
+
+    @Override
+    public java.util.List addTabCompletionOptions(ICommandSender sender, String[] args) {
+        if (args.length == 1) {
+            return getListOfStringsMatchingLastWord(args, "1", "3", "5", "8", "10", "guia", "help", "ayuda");
+        }
+        return null;
     }
 
     @Override
@@ -43,8 +51,12 @@ public class CommandCrucio extends CommandBase {
         if (!(sender instanceof EntityPlayer)) return;
         EntityPlayer player = (EntityPlayer) sender;
 
-        if (args.length == 0) {
-            player.addChatMessage(new ChatComponentText("Uso: " + getCommandUsage(sender)));
+        if (args.length == 0 || args[0].equalsIgnoreCase("guia") || args[0].equalsIgnoreCase("help") || args[0].equalsIgnoreCase("ayuda")) {
+            int actual = CRUCIO_POWER.containsKey(player.getCommandSenderName()) ? CRUCIO_POWER.get(player.getCommandSenderName()) : 5;
+            player.addChatMessage(new ChatComponentText("\u00a74\u00a7l=== Maldición Cruciatus (/crucio) ==="));
+            player.addChatMessage(new ChatComponentText("\u00a7cPotencia actual configurada: \u00a7e" + actual + " corazones\u00a77 (máx. 10)."));
+            player.addChatMessage(new ChatComponentText("\u00a7eUso: \u00a7f/crucio <1-10> \u00a77- Ajusta cuántos corazones de agonía progresiva infligirá tu próximo hechizo Crucio."));
+            player.addChatMessage(new ChatComponentText("\u00a76Trazo en Rama Mística: \u00a7f↓ → ← ↑ ↓ \u00a77(Requiere Infusión Infernal o Bruja Suprema)."));
             return;
         }
 

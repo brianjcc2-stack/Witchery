@@ -43,6 +43,12 @@ public abstract class SymbolEffectProjectile extends SymbolEffect {
       return this;
    }
 
+   @Override
+   public SymbolEffectProjectile setRequiredInfusion(int infusionID) {
+      super.setRequiredInfusion(infusionID);
+      return this;
+   }
+
    public int getColor() {
       return this.color;
    }

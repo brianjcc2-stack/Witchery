@@ -428,6 +428,23 @@ public class BlockAltar extends BlockBaseContainer {
          }
       }
 
+      public void addPower(float extraPower) {
+         if(this.core != null) {
+            BlockAltar.TileEntityAltar tileEntity = (BlockAltar.TileEntityAltar)this.core.getBlockTileEntity(super.worldObj);
+            if(tileEntity != null) {
+               tileEntity.addOurPower(extraPower);
+            }
+         }
+      }
+
+      private void addOurPower(float extraPower) {
+         if(!super.worldObj.isRemote) {
+            float maxPowerScaled = (this.maxPower + this.externalBonusPower) * (float)this.powerScale;
+            this.power = Math.min(this.power + extraPower, maxPowerScaled);
+            super.worldObj.markBlockForUpdate(super.xCoord, super.yCoord, super.zCoord);
+         }
+      }
+
       public float getCurrentPower() {
          if(this.core != null) {
             BlockAltar.TileEntityAltar tileEntity = (BlockAltar.TileEntityAltar)this.core.getBlockTileEntity(super.worldObj);
@@ -569,6 +586,11 @@ public class BlockAltar extends BlockBaseContainer {
             BlockAltar.TileEntityAltar.PowerSource.createInMap(powerObjectTable, Witchery.Blocks.GLINT_WEED, 2, 20);
             BlockAltar.TileEntityAltar.PowerSource.createInMap(powerObjectTable, Witchery.Blocks.CRITTER_SNARE, 2, 10);
             BlockAltar.TileEntityAltar.PowerSource.createInMap(powerObjectTable, Witchery.Blocks.BLOOD_ROSE, 2, 10);
+            BlockAltar.TileEntityAltar.PowerSource.createInMap(powerObjectTable, Witchery.Blocks.MOON_ROSE, 4, 20);
+            BlockAltar.TileEntityAltar.PowerSource.createInMap(powerObjectTable, Witchery.Blocks.SUN_ROSE, 4, 20);
+            BlockAltar.TileEntityAltar.PowerSource.createInMap(powerObjectTable, Witchery.Blocks.GRAVE_ROSE, 4, 20);
+            BlockAltar.TileEntityAltar.PowerSource.createInMap(powerObjectTable, Witchery.Blocks.BANSHEE_ROSE, 3, 15);
+            BlockAltar.TileEntityAltar.PowerSource.createInMap(powerObjectTable, Witchery.Blocks.HECATES_TEARS, 4, 15);
             BlockAltar.TileEntityAltar.PowerSource.createInMap(powerObjectTable, Witchery.Blocks.GRASSPER, 2, 10);
             BlockAltar.TileEntityAltar.PowerSource.createInMap(powerObjectTable, Witchery.Blocks.WISPY_COTTON, 3, 20);
             BlockAltar.TileEntityAltar.PowerSource.createInMap(powerObjectTable, Witchery.Blocks.INFINITY_EGG, 1000, 1);

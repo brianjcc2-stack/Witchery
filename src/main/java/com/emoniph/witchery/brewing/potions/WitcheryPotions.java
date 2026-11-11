@@ -480,6 +480,7 @@ public class WitcheryPotions {
       @SubscribeEvent
       public void onLivingAttack(LivingAttackEvent event) {
          Iterator i$ = Witchery.Potions.livingAttackEventHandlers.iterator();
+         EntityLivingBase attacker = event.source != null && event.source.getEntity() instanceof EntityLivingBase ? (EntityLivingBase)event.source.getEntity() : null;
 
          while(i$.hasNext()) {
             IHandleLivingAttack handler = (IHandleLivingAttack)i$.next();
@@ -489,6 +490,9 @@ public class WitcheryPotions {
 
             if(event.entityLiving.isPotionActive(handler.getPotion())) {
                PotionEffect effect = event.entityLiving.getActivePotionEffect(handler.getPotion());
+               handler.onLivingAttack(event.entityLiving.worldObj, event.entityLiving, event, effect.getAmplifier());
+            } else if(attacker != null && attacker.isPotionActive(handler.getPotion())) {
+               PotionEffect effect = attacker.getActivePotionEffect(handler.getPotion());
                handler.onLivingAttack(event.entityLiving.worldObj, event.entityLiving, event, effect.getAmplifier());
             }
          }
@@ -560,6 +564,9 @@ public class WitcheryPotions {
 
                if(event.entityLiving.isPotionActive(handler.getPotion())) {
                   PotionEffect effect = event.entityLiving.getActivePotionEffect(handler.getPotion());
+                  handler.onLivingSetAttackTarget(event.entityLiving.worldObj, livingEntity, event, effect.getAmplifier());
+               } else if(event.target != null && event.target.isPotionActive(handler.getPotion())) {
+                  PotionEffect effect = event.target.getActivePotionEffect(handler.getPotion());
                   handler.onLivingSetAttackTarget(event.entityLiving.worldObj, livingEntity, event, effect.getAmplifier());
                }
             }

@@ -60,10 +60,10 @@ public class EntitySizeInfo {
             this.stepSize = 0.5F;
             break;
          case SUBDUED_SPIRIT:
-            this.isDefault = false;
-            this.defaultWidth = 0.25F;
-            this.defaultHeight = 0.25F;
-            this.eyeHeight = 0.2F;
+            this.isDefault = true;
+            this.defaultWidth = 0.6F;
+            this.defaultHeight = 1.8F;
+            this.eyeHeight = nbtEntity.getDefaultEyeHeight();
             this.stepSize = 0.5F;
             break;
          case NONE:

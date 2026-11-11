@@ -59,6 +59,10 @@ public class RitePhilosopherStone extends Rite {
                 spawnReward(world, x, y, z, new ItemStack(Items.diamond, 1));
                 spawnReward(world, x, y, z, new ItemStack(Items.gold_ingot, 3));
                 spawnReward(world, x, y, z, Witchery.Items.GENERIC.itemAttunedStoneCharged.createStack());
+                net.minecraft.entity.player.EntityPlayer initiator = circleType.getInitiatingPlayer(world);
+                if (initiator != null) {
+                    com.emoniph.witchery.common.SupremeWitchData.completeWonder(initiator, com.emoniph.witchery.common.SupremeWitchData.WONDER_TRANSMUTATION);
+                }
 
                 ParticleEffect.INSTANT_SPELL.send(SoundEffect.RANDOM_LEVELUP, world, 0.5D + (double)x, (double)y + 1.0D, 0.5D + (double)z, 2.0D, 2.0D, 24);
             }

@@ -2,6 +2,7 @@ package com.emoniph.witchery.blocks;
 
 import com.emoniph.witchery.Witchery;
 import com.emoniph.witchery.blocks.BlockBaseContainer;
+import com.emoniph.witchery.brewing.potions.PotionEnderInhibition;
 import com.emoniph.witchery.item.ItemGeneral;
 import com.emoniph.witchery.util.ParticleEffect;
 import com.emoniph.witchery.util.SoundEffect;
@@ -242,6 +243,10 @@ public class BlockChalice extends BlockBaseContainer {
 
       public void teleport(EntityPlayer player) {
          if (this.isPortkey && super.worldObj != null && !super.worldObj.isRemote && player != null) {
+            if (PotionEnderInhibition.isActive(player, 0)) {
+               SoundEffect.NOTE_SNARE.playAtPlayer(super.worldObj, player);
+               return;
+            }
             long time = super.worldObj.getTotalWorldTime();
             if (time - this.lastTeleportTime < 20L) {
                return;

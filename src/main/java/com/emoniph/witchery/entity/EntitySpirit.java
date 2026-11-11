@@ -69,6 +69,13 @@ public class EntitySpirit extends EntityFlyingTameable {
    public void setTarget(String target, int type) {
       this.timeToLive = TimeUtil.secsToTicks(10);
       this.spiritType = type;
+      if(type == 1) {
+         this.setFeatherColor(0xFFDF00);
+      } else if(type == 2) {
+         this.setFeatherColor(0xFF3333);
+      } else {
+         this.setFeatherColor(0x55FFFF);
+      }
 
       try {
          if(target.equals("Village")) {
@@ -208,9 +215,9 @@ public class EntitySpirit extends EntityFlyingTameable {
       super.onUpdate();
       if(super.worldObj.isRemote) {
          int color = this.getFeatherColor();
-         float red = 1.0F;
-         float green = 0.8F;
-         float blue = 0.0F;
+         float red = 0.33F;
+         float green = 1.0F;
+         float blue = 1.0F;
          if(color > 0) {
             red = (float)(color >> 16 & 255) / 255.0F;
             green = (float)(color >> 8 & 255) / 255.0F;

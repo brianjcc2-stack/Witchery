@@ -4,6 +4,7 @@ import com.emoniph.witchery.Witchery;
 import com.emoniph.witchery.blocks.BlockAlluringSkull;
 import com.emoniph.witchery.blocks.BlockAltar;
 import com.emoniph.witchery.blocks.BlockAltarGUI;
+import com.emoniph.witchery.blocks.BlockApothecaryJar;
 import com.emoniph.witchery.blocks.BlockAreaMarker;
 import com.emoniph.witchery.blocks.BlockBeartrap;
 import com.emoniph.witchery.blocks.BlockBloodCrucible;
@@ -68,6 +69,7 @@ import com.emoniph.witchery.client.model.ModelTreefyd;
 import com.emoniph.witchery.client.model.ModelWolfman;
 import com.emoniph.witchery.client.particle.NaturePowerFX;
 import com.emoniph.witchery.client.renderer.RenderAlluringSkull;
+import com.emoniph.witchery.client.renderer.RenderApothecaryJar;
 import com.emoniph.witchery.client.renderer.RenderBabaYaga;
 import com.emoniph.witchery.client.renderer.RenderBanshee;
 import com.emoniph.witchery.client.renderer.RenderBeartrap;
@@ -198,6 +200,8 @@ import com.emoniph.witchery.entity.EntityWitchCat;
 import com.emoniph.witchery.entity.EntityWitchHunter;
 import com.emoniph.witchery.entity.EntityWitchProjectile;
 import com.emoniph.witchery.entity.EntityWolfman;
+import com.emoniph.witchery.item.ItemApothecaryPouch;
+import com.emoniph.witchery.item.ItemBottomlessSatchel;
 import com.emoniph.witchery.item.ItemBrewBag;
 import com.emoniph.witchery.item.ItemBrewBagGUI;
 import com.emoniph.witchery.item.ItemEarmuffs;
@@ -213,6 +217,7 @@ import cpw.mods.fml.common.registry.VillagerRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.model.ModelCreeper;
 import net.minecraft.client.model.ModelOcelot;
@@ -303,8 +308,10 @@ public class ClientProxy extends CommonProxy {
       RenderingRegistry.registerEntityRenderingHandler(EntityAttackBat.class, new RenderBat());
       RenderingRegistry.registerEntityRenderingHandler(EntityMirrorFace.class, new RenderMirrorFace());
       RenderingRegistry.registerEntityRenderingHandler(EntityReflection.class, new RenderReflection());
-      RenderingRegistry.registerEntityRenderingHandler(com.emoniph.witchery.entity.EntityMirrorClone.class, new net.minecraft.client.renderer.entity.RenderBiped(new net.minecraft.client.model.ModelBiped(), 0.5F));
-      RenderingRegistry.registerEntityRenderingHandler(com.emoniph.witchery.entity.EntityFlyingMortar.class, new RenderBroom());
+      RenderingRegistry.registerEntityRenderingHandler(com.emoniph.witchery.entity.EntityMirrorClone.class, new com.emoniph.witchery.client.renderer.RenderMirrorClone());
+      RenderingRegistry.registerEntityRenderingHandler(com.emoniph.witchery.entity.EntityFlyingMortar.class, new com.emoniph.witchery.client.renderer.RenderFlyingMortar());
+      RenderingRegistry.registerEntityRenderingHandler(com.emoniph.witchery.entity.EntityRivalWitch.class, new com.emoniph.witchery.client.renderer.RenderRivalWitch());
+      RenderingRegistry.registerEntityRenderingHandler(com.emoniph.witchery.entity.EntityRivalFamiliar.class, new com.emoniph.witchery.client.renderer.RenderRivalFamiliar());
       this.bindRenderer(BlockPoppetShelf.TileEntityPoppetShelf.class, new RenderPoppetChest(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.POPPET_SHELF)});
       this.bindRenderer(BlockGrassper.TileEntityGrassper.class, new RenderGrassper(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.GRASSPER)});
       this.bindRenderer(BlockDistillery.TileEntityDistillery.class, new RenderDistillery(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.DISTILLERY_IDLE)});
@@ -314,6 +321,7 @@ public class ClientProxy extends CommonProxy {
 //      this.bindRenderer(com.emoniph.witchery.brewing.TileEntityPortkey.class, new RenderChalice(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.PORTKEY)});
 //      this.bindRenderer(com.emoniph.witchery.brewing.TileEntityPortkey.class, new RenderChalice(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.PORTKEY)});
       this.bindRenderer(BlockCandelabra.TileEntityCandelabra.class, new RenderCandelabra(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.CANDELABRA)});
+      this.bindRenderer(BlockApothecaryJar.TileEntityApothecaryJar.class, new RenderApothecaryJar(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.APOTHECARY_JAR)});
       this.bindRenderer(BlockCrystalBall.TileEntityCrystalBall.class, new RenderCrystalBall(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.CRYSTAL_BALL)});
       this.bindRenderer(BlockKettle.TileEntityKettle.class, new RenderKettle(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.KETTLE)});
       this.bindRenderer(BlockLeechChest.TileEntityLeechChest.class, new RenderLeechChest(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.LEECH_CHEST)});
@@ -425,6 +433,10 @@ public class ClientProxy extends CommonProxy {
          return new GuiScreenMarkupBook(player, player.getHeldItem());
       case 8:
          return new ItemLeonardsUrnGUI(player.inventory, new ItemLeonardsUrn.InventoryLeonardsUrn(player));
+      case 9:
+         return new GuiChest(player.inventory, new ItemApothecaryPouch.InventoryApothecary(player.getHeldItem(), player));
+      case 10:
+         return new GuiChest(player.inventory, new ItemBottomlessSatchel.InventorySatchel(player.getHeldItem(), player));
       default:
          return null;
       }

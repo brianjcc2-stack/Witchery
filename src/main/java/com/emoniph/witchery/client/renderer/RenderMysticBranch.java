@@ -64,21 +64,21 @@ public class RenderMysticBranch implements IItemRenderer {
          if(data.length > 1 && data[1] != null) {
             if(data[1] instanceof EntityPlayer) {
                EntityPlayer player = (EntityPlayer)data[1];
-               this.spawnCastingFX(player);
+               this.spawnCastingFX(player, item);
                if((EntityPlayer)data[1] == Minecraft.getMinecraft().renderViewEntity && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0 && (!(Minecraft.getMinecraft().currentScreen instanceof GuiInventory) && !(Minecraft.getMinecraft().currentScreen instanceof GuiContainerCreative) || RenderManager.instance.playerViewY != 180.0F)) {
                   if(player.isInvisible()) {
                      RenderUtil.blend(true);
                   }
 
-                  this.renderModel(player);
+                  this.renderModel(player, item);
                   if(player.isInvisible()) {
                      RenderUtil.blend(false);
                   }
                } else if(!player.isInvisible()) {
-                  this.renderModel(player);
+                  this.renderModel(player, item);
                }
             } else {
-               this.renderModel((Entity)data[1]);
+               this.renderModel((Entity)data[1], item);
             }
          }
 
@@ -87,24 +87,40 @@ public class RenderMysticBranch implements IItemRenderer {
       }
    }
 
-   private void spawnCastingFX(EntityPlayer player) {
+   private void spawnCastingFX(EntityPlayer player, ItemStack item) {
       if(player.worldObj != null && player.worldObj.isRemote && player.isUsingItem()) {
+         int wood = com.emoniph.witchery.item.ItemMysticBranch.getWoodType(item);
          for(int i = 0; i < 2; ++i) {
             if(player.worldObj.rand.nextInt(2) == 0) {
                Vec3 look = player.getLook(1.0F);
                double tipX = player.posX + look.xCoord * 1.1D + (player.worldObj.rand.nextDouble() - 0.5D) * 0.35D;
                double tipY = player.posY + (double)player.getEyeHeight() - 0.15D + look.yCoord * 1.1D + (player.worldObj.rand.nextDouble() - 0.5D) * 0.35D;
                double tipZ = player.posZ + look.zCoord * 1.1D + (player.worldObj.rand.nextDouble() - 0.5D) * 0.35D;
-               float white = 0.6F + player.worldObj.rand.nextFloat() * 0.4F;
-               Witchery.proxy.generateParticle(player.worldObj, tipX, tipY, tipZ, 0.6F * white, 0.3F * white, white, 6 + player.worldObj.rand.nextInt(5), 0.0F);
+               if(wood == 0) {
+                  Witchery.proxy.generateParticle(player.worldObj, tipX, tipY, tipZ, 0.95F, 0.75F, 0.2F, 6 + player.worldObj.rand.nextInt(5), 0.0F);
+               } else if(wood == 1) {
+                  Witchery.proxy.generateParticle(player.worldObj, tipX, tipY, tipZ, 1.0F, 0.35F, 0.05F, 6 + player.worldObj.rand.nextInt(5), 0.0F);
+               } else {
+                  float white = 0.6F + player.worldObj.rand.nextFloat() * 0.4F;
+                  Witchery.proxy.generateParticle(player.worldObj, tipX, tipY, tipZ, 0.3F * white, 0.85F * white, white, 6 + player.worldObj.rand.nextInt(5), 0.0F);
+               }
             }
          }
       }
 
    }
 
-   private void renderModel(Entity player) {
+   private void renderModel(Entity player, ItemStack item) {
+      int wood = com.emoniph.witchery.item.ItemMysticBranch.getWoodType(item);
+      if(wood == 0) {
+         GL11.glColor3f(0.90F, 0.52F, 0.38F);
+      } else if(wood == 1) {
+         GL11.glColor3f(0.68F, 0.42F, 0.28F);
+      } else {
+         GL11.glColor3f(0.95F, 0.95F, 0.88F);
+      }
       this.model.render(player, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F);
+      GL11.glColor3f(1.0F, 1.0F, 1.0F);
       Minecraft mc = Minecraft.getMinecraft();
       if(mc.gameSettings.fancyGraphics && Config.instance().render3dGlintEffect) {
          float f9 = (float)player.ticksExisted;
@@ -118,7 +134,13 @@ public class RenderMysticBranch implements IItemRenderer {
          for(int k = 0; k < 2; ++k) {
             GL11.glDisable(2896);
             float f11 = 0.76F;
-            GL11.glColor4f(0.0F * f11, 0.5F * f11, 0.0F * f11, 1.0F);
+            if(wood == 0) {
+               GL11.glColor4f(0.85F * f11, 0.55F * f11, 0.15F * f11, 1.0F);
+            } else if(wood == 1) {
+               GL11.glColor4f(0.9F * f11, 0.25F * f11, 0.1F * f11, 1.0F);
+            } else {
+               GL11.glColor4f(0.0F * f11, 0.5F * f11, 0.8F * f11, 1.0F);
+            }
             GL11.glBlendFunc(768, 1);
             GL11.glMatrixMode(5890);
             GL11.glLoadIdentity();

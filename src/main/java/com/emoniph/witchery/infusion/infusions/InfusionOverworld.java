@@ -173,7 +173,7 @@ public class InfusionOverworld extends Infusion {
                         Block var33 = world.getBlock(var32, var31, z);
                         if(var33 != Blocks.air) {
                            Item ingot = EarthItems.instance().oreToIngot(var33);
-                           if(ingot != null && !world.isRemote && this.consumeCharges(world, player, 2, true)) {
+                           if(ingot != null && !world.isRemote && this.consumeCharges(world, player, 5, true)) {
                               world.setBlock(var32, var31, z, Blocks.stone, 0, 3);
                               world.spawnEntityInWorld(new EntityItem(world, (double)var32, (double)var31, (double)z, new ItemStack(ingot)));
                            }
@@ -242,7 +242,7 @@ public class InfusionOverworld extends Infusion {
                      var19.setPosition((double)hit.blockX + 0.5D, (double)hit.blockY + 0.5D, (double)hit.blockZ + 0.5D);
                      world.spawnEntityInWorld(var19);
                   }
-               } else if(player.isSneaking() && this.consumeCharges(world, player, 2, true)) {
+               } else if(player.isSneaking() && this.consumeCharges(world, player, 5, true)) {
                   Block blockID = world.getBlock(hit.blockX, hit.blockY, hit.blockZ);
                   Item ingot = EarthItems.instance().oreToIngot(blockID);
                   if(ingot != null) {

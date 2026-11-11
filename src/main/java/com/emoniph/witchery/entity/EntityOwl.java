@@ -35,6 +35,8 @@ import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.potion.Potion;
+import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.MathHelper;
@@ -98,6 +100,21 @@ public class EntityOwl extends EntityFlyingTameable implements IFamiliar {
    public void onUpdate() {
       super.isImmuneToFire = this.isFamiliar();
       super.onUpdate();
+
+      if(this.isFamiliar() && !super.worldObj.isRemote) {
+         EntityLivingBase owner = this.getOwner();
+         if(owner instanceof EntityPlayer && this.getDistanceSqToEntity(owner) <= 400.0D) {
+            EntityPlayer player = (EntityPlayer)owner;
+            player.addPotionEffect(new PotionEffect(Potion.nightVision.id, 220, 0, true));
+            if(player.fallDistance > 2.0F) {
+               player.motionY = Math.max(player.motionY, -0.15D);
+               player.fallDistance = 0.0F;
+               if(player.ticksExisted % 10 == 0) {
+                  ParticleEffect.CLOUD.send(SoundEffect.NONE, player, 0.5D, 0.2D, 4);
+               }
+            }
+         }
+      }
    }
 
    protected void entityInit() {
@@ -183,7 +200,15 @@ public class EntityOwl extends EntityFlyingTameable implements IFamiliar {
    }
 
    public boolean attackEntityAsMob(Entity par1Entity) {
-      return par1Entity.attackEntityFrom(DamageSource.causeMobDamage(this), 2.0F);
+      float damage = this.isFamiliar() ? 4.0F : 2.0F;
+      boolean success = par1Entity.attackEntityFrom(DamageSource.causeMobDamage(this), damage);
+      if(success && this.isFamiliar() && par1Entity instanceof EntityLivingBase) {
+         EntityLivingBase target = (EntityLivingBase)par1Entity;
+         target.addPotionEffect(new PotionEffect(Potion.blindness.id, 80, 0));
+         target.addPotionEffect(new PotionEffect(Potion.confusion.id, 80, 0));
+         ParticleEffect.SPELL.send(SoundEffect.DAMAGE_HIT, target, 0.5D, 1.0D, 8);
+      }
+      return success;
    }
 
    public boolean attackEntityFrom(DamageSource par1DamageSource, float par2) {

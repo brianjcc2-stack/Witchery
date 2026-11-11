@@ -17,6 +17,7 @@ public class EntityBrew extends EntityThrowableBase {
    private ItemStack brewStack;
    private int color;
    private boolean isSpell;
+   private int brewLevel = 1;
 
 
    public EntityBrew(World world) {
@@ -24,16 +25,26 @@ public class EntityBrew extends EntityThrowableBase {
    }
 
    public EntityBrew(World world, EntityLivingBase thrower, ItemStack brewStack, boolean isSpell) {
+      this(world, thrower, brewStack, isSpell, 1);
+   }
+
+   public EntityBrew(World world, EntityLivingBase thrower, ItemStack brewStack, boolean isSpell, int brewLevel) {
       super(world, thrower, isSpell?0.0F:-20.0F);
       this.brewStack = brewStack;
       this.setIsSpell(isSpell);
+      this.brewLevel = Math.max(1, brewLevel);
       this.setColor(WitcheryBrewRegistry.INSTANCE.getBrewColor(brewStack.getTagCompound()));
    }
 
    public EntityBrew(World world, double x, double y, double z, ItemStack brewStack, boolean isSpell) {
+      this(world, x, y, z, brewStack, isSpell, 1);
+   }
+
+   public EntityBrew(World world, double x, double y, double z, ItemStack brewStack, boolean isSpell, int brewLevel) {
       super(world, x, y, z, isSpell?0.0F:-20.0F);
       this.brewStack = brewStack;
       this.setIsSpell(isSpell);
+      this.brewLevel = Math.max(1, brewLevel);
       this.setColor(WitcheryBrewRegistry.INSTANCE.getBrewColor(brewStack.getTagCompound()));
    }
 
@@ -63,6 +74,14 @@ public class EntityBrew extends EntityThrowableBase {
       return this.brewStack;
    }
 
+   public int getBrewLevel() {
+      return this.brewLevel;
+   }
+
+   public void setBrewLevel(int level) {
+      this.brewLevel = Math.max(1, level);
+   }
+
    protected float getGravityVelocity() {
       return this.getIsSpell()?0.0F:0.05F;
    }
@@ -76,8 +95,16 @@ public class EntityBrew extends EntityThrowableBase {
    }
 
    protected void onImpact(MovingObjectPosition mop) {
-      if(!super.worldObj.isRemote && mop != null && WitcheryBrewRegistry.INSTANCE.impactSplashPotion(super.worldObj, this.brewStack, mop, new ModifiersImpact(new EntityPosition(this), false, 0, EntityUtil.playerOrFake(super.worldObj, this.getThrower())))) {
-         super.worldObj.playAuxSFX(2002, MathHelper.floor_double(super.posX), MathHelper.floor_double(super.posY), MathHelper.floor_double(super.posZ), this.getColor());
+      if(!super.worldObj.isRemote && mop != null) {
+         ModifiersImpact impact = new ModifiersImpact(new EntityPosition(this), false, (this.brewLevel - 1) * 3, EntityUtil.playerOrFake(super.worldObj, this.getThrower()));
+         impact.extent += (this.brewLevel - 1) * 2;
+         impact.lifetime += (this.brewLevel - 1) * 200;
+         if(WitcheryBrewRegistry.INSTANCE.impactSplashPotion(super.worldObj, this.brewStack, mop, impact)) {
+            super.worldObj.playAuxSFX(2002, MathHelper.floor_double(super.posX), MathHelper.floor_double(super.posY), MathHelper.floor_double(super.posZ), this.getColor());
+            if (this.brewLevel >= 2) {
+               com.emoniph.witchery.util.ParticleEffect.SPELL_COLORED.send(com.emoniph.witchery.util.SoundEffect.RANDOM_ORB, super.worldObj, super.posX, super.posY, super.posZ, 1.5D, 1.5D, 16 * this.brewLevel, this.getColor());
+            }
+         }
       }
 
       this.setDead();
@@ -90,6 +117,9 @@ public class EntityBrew extends EntityThrowableBase {
          this.setColor(WitcheryBrewRegistry.INSTANCE.getBrewColor(this.brewStack.getTagCompound()));
          if(nbtRoot.hasKey("Spell")) {
             this.setIsSpell(nbtRoot.getBoolean("Spell"));
+         }
+         if(nbtRoot.hasKey("BrewLevel")) {
+            this.brewLevel = Math.max(1, nbtRoot.getInteger("BrewLevel"));
          }
       }
 
@@ -104,6 +134,7 @@ public class EntityBrew extends EntityThrowableBase {
       if(this.brewStack != null) {
          nbtRoot.setTag("Brew", this.brewStack.writeToNBT(new NBTTagCompound()));
          nbtRoot.setBoolean("Spell", this.getIsSpell());
+         nbtRoot.setInteger("BrewLevel", this.brewLevel);
       }
 
    }

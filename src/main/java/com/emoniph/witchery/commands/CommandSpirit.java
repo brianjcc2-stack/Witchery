@@ -15,6 +15,8 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.potion.Potion;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
@@ -36,7 +38,7 @@ public class CommandSpirit extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/spirit <form|subdued|astral|summon|supreme|status|level <0-10>>";
+        return "/spirit <form|subdued|astral|summon|invisible|vault|status|level <0-10>|help>";
     }
 
     @Override
@@ -52,13 +54,10 @@ public class CommandSpirit extends CommandBase {
     @Override
     public List addTabCompletionOptions(ICommandSender sender, String[] args) {
         if (args.length == 1) {
-            return getListOfStringsMatchingLastWord(args, "form", "subdued", "astral", "summon", "supreme", "status", "level", "forma", "orbe", "invocar", "suprema", "estado", "nivel");
+            return getListOfStringsMatchingLastWord(args, "form", "subdued", "dementor", "auror", "astral", "summon", "invisible", "sigilo", "vault", "relicario", "status", "level", "help", "forma", "humo", "invocar", "proyeccion", "estado", "nivel", "ayuda", "guia");
         }
-        if (args.length == 2 && (args[0].equalsIgnoreCase("form") || args[0].equalsIgnoreCase("forma"))) {
-            return getListOfStringsMatchingLastWord(args, "spirit", "subdued", "espectro", "orbe");
-        }
-        if (args.length == 2 && (args[0].equalsIgnoreCase("supreme") || args[0].equalsIgnoreCase("suprema"))) {
-            return getListOfStringsMatchingLastWord(args, "claim", "revoke", "status", "reclamar", "renunciar");
+        if (args.length == 2 && (args[0].equalsIgnoreCase("subdued") || args[0].equalsIgnoreCase("orbe") || args[0].equalsIgnoreCase("form") || args[0].equalsIgnoreCase("forma"))) {
+            return getListOfStringsMatchingLastWord(args, "dementor", "auror", "auto", "human", "humano");
         }
         return null;
     }
@@ -70,102 +69,158 @@ public class CommandSpirit extends CommandBase {
         ExtendedPlayer playerEx = ExtendedPlayer.get(player);
         if (playerEx == null) return;
 
+        boolean isSupreme = SupremeWitchData.isPlayerSupreme(player);
+        int lvl = playerEx.getEffectiveSpiritLevel();
+
         if (args.length == 0) {
-            int lvl = playerEx.getSpiritLevel();
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "=== Magia del Plano Espiritual (Nivel: " + lvl + "/10) ==="));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "/spirit form [spirit|subdued]" + EnumChatFormatting.GRAY + " - Transfórmate en Espectro o Espíritu Subyugado (Orbe)."));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "/spirit subdued" + EnumChatFormatting.GRAY + " (o /spirit orbe) - Forma de Espíritu Subyugado veloz e intangible."));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "/spirit summon" + EnumChatFormatting.GRAY + " (o /spirit invocar) - Invoca espíritus subyugados para atacar como Leonard."));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "/spirit astral" + EnumChatFormatting.GRAY + " - Separa tu espíritu de tu cuerpo carnal (Req. Nivel 10)."));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "/spirit supreme" + EnumChatFormatting.GRAY + " (o suprema) - Consulta o gestiona el Manto de la Bruja Suprema."));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "/spirit status" + EnumChatFormatting.GRAY + " (o estado) - Muestra tus poderes espirituales desbloqueados."));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "/spirit level <0-10>" + EnumChatFormatting.GRAY + " (o nivel) - Ajusta tu nivel de espíritu."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "╔════════════════════════════════════════════╗"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "  ★ MAGIA DEL PLANO ESPIRITUAL ★"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "╚════════════════════════════════════════════╝"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "Tu Nivel de Espíritu: " + EnumChatFormatting.AQUA + lvl + "/10" + (isSupreme ? EnumChatFormatting.GOLD + " (Bruja Suprema)" : "")));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "/spirit subdued [dementor|auror|auto]" + EnumChatFormatting.GRAY + " - Vuelo de Humo de Harry Potter (Nvl 3)."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "/spirit summon" + EnumChatFormatting.GRAY + " - Invoca espíritus guardianes aliados (Req. Nivel 5)."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "/spirit invisible" + EnumChatFormatting.GRAY + " - Manto de invisibilidad astral / sigilo (Req. Nivel 6)."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "/spirit relicario" + EnumChatFormatting.GRAY + " - Abre tu Relicario del Vacío [54 slots] (Req. Nivel 8)."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "/spirit astral" + EnumChatFormatting.GRAY + " - Proyección Astral y Posesión de Criaturas (Req. Nivel 10)."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "/spirit status" + EnumChatFormatting.GRAY + " - Consulta tus bendiciones y habilidades espirituales."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "/spirit level <0-10>" + EnumChatFormatting.GRAY + " - Ajusta tu nivel de espíritu."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "/spirit guia" + EnumChatFormatting.GRAY + " - Guía detallada de la senda espiritual."));
             return;
         }
 
         String sub = args[0].toLowerCase();
 
-        if (sub.equals("form") || sub.equals("forma")) {
-            boolean isSupreme = SupremeWitchData.isPlayerSupreme(player);
+        if (sub.equals("help") || sub.equals("ayuda") || sub.equals("guia")) {
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "=== Senda del Espíritu (Desbloqueos y Progresión) ==="));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "--- Límite Terrenal (Cualquier Bruja: Niveles 1–3) ---"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "• Nivel 1-2: " + EnumChatFormatting.WHITE + "Percepción etérea de espectros y sintonía del Mundo de los Sueños."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "• Nivel 3: " + EnumChatFormatting.WHITE + "Vuelo de Humo Dementor/Auror (/spirit subdued) — Vence a una Pesadilla."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "--- Trascendencia Suprema (Exclusivo Bruja Suprema: Niveles 4–10) ---"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "• Nivel 4: " + EnumChatFormatting.WHITE + "Vínculo del Más Allá — Canalización de energía de infusión amplificada."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "• Nivel 5: " + EnumChatFormatting.WHITE + "Danza de Espíritus Guardianes (/spirit summon) — Derrota 3 espectros."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "• Nivel 6: " + EnumChatFormatting.WHITE + "Manto de Sigilo Espectral (/spirit invisible o agacharse con Shift)."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "• Nivel 7: " + EnumChatFormatting.WHITE + "Resistencia Etérea (Inmunidad a asfixia y ralentizaciones) — Purga 6 espectros."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "• Nivel 8: " + EnumChatFormatting.WHITE + "Relicario del Vacío (Cofre dimensional 54 slots) — Rito Ladrón de Almas o Demonio."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "• Nivel 9: " + EnumChatFormatting.WHITE + "Paso Etéreo (Atravesar muros sólidos) — Crea un Horrocrux o vence a Cazador/Muerte."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "• Nivel 10: " + EnumChatFormatting.WHITE + "Proyección Astral & Posesión de Criaturas (/spirit astral o 'ex corpus') — Vence a Baba Yaga."));
+            return;
+        }
 
+        if (sub.equals("form") || sub.equals("forma") || sub.equals("transformar")) {
             if (args.length >= 2) {
                 String type = args[1].toLowerCase();
-                if (type.equals("subdued") || type.equals("orbe") || type.equals("wisp") || type.equals("subyugado")) {
-                    if (playerEx.getSpiritLevel() < 3 && !isSupreme) {
-                        player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Necesitas nivel de Espíritu 3 o superior (o ser la Bruja Suprema) para adoptar la Forma de Espíritu Subyugado. Tu nivel: " + playerEx.getSpiritLevel()));
+                if (type.equals("subdued") || type.equals("orbe") || type.equals("wisp") || type.equals("subyugado") || type.equals("dementor") || type.equals("auror") || type.equals("humo")) {
+                    if (lvl < 3 && !isSupreme) {
+                        player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Necesitas nivel de Espíritu 3 o superior para el Vuelo de Humo. Tu nivel: " + lvl));
                         return;
                     }
+                    if (type.equals("dementor")) playerEx.setSubduedSpiritStyle(1);
+                    else if (type.equals("auror")) playerEx.setSubduedSpiritStyle(2);
+
                     Shapeshift.INSTANCE.shiftTo(player, TransformCreature.SUBDUED_SPIRIT);
                     player.worldObj.playSoundAtEntity(player, "witchery:mob.spirit.say", 1.0F, 1.2F);
-                    ParticleEffect.PORTAL.send(SoundEffect.NONE, player.worldObj, player.posX, player.posY + 1.0D, player.posZ, 0.5D, 1.0D, 15);
-                    player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "¡Has adoptado la Forma de Espíritu Subyugado!"));
+                    player.worldObj.playSoundAtEntity(player, "mob.bat.takeoff", 1.0F, 0.7F);
+                    int st = playerEx.getSubduedSpiritStyle();
+                    ParticleEffect burstEffect = (st == 2) ? ParticleEffect.CLOUD : ParticleEffect.LARGE_SMOKE;
+                    burstEffect.send(SoundEffect.NONE, player.worldObj, player.posX, player.posY + 1.0D, player.posZ, 0.8D, 1.0D, 16);
+                    String styleName = st == 1 ? "Dementor (Humo Oscuro)" : (st == 2 ? "Auror (Humo Luminoso)" : "Automático");
+                    player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "★ " + EnumChatFormatting.AQUA + "¡Vuelo de Humo Activo [" + EnumChatFormatting.GOLD + styleName + EnumChatFormatting.AQUA + "]!"));
+                    player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "• Salta para despegar y usa tu mirada para guiar el vuelo."));
+                    player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "• Pulsa " + EnumChatFormatting.YELLOW + "ESPACIO" + EnumChatFormatting.GRAY + " en el aire para hacer sprints rápidos (dashes)."));
+                    player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "• Solo te detienes tocando el suelo o picando con Shift."));
                     return;
-                } else if (type.equals("spirit") || type.equals("espectro") || type.equals("humanoide")) {
-                    if (playerEx.getSpiritLevel() < 4) {
-                        player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Necesitas nivel de Espíritu 4 o superior para adoptar la Forma de Espectro. Tu nivel: " + playerEx.getSpiritLevel()));
-                        return;
+                } else if (type.equals("human") || type.equals("humano") || type.equals("mortal") || type.equals("normal") || type.equals("none")) {
+                    Shapeshift.INSTANCE.shiftTo(player, TransformCreature.NONE);
+                    if (!player.isPotionActive(Potion.invisibility)) {
+                        player.setInvisible(false);
                     }
-                    Shapeshift.INSTANCE.shiftTo(player, TransformCreature.SPIRIT);
-                    player.worldObj.playSoundAtEntity(player, "witchery:mob.spirit.say", 1.0F, 0.8F);
-                    ParticleEffect.PORTAL.send(SoundEffect.NONE, player.worldObj, player.posX, player.posY + 1.0D, player.posZ, 0.5D, 1.0D, 15);
-                    player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "¡Has adoptado la Forma de Espectro!"));
+                    player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "Has regresado a tu forma terrenal."));
                     return;
                 }
             }
 
             TransformCreature current = playerEx.getCreatureType();
-            if (current == TransformCreature.SPIRIT) {
-                if (playerEx.getSpiritLevel() >= 3 || isSupreme) {
-                    Shapeshift.INSTANCE.shiftTo(player, TransformCreature.SUBDUED_SPIRIT);
-                    player.worldObj.playSoundAtEntity(player, "witchery:mob.spirit.say", 1.0F, 1.2F);
-                    ParticleEffect.PORTAL.send(SoundEffect.NONE, player.worldObj, player.posX, player.posY + 1.0D, player.posZ, 0.5D, 1.0D, 15);
-                    player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "¡Has cambiado a Forma de Espíritu Subyugado (Orbe)!"));
-                } else {
-                    Shapeshift.INSTANCE.shiftTo(player, TransformCreature.NONE);
-                    player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "Has regresado a tu forma terrenal."));
-                }
-            } else if (current == TransformCreature.SUBDUED_SPIRIT) {
+            if (current == TransformCreature.SUBDUED_SPIRIT || current == TransformCreature.SPIRIT) {
                 Shapeshift.INSTANCE.shiftTo(player, TransformCreature.NONE);
+                if (!player.isPotionActive(Potion.invisibility)) {
+                    player.setInvisible(false);
+                }
                 player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "Has regresado a tu forma terrenal."));
             } else {
-                if (playerEx.getSpiritLevel() >= 4) {
-                    Shapeshift.INSTANCE.shiftTo(player, TransformCreature.SPIRIT);
-                    player.worldObj.playSoundAtEntity(player, "witchery:mob.spirit.say", 1.0F, 0.8F);
-                    ParticleEffect.PORTAL.send(SoundEffect.NONE, player.worldObj, player.posX, player.posY + 1.0D, player.posZ, 0.5D, 1.0D, 15);
-                    player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "¡Has adoptado la Forma de Espectro!"));
-                } else if (playerEx.getSpiritLevel() >= 3 || isSupreme) {
+                if (lvl >= 3 || isSupreme) {
                     Shapeshift.INSTANCE.shiftTo(player, TransformCreature.SUBDUED_SPIRIT);
                     player.worldObj.playSoundAtEntity(player, "witchery:mob.spirit.say", 1.0F, 1.2F);
-                    ParticleEffect.PORTAL.send(SoundEffect.NONE, player.worldObj, player.posX, player.posY + 1.0D, player.posZ, 0.5D, 1.0D, 15);
-                    player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "¡Has adoptado la Forma de Espíritu Subyugado!"));
+                    player.worldObj.playSoundAtEntity(player, "mob.bat.takeoff", 1.0F, 0.7F);
+                    int st = playerEx.getSubduedSpiritStyle();
+                    ParticleEffect burstEffect = (st == 2) ? ParticleEffect.CLOUD : ParticleEffect.LARGE_SMOKE;
+                    burstEffect.send(SoundEffect.NONE, player.worldObj, player.posX, player.posY + 1.0D, player.posZ, 0.8D, 1.0D, 16);
+                    String styleName = st == 1 ? "Dementor (Humo Oscuro)" : (st == 2 ? "Auror (Humo Luminoso)" : "Automático");
+                    player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "★ " + EnumChatFormatting.AQUA + "¡Vuelo de Humo Activo [" + EnumChatFormatting.GOLD + styleName + EnumChatFormatting.AQUA + "]!"));
+                    player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "• Salta para despegar y usa tu mirada para guiar el vuelo."));
+                    player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "• Pulsa " + EnumChatFormatting.YELLOW + "ESPACIO" + EnumChatFormatting.GRAY + " en el aire para hacer sprints rápidos (dashes)."));
+                    player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "• Solo te detienes tocando el suelo o picando con Shift."));
                 } else {
-                    player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Necesitas nivel de Espíritu 3 para Espíritu Subyugado, o 4 para Espectro. Tu nivel: " + playerEx.getSpiritLevel()));
+                    player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Necesitas al menos nivel de Espíritu 3 para adoptar el Vuelo de Humo. Tu nivel: " + lvl));
                 }
             }
             return;
         }
 
-        if (sub.equals("subdued") || sub.equals("orbe") || sub.equals("wisp") || sub.equals("subyugado")) {
-            boolean isSupreme = SupremeWitchData.isPlayerSupreme(player);
-            if (playerEx.getSpiritLevel() < 3 && !isSupreme) {
-                player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Necesitas nivel de Espíritu 3 o superior (o ser la Bruja Suprema) para adoptar la Forma de Espíritu Subyugado. Tu nivel: " + playerEx.getSpiritLevel()));
+        if (sub.equals("human") || sub.equals("humano") || sub.equals("mortal") || sub.equals("normal") || sub.equals("none")) {
+            Shapeshift.INSTANCE.shiftTo(player, TransformCreature.NONE);
+            if (!player.isPotionActive(Potion.invisibility)) {
+                player.setInvisible(false);
+            }
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "Has regresado a tu forma terrenal."));
+            return;
+        }
+
+        if (sub.equals("subdued") || sub.equals("orbe") || sub.equals("wisp") || sub.equals("subyugado") || sub.equals("dementor") || sub.equals("auror") || sub.equals("humo")) {
+            if (lvl < 3 && !isSupreme) {
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Necesitas nivel de Espíritu 3 o superior para el Vuelo de Humo. Tu nivel: " + lvl));
                 return;
             }
-            if (playerEx.getCreatureType() == TransformCreature.SUBDUED_SPIRIT) {
+
+            int requestedStyle = -1;
+            if (sub.equals("dementor")) {
+                requestedStyle = 1;
+            } else if (sub.equals("auror")) {
+                requestedStyle = 2;
+            } else if (args.length >= 2) {
+                String a = args[1].toLowerCase();
+                if (a.equals("dementor") || a.equals("dark") || a.equals("oscuro")) requestedStyle = 1;
+                else if (a.equals("auror") || a.equals("light") || a.equals("luz")) requestedStyle = 2;
+                else if (a.equals("auto") || a.equals("normal")) requestedStyle = 0;
+            }
+
+            if (requestedStyle != -1) {
+                playerEx.setSubduedSpiritStyle(requestedStyle);
+            }
+
+            if (playerEx.getCreatureType() == TransformCreature.SUBDUED_SPIRIT && requestedStyle == -1) {
                 Shapeshift.INSTANCE.shiftTo(player, TransformCreature.NONE);
                 player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "Has regresado a tu forma terrenal."));
             } else {
                 Shapeshift.INSTANCE.shiftTo(player, TransformCreature.SUBDUED_SPIRIT);
                 player.worldObj.playSoundAtEntity(player, "witchery:mob.spirit.say", 1.0F, 1.2F);
-                ParticleEffect.PORTAL.send(SoundEffect.NONE, player.worldObj, player.posX, player.posY + 1.0D, player.posZ, 0.5D, 1.0D, 15);
-                player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "¡Has adoptado la Forma de Espíritu Subyugado!"));
+                player.worldObj.playSoundAtEntity(player, "mob.bat.takeoff", 1.0F, 0.7F);
+                ParticleEffect.LARGE_SMOKE.send(SoundEffect.NONE, player.worldObj, player.posX, player.posY + 1.0D, player.posZ, 0.8D, 1.0D, 16);
+                int st = playerEx.getSubduedSpiritStyle();
+                String styleName = st == 1 ? "Dementor (Humo Oscuro)" : (st == 2 ? "Auror (Humo Luminoso)" : "Automático");
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "★ " + EnumChatFormatting.AQUA + "¡Vuelo de Humo Activo [" + EnumChatFormatting.GOLD + styleName + EnumChatFormatting.AQUA + "]!"));
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "• Salta para despegar y usa tu mirada para guiar el vuelo."));
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "• Pulsa " + EnumChatFormatting.YELLOW + "ESPACIO" + EnumChatFormatting.GRAY + " en el aire para hacer sprints rápidos (dashes)."));
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "• Solo te detienes tocando el suelo o picando con Shift."));
+            }
+            if ((lvl >= 3 || isSupreme) && playerEx.getCreatureType() == TransformCreature.SUBDUED_SPIRIT) {
+                SupremeWitchData.completeWonder(player, SupremeWitchData.WONDER_DESCENSUM);
             }
             return;
         }
 
         if (sub.equals("summon") || sub.equals("invocar") || sub.equals("attack") || sub.equals("atacar")) {
-            if (playerEx.getSpiritLevel() < 5) {
-                player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Necesitas nivel de Espíritu 5 o superior para invocar la danza de espíritus subyugados. Tu nivel: " + playerEx.getSpiritLevel()));
+            if (lvl < 5 && !isSupreme) {
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Necesitas nivel de Espíritu 5 o superior para invocar espíritus guardianes. Tu nivel: " + lvl));
                 return;
             }
 
@@ -178,11 +233,12 @@ public class CommandSpirit extends CommandBase {
             }
 
             for (int i = 0; i < count; i++) {
-                double spawnX = player.posX + (player.worldObj.rand.nextDouble() - 0.5D) * 4.0D;
-                double spawnY = player.posY + 1.0D + player.worldObj.rand.nextDouble() * 1.5D;
-                double spawnZ = player.posZ + (player.worldObj.rand.nextDouble() - 0.5D) * 4.0D;
+                double angle = Math.toRadians((double) i * (360.0D / (double) count));
+                double spawnX = player.posX + Math.cos(angle) * 2.5D;
+                double spawnY = player.posY + 0.5D;
+                double spawnZ = player.posZ + Math.sin(angle) * 2.5D;
 
-                EntityLostSoul soul = (EntityLostSoul) Infusion.spawnCreature(player.worldObj, EntityLostSoul.class, (int)spawnX, (int)spawnY, (int)spawnZ, null, 0, 0, ParticleEffect.INSTANT_SPELL, SoundEffect.RANDOM_POP);
+                EntityLostSoul soul = (EntityLostSoul) Infusion.spawnCreature(player.worldObj, EntityLostSoul.class, (int) spawnX, (int) spawnY, (int) spawnZ, null, 0, 0, ParticleEffect.INSTANT_SPELL, SoundEffect.RANDOM_POP);
                 if (soul != null) {
                     soul.setSummoner(player);
                     soul.setSoulType(i % 3);
@@ -195,13 +251,56 @@ public class CommandSpirit extends CommandBase {
 
             player.worldObj.playSoundAtEntity(player, "witchery:mob.spirit.say", 1.2F, 0.9F);
             ParticleEffect.PORTAL.send(SoundEffect.RANDOM_ORB, player.worldObj, player.posX, player.posY + 1.0D, player.posZ, 2.0D, 2.0D, 30);
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "¡Has desatado una horda de espíritus subyugados para que luchen por ti!"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "¡Has desatado una danza de espíritus subyugados para que luchen por ti!"));
+            if (targetEnemy != null) {
+                playerEx.tryAdvanceSpiritMilestone(6, "Comandar espíritus guardianes en batalla");
+            }
+            return;
+        }
+
+        if (sub.equals("invisible") || sub.equals("sigilo") || sub.equals("invis")) {
+            boolean isAstral = playerEx.isAstralProjecting();
+            boolean isSpiritForm = playerEx.getCreatureType() == TransformCreature.SPIRIT || playerEx.getCreatureType() == TransformCreature.SUBDUED_SPIRIT || isAstral;
+            if (!isSpiritForm && lvl < 6 && !isSupreme) {
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "El manto de invisibilidad requiere estar en Proyección Astral o forma espiritual (o Nivel de Espíritu 6+)."));
+                return;
+            }
+            if (player.isPotionActive(Potion.invisibility)) {
+                player.removePotionEffect(Potion.invisibility.id);
+                player.setInvisible(false);
+                player.worldObj.playSoundAtEntity(player, "witchery:mob.spirit.say", 0.8F, 1.3F);
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "✦ " + EnumChatFormatting.WHITE + "Has " + EnumChatFormatting.YELLOW + "desactivado" + EnumChatFormatting.WHITE + " el manto de invisibilidad. Tu forma etérea vuelve a ser visible."));
+            } else {
+                player.addPotionEffect(new net.minecraft.potion.PotionEffect(Potion.invisibility.id, 72000, 0, true));
+                player.worldObj.playSoundAtEntity(player, "mob.bat.takeoff", 0.8F, 0.6F);
+                ParticleEffect.LARGE_SMOKE.send(SoundEffect.NONE, player.worldObj, player.posX, player.posY + 1.0D, player.posZ, 0.5D, 0.5D, 12);
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "✦ " + EnumChatFormatting.LIGHT_PURPLE + "Has " + EnumChatFormatting.GREEN + "activado" + EnumChatFormatting.LIGHT_PURPLE + " el manto de invisibilidad astral. Ahora eres completamente invisible."));
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "(Escribe /spirit invisible de nuevo o sal de la proyección para desactivarlo)."));
+            }
+            return;
+        }
+
+        if (sub.equals("vault") || sub.equals("relicario") || sub.equals("cofre") || sub.equals("boveda")) {
+            if (lvl < 8 && !isSupreme) {
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "El Relicario del Vacío requiere nivel de Espíritu 8 o superior. Tu nivel: " + lvl));
+                return;
+            }
+            player.displayGUIChest(playerEx.getVoidVault());
+            SoundEffect.MOB_ENDERMEN_PORTAL.playOnlyTo(player, 0.8F, 1.4F);
+            ParticleEffect.PORTAL.send(SoundEffect.NONE, player, 0.5D, 1.0D, 16);
+            if (!player.inventory.hasItem(Witchery.Items.VOID_LOCKET)) {
+                ItemStack locket = new ItemStack(Witchery.Items.VOID_LOCKET);
+                if (!player.inventory.addItemStackToInventory(locket)) {
+                    player.dropPlayerItemWithRandomChoice(locket, false);
+                }
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "✦ Se te ha entregado el [Relicario del Vacío] en tu inventario."));
+            }
             return;
         }
 
         if (sub.equals("astral") || sub.equals("corpus") || sub.equals("proyeccion")) {
-            if (playerEx.getSpiritLevel() < 10) {
-                player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Necesitas maestría de Espíritu 10 para la Proyección Astral. Tu nivel actual: " + playerEx.getSpiritLevel()));
+            if (lvl < 10 && !isSupreme) {
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Necesitas maestría de Espíritu 10 para la Proyección Astral. Tu nivel: " + lvl));
                 return;
             }
             ExtendedPlayer.trySayAstralProjection(player, "astral");
@@ -214,92 +313,43 @@ public class CommandSpirit extends CommandBase {
 
         if (sub.equals("level") || sub.equals("nivel")) {
             if (args.length < 2) {
-                player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "Nivel actual de Espíritu: " + playerEx.getSpiritLevel() + "/10"));
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "Nivel actual de Espíritu: " + lvl + "/10"));
                 return;
             }
             try {
                 int newLvl = Integer.parseInt(args[1]);
                 if (newLvl < 0) newLvl = 0;
                 if (newLvl > 10) newLvl = 10;
+                if (newLvl > 3 && !isSupreme && !player.capabilities.isCreativeMode) {
+                    newLvl = 3;
+                    player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "El límite espiritual terrenal es Nivel 3. Solo la Bruja Suprema puede trascender a los niveles 4–10."));
+                }
                 playerEx.setSpiritLevel(newLvl);
-                player.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "Nivel de Espíritu establecido a " + newLvl + "/10."));
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "Nivel de Espíritu ajustado a: " + newLvl + "/10"));
             } catch (NumberFormatException e) {
-                player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Introduce un nivel válido de 0 a 10."));
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Uso: /spirit level <0-10>"));
             }
-            return;
-        }
-
-        if (sub.equals("supreme") || sub.equals("suprema")) {
-            SupremeWitchData data = SupremeWitchData.get(player.worldObj);
-            if (data == null) {
-                player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Error obteniendo datos de la Bruja Suprema."));
-                return;
-            }
-
-            if (args.length >= 2) {
-                String action = args[1].toLowerCase();
-                if (action.equals("claim") || action.equals("reclamar")) {
-                    data.setSupreme(player);
-                    if (playerEx.getSpiritLevel() == 0) {
-                        playerEx.setSpiritLevel(1);
-                    }
-                    player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "" + EnumChatFormatting.BOLD + "[Bruja Suprema] " + EnumChatFormatting.LIGHT_PURPLE + "¡Has reclamado el manto sagrado de la " + EnumChatFormatting.GOLD + "Bruja Suprema" + EnumChatFormatting.LIGHT_PURPLE + "!"));
-                    player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "[Bruja Suprema] " + EnumChatFormatting.AQUA + "Como Suprema, puedes adoptar la Forma de Espíritu Subyugado (/spirit subdued) desde el inicio."));
-                    if (net.minecraft.server.MinecraftServer.getServer() != null) {
-                        net.minecraft.server.MinecraftServer.getServer().getConfigurationManager().sendChatMsg(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "" + EnumChatFormatting.BOLD + "★ [Witchery] " + EnumChatFormatting.LIGHT_PURPLE + "¡" + EnumChatFormatting.GOLD + player.getCommandSenderName() + EnumChatFormatting.LIGHT_PURPLE + " ha ascendido como la " + EnumChatFormatting.GOLD + "Bruja Suprema" + EnumChatFormatting.LIGHT_PURPLE + "!"));
-                    }
-                    return;
-                } else if (action.equals("revoke") || action.equals("renunciar") || action.equals("clear") || action.equals("quitar")) {
-                    boolean isOp = net.minecraft.server.MinecraftServer.getServer() == null || !net.minecraft.server.MinecraftServer.getServer().isDedicatedServer() || net.minecraft.server.MinecraftServer.getServer().getConfigurationManager().func_152596_g(player.getGameProfile()) || player.capabilities.isCreativeMode;
-                    if (data.isSupreme(player) || isOp) {
-                        data.clearSupreme();
-                        player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "El manto de la Bruja Suprema ha sido liberado. El trono queda vacante."));
-                        if (net.minecraft.server.MinecraftServer.getServer() != null) {
-                            net.minecraft.server.MinecraftServer.getServer().getConfigurationManager().sendChatMsg(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "★ [Witchery] " + EnumChatFormatting.LIGHT_PURPLE + "El trono de la Bruja Suprema ha quedado vacante."));
-                        }
-                    } else {
-                        player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Solo la Bruja Suprema o un administrador pueden liberar el manto."));
-                    }
-                    return;
-                }
-            }
-
-            int myScore = SupremeWitchData.calculateWitcheryMasteryScore(player);
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "=== Manto de la Bruja Suprema ==="));
-            if (data.hasSupreme()) {
-                boolean isYou = data.isSupreme(player);
-                player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "Bruja Suprema actual: " + EnumChatFormatting.GOLD + data.getSupremeName() + (isYou ? EnumChatFormatting.GREEN + " (¡Eres tú!)" : "")));
-                if (isYou) {
-                    player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "Posees el Manto Sagrado (Forma de Espíritu Subyugado desbloqueada y aura astral)."));
-                    player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Usa '/spirit supreme revoke' si deseas renunciar al manto."));
-                }
-            } else {
-                player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "El trono está actualmente vacante."));
-            }
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "Tu Puntuación de Maestría en Brujería: " + EnumChatFormatting.GOLD + myScore + " pts"));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "(Basado en: Nivel de Espíritu, Aquelarre, Familiar, Infusión y Hechizos)"));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "✦ ¡La bruja con mayor maestría en el servidor ostenta el manto!"));
             return;
         }
 
         if (sub.equals("status") || sub.equals("estado")) {
-            int lvl = playerEx.getSpiritLevel();
-            boolean isSupreme = SupremeWitchData.isPlayerSupreme(player);
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "=== Senda Espiritual (Nivel " + lvl + "/10)" + (isSupreme ? EnumChatFormatting.GOLD + " [Bruja Suprema]" : "") + " ==="));
-            player.addChatMessage(new ChatComponentText((lvl >= 1 ? EnumChatFormatting.GREEN + "✔ " : EnumChatFormatting.RED + "✖ ") + EnumChatFormatting.WHITE + "Nivel 1: Percepción del Plano Espiritual (visión de fantasmas y espíritus)."));
-            player.addChatMessage(new ChatComponentText((lvl >= 2 ? EnumChatFormatting.GREEN + "✔ " : EnumChatFormatting.RED + "✖ ") + EnumChatFormatting.WHITE + "Nivel 2: Resonancia de Almas (sintonía ectoplásmica y resistencia)."));
-            player.addChatMessage(new ChatComponentText((lvl >= 3 || isSupreme ? EnumChatFormatting.GREEN + "✔ " : EnumChatFormatting.RED + "✖ ") + EnumChatFormatting.WHITE + "Nivel 3: Forma de Espíritu Subyugado (/spirit subdued)" + (isSupreme && lvl < 3 ? EnumChatFormatting.GOLD + " [Manto Suprema]" : "") + "."));
-            player.addChatMessage(new ChatComponentText((lvl >= 4 ? EnumChatFormatting.GREEN + "✔ " : EnumChatFormatting.RED + "✖ ") + EnumChatFormatting.WHITE + "Nivel 4: Forma de Espectro (/spirit form spirit - vuelo etéreo)."));
-            player.addChatMessage(new ChatComponentText((lvl >= 5 ? EnumChatFormatting.GREEN + "✔ " : EnumChatFormatting.RED + "✖ ") + EnumChatFormatting.WHITE + "Nivel 5: Invocación de Espíritus Subyugados (/spirit summon - danza de Leonard)."));
-            player.addChatMessage(new ChatComponentText((lvl >= 6 ? EnumChatFormatting.GREEN + "✔ " : EnumChatFormatting.RED + "✖ ") + EnumChatFormatting.WHITE + "Nivel 6: Velo de Sigilo Ectoplásmico (invisibilidad ante monstruos al agacharte)."));
-            player.addChatMessage(new ChatComponentText((lvl >= 7 ? EnumChatFormatting.GREEN + "✔ " : EnumChatFormatting.RED + "✖ ") + EnumChatFormatting.WHITE + "Nivel 7: Salvación del Alma (Death Ward ante golpes mortales con orbe salvador)."));
-            player.addChatMessage(new ChatComponentText((lvl >= 8 ? EnumChatFormatting.GREEN + "✔ " : EnumChatFormatting.RED + "✖ ") + EnumChatFormatting.WHITE + "Nivel 8: Posesión Espiritual (click derecho agachado para poseer criaturas)."));
-            player.addChatMessage(new ChatComponentText((lvl >= 9 ? EnumChatFormatting.GREEN + "✔ " : EnumChatFormatting.RED + "✖ ") + EnumChatFormatting.WHITE + "Nivel 9: Transfase y Paso Astral (atravesar muros sólidos en forma de espíritu)."));
-            player.addChatMessage(new ChatComponentText((lvl >= 10 ? EnumChatFormatting.GREEN + "✔ " : EnumChatFormatting.RED + "✖ ") + EnumChatFormatting.WHITE + "Nivel 10: Proyección Astral Total (/spirit astral - separación corporal)."));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "✦ " + EnumChatFormatting.LIGHT_PURPLE + "¿Cómo subir de nivel?: " + EnumChatFormatting.GRAY + "Derrota criaturas del plano espiritual (Banshees, Poltergeists, Pesadillas o jefes como Leonard y Lord of the Torment) para absorber su esencia."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "╔════════════════════════════════════════════╗"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "  ★ ESTADO DEL PODER ESPIRITUAL ★"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "╚════════════════════════════════════════════╝"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "Nivel de Espíritu: " + EnumChatFormatting.AQUA + lvl + "/10" + (isSupreme ? EnumChatFormatting.GOLD + " (Bruja Suprema)" : "")));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "Forma activa: " + EnumChatFormatting.WHITE + playerEx.getCreatureType()));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "Proyección Astral: " + (playerEx.isAstralProjecting() ? EnumChatFormatting.GREEN + "Activa" : EnumChatFormatting.RED + "Inactiva")));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "Habilidades desbloqueadas:"));
+            player.addChatMessage(new ChatComponentText((lvl >= 3 || isSupreme ? EnumChatFormatting.GREEN + "  ✔ " : EnumChatFormatting.RED + "  ✖ ") + EnumChatFormatting.WHITE + "Nvl 3: Vuelo de Humo Dementor/Auror (/spirit subdued)"));
+            player.addChatMessage(new ChatComponentText((lvl >= 5 || isSupreme ? EnumChatFormatting.GREEN + "  ✔ " : EnumChatFormatting.RED + "  ✖ ") + EnumChatFormatting.WHITE + "Nvl 5: Invocación de Espíritus Guardianes (/spirit summon)"));
+            player.addChatMessage(new ChatComponentText((lvl >= 6 || isSupreme ? EnumChatFormatting.GREEN + "  ✔ " : EnumChatFormatting.RED + "  ✖ ") + EnumChatFormatting.WHITE + "Nvl 6: Manto de Sigilo Espectral (/spirit invisible)"));
+            player.addChatMessage(new ChatComponentText((lvl >= 7 || isSupreme ? EnumChatFormatting.GREEN + "  ✔ " : EnumChatFormatting.RED + "  ✖ ") + EnumChatFormatting.WHITE + "Nvl 7: Resistencia Etérea (Inmunidad a Asfixia)"));
+            player.addChatMessage(new ChatComponentText((lvl >= 8 || isSupreme ? EnumChatFormatting.GREEN + "  ✔ " : EnumChatFormatting.RED + "  ✖ ") + EnumChatFormatting.WHITE + "Nvl 8: Relicario del Vacío [54 slots] (/spirit relicario)"));
+            player.addChatMessage(new ChatComponentText((lvl >= 9 || isSupreme ? EnumChatFormatting.GREEN + "  ✔ " : EnumChatFormatting.RED + "  ✖ ") + EnumChatFormatting.WHITE + "Nvl 9: Paso Etéreo (Atravesar Muros)"));
+            player.addChatMessage(new ChatComponentText((lvl >= 10 || isSupreme ? EnumChatFormatting.GREEN + "  ✔ " : EnumChatFormatting.RED + "  ✖ ") + EnumChatFormatting.WHITE + "Nvl 10: Proyección Astral y Posesión de Criaturas (/spirit astral)"));
             return;
         }
 
-        player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Subcomando desconocido. Usa: /spirit <form|subdued|summon|astral|supreme|status|level <0-10>>"));
+        player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Comando desconocido. Usa: /spirit <form|subdued|summon|invisible|vault|astral|status|level|help>"));
     }
 }

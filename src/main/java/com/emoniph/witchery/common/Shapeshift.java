@@ -97,6 +97,12 @@ public class Shapeshift {
             player.sendPlayerAbilities();
          }
 
+         if(playerEx.getCreatureType() == TransformCreature.NONE) {
+            if(!player.isPotionActive(net.minecraft.potion.Potion.invisibility)) {
+               player.setInvisible(false);
+            }
+         }
+
          Witchery.packetPipeline.sendToAll((IMessage)(new PacketSyncEntitySize(player)));
          Witchery.packetPipeline.sendTo((IMessage)(new PacketSyncEntitySize(player)), player);
       }
@@ -105,7 +111,7 @@ public class Shapeshift {
 
    public void updatePlayerState(EntityPlayer player, ExtendedPlayer playerEx) {
       boolean isGhost = WorldProviderDreamWorld.getPlayerIsGhost(com.emoniph.witchery.infusion.Infusion.getNBT(player));
-      boolean isSpirit = playerEx.getCreatureType() == TransformCreature.SPIRIT || playerEx.getCreatureType() == TransformCreature.SUBDUED_SPIRIT || (isGhost && playerEx.getSpiritLevel() >= 1) || playerEx.isAstralProjecting();
+      boolean isSpirit = playerEx.getCreatureType() == TransformCreature.SPIRIT || (isGhost && playerEx.getSpiritLevel() >= 1) || playerEx.isAstralProjecting();
       if(playerEx.getCreatureType() == TransformCreature.BAT || isSpirit) {
          if(!player.capabilities.allowFlying) {
             player.capabilities.allowFlying = true;
@@ -121,7 +127,20 @@ public class Shapeshift {
          }
       }
 
-      if (isSpirit && player.capabilities.isFlying && (playerEx.getSpiritLevel() >= 9 || playerEx.isAstralProjecting())) {
+      if (playerEx.getCreatureType() == TransformCreature.SUBDUED_SPIRIT) {
+         player.fallDistance = 0.0F;
+         if (!player.capabilities.isCreativeMode) {
+            if (player.capabilities.isFlying) {
+               player.capabilities.isFlying = false;
+            }
+            if (player.capabilities.allowFlying) {
+               player.capabilities.allowFlying = false;
+               player.sendPlayerAbilities();
+            }
+         }
+      }
+
+      if (isSpirit && player.capabilities.isFlying && (playerEx.getEffectiveSpiritLevel() >= 9 || playerEx.isAstralProjecting())) {
          player.noClip = true;
       } else if (!player.capabilities.isCreativeMode) {
          player.noClip = false;
@@ -382,7 +401,7 @@ public class Shapeshift {
          return (new Shapeshift.StatBoost(-12.0F)).setFlying(true);
       }
       if (creature == TransformCreature.SUBDUED_SPIRIT) {
-         return (new Shapeshift.StatBoost(0.15F, 0.0D, 0.0D, -12, 0.0F, 0.4F, -1, 10.0F)).setFlying(true);
+         return (new Shapeshift.StatBoost(0.20F, 0.0D, 0.0D, -12, 0.0F, 0.5F, -1, 10.0F)).setFlying(false);
       }
       switch(Shapeshift.NamelessClass26779675.$SwitchMap$com$emoniph$witchery$util$TransformCreature[creature.ordinal()]) {
       case 1:

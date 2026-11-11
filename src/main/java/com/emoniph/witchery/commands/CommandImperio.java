@@ -33,7 +33,7 @@ public class CommandImperio extends CommandBase {
     @Override
     public List addTabCompletionOptions(ICommandSender sender, String[] args) {
         if (args.length == 1) {
-            return getListOfStringsMatchingLastWord(args, "control", "follow", "stay", "attack", "inventory", "forward", "backward", "coord", "release",
+            return getListOfStringsMatchingLastWord(args, "control", "follow", "stay", "attack", "inventory", "forward", "backward", "coord", "release", "guia", "help", "ayuda",
                     "seguir", "quieto", "atacar", "liberar", "adelante", "atras");
         }
         return null;
@@ -140,16 +140,29 @@ public class CommandImperio extends CommandBase {
             ChatUtil.sendPlain(player, EnumChatFormatting.LIGHT_PURPLE + "/imperio attack" + EnumChatFormatting.GRAY + " - Ordena atacar al objetivo que estás mirando.");
             ChatUtil.sendPlain(player, EnumChatFormatting.LIGHT_PURPLE + "/imperio inventory" + EnumChatFormatting.GRAY + " - Abre el inventario de equipamiento de la criatura.");
             ChatUtil.sendPlain(player, EnumChatFormatting.LIGHT_PURPLE + "/imperio forward <bloques>" + EnumChatFormatting.GRAY + " - La mueve hacia adelante.");
+            ChatUtil.sendPlain(player, EnumChatFormatting.LIGHT_PURPLE + "/imperio coord <x> <y> <z>" + EnumChatFormatting.GRAY + " - Ordena marchar a coordenadas.");
             ChatUtil.sendPlain(player, EnumChatFormatting.LIGHT_PURPLE + "/imperio release" + EnumChatFormatting.GRAY + " - Libera a la criatura.");
+            ChatUtil.sendPlain(player, EnumChatFormatting.LIGHT_PURPLE + "/imperio guia" + EnumChatFormatting.GRAY + " - Guía detallada de la Maldición Imperius.");
             return;
         }
 
         String sub = args[0].toLowerCase();
 
+        if (sub.equals("guia") || sub.equals("help") || sub.equals("ayuda")) {
+            ChatUtil.sendPlain(player, EnumChatFormatting.DARK_PURPLE + "╔════════════════════════════════════════════╗");
+            ChatUtil.sendPlain(player, EnumChatFormatting.GOLD + "  ★ GUÍA DE LA MALDICIÓN IMPERIUS ★");
+            ChatUtil.sendPlain(player, EnumChatFormatting.DARK_PURPLE + "╚════════════════════════════════════════════╝");
+            ChatUtil.sendPlain(player, EnumChatFormatting.YELLOW + "1. Dominar: " + EnumChatFormatting.WHITE + "Lanza el hechizo Imperio con la Rama Mística (↑ ↑ ↓ ← ←) o usa /imperio control mirando a una criatura.");
+            ChatUtil.sendPlain(player, EnumChatFormatting.YELLOW + "2. Órdenes Tácticas: " + EnumChatFormatting.WHITE + "Usa /imperio follow, /imperio stay, /imperio attack (mirando al rival) o /imperio coord <x> <y> <z>.");
+            ChatUtil.sendPlain(player, EnumChatFormatting.YELLOW + "3. Equipamiento: " + EnumChatFormatting.WHITE + "Usa /imperio inventory para equipar armas o armaduras a tu siervo dominado.");
+            return;
+        }
+
         if (sub.equals("control")) {
             Entity pointed = getEntityLookedAt(player, 24.0D);
             if (pointed instanceof EntityLiving && pointed.isEntityAlive()) {
                 SymbolEffectImperio.IMPERIO_TARGETS.put((EntityLiving) pointed, player);
+                com.emoniph.witchery.common.SupremeWitchData.completeWonder(player, com.emoniph.witchery.common.SupremeWitchData.WONDER_CONCILIUM);
                 ChatUtil.sendPlain(player, EnumChatFormatting.GREEN + "¡Ahora estás controlando a: " + pointed.getCommandSenderName() + "!");
             } else {
                 ChatUtil.sendPlain(player, EnumChatFormatting.RED + "No estás mirando a ninguna criatura válida para controlar.");
@@ -163,6 +176,7 @@ public class CommandImperio extends CommandBase {
             ChatUtil.sendPlain(player, EnumChatFormatting.RED + "No tienes ninguna criatura bajo Imperio. Mira a una y usa /imperio control.");
             return;
         }
+        com.emoniph.witchery.common.SupremeWitchData.completeWonder(player, com.emoniph.witchery.common.SupremeWitchData.WONDER_CONCILIUM);
 
         if (sub.equals("release") || sub.equals("liberar")) {
             SymbolEffectImperio.IMPERIO_TARGETS.remove(creature);

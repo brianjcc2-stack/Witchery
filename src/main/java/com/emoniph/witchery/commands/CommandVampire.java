@@ -46,7 +46,7 @@ public class CommandVampire extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/vampire <bat|vision|speed|mesmerize|mist|ultimate|blood|status|level <0-10>>";
+        return "/vampire <bat|vision|speed|mesmerize|mist|ultimate|blood|status|level <0-10>|guia>";
     }
 
     @Override
@@ -62,7 +62,7 @@ public class CommandVampire extends CommandBase {
     @Override
     public List addTabCompletionOptions(ICommandSender sender, String[] args) {
         if (args.length == 1) {
-            return getListOfStringsMatchingLastWord(args, "bat", "vision", "speed", "mesmerize", "mist", "ultimate", "blood", "status", "level",
+            return getListOfStringsMatchingLastWord(args, "bat", "vision", "speed", "mesmerize", "mist", "ultimate", "blood", "status", "level", "guia", "help", "ayuda",
                     "murcielago", "ojo", "velocidad", "hipnotizar", "niebla", "definitiva", "sangre", "estado", "nivel");
         }
         return null;
@@ -121,10 +121,24 @@ public class CommandVampire extends CommandBase {
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "/vampire blood [cant]" + EnumChatFormatting.GRAY + " (o sangre) - Consulta o ajusta tu sangre."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "/vampire status" + EnumChatFormatting.GRAY + " (o estado) - Muestra tu estado vampírico completo."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "/vampire level <0-10>" + EnumChatFormatting.GRAY + " (o nivel) - Ajusta tu nivel de vampirismo."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "/vampire guia" + EnumChatFormatting.GRAY + " (o help) - Guía de niveles y progresión vampírica."));
             return;
         }
 
         String sub = args[0].toLowerCase();
+
+        if (sub.equals("guia") || sub.equals("help") || sub.equals("ayuda")) {
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_RED + "╔════════════════════════════════════════════╗"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "  ★ GUÍA DE LA SENDA VAMPÍRICA ★"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_RED + "╚════════════════════════════════════════════╝"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "• Nivel 1-2: " + EnumChatFormatting.WHITE + "Beber sangre, Visión Nocturna (/vampire vision) e Hipnosis (/vampire mesmerize)."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "• Nivel 4: " + EnumChatFormatting.WHITE + "Velocidad y salto sobrenatural (/vampire speed)."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "• Nivel 5: " + EnumChatFormatting.WHITE + "Forma de Niebla protectora e intangible (/vampire mist)."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "• Nivel 7: " + EnumChatFormatting.WHITE + "Transformación en Murciélago (/vampire bat)."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "• Nivel 10: " + EnumChatFormatting.WHITE + "Poder Definitivo (/vampire ultimate: Tormenta, Enjambre o Teletransporte)."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "✦ Sobrecarga de Varita: " + EnumChatFormatting.GRAY + "Si agotas tu energía de infusión, la Rama Mística puede consumir tu Sangre almacenada."));
+            return;
+        }
 
         if (sub.equals("status") || sub.equals("estado")) {
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_RED + "--- Estado Vampírico ---"));

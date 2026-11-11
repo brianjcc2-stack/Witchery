@@ -263,19 +263,23 @@ public class Infusion {
       if(player.capabilities.isCreativeMode) {
          return true;
       } else {
+         boolean isSupreme = player != null && com.emoniph.witchery.common.SupremeWitchData.isPlayerSupreme(player);
+         int effectiveCost = isSupreme ? Math.max(1, cost / 2) : cost;
          int charges = getCurrentEnergy(player);
-         if(charges - cost < 0) {
-            int deficit = cost - charges;
+         if(charges - effectiveCost < 0) {
+            int deficit = effectiveCost - charges;
             if(attemptOvercharge(world, player, deficit)) {
                return true;
             }
             if(playFailSound) {
                world.playSoundAtEntity(player, "note.snare", 0.5F, 0.4F / ((float)Math.random() * 0.4F + 0.8F));
             }
-            this.clearInfusion(player);
+            if(!isSupreme) {
+               this.clearInfusion(player);
+            }
             return false;
          } else {
-            setCurrentEnergy(player, charges - cost);
+            setCurrentEnergy(player, charges - effectiveCost);
             return true;
          }
       }
@@ -383,9 +387,10 @@ public class Infusion {
    public void infuse(EntityPlayer player, int charges) {
       if(!player.worldObj.isRemote) {
          NBTTagCompound nbt = getNBT(player);
+         int finalCharges = (player != null && com.emoniph.witchery.common.SupremeWitchData.isPlayerSupreme(player)) ? Math.max(charges, 3000) : charges;
          nbt.setInteger("witcheryInfusionID", this.infusionID);
-         nbt.setInteger("witcheryInfusionCharges", charges);
-         nbt.setInteger("witcheryInfusionChargesMax", charges);
+         nbt.setInteger("witcheryInfusionCharges", finalCharges);
+         nbt.setInteger("witcheryInfusionChargesMax", finalCharges);
          CreaturePower.setCreaturePowerID(player, 0, 0);
          syncPlayer(player.worldObj, player);
       }
@@ -404,10 +409,28 @@ public class Infusion {
    public static void setCurrentEnergy(EntityPlayer player, int currentEnergy) {
       if(!player.worldObj.isRemote) {
          NBTTagCompound nbt = getNBT(player);
+         if(player != null && com.emoniph.witchery.common.SupremeWitchData.isPlayerSupreme(player)) {
+            int max = Math.max(getMaxEnergy(player), 3000);
+            nbt.setInteger("witcheryInfusionChargesMax", max);
+            nbt.setInteger("witcheryInfusionCharges", Math.max(0, Math.min(currentEnergy, max)));
+            syncPlayer(player.worldObj, player);
+            return;
+         }
          nbt.setInteger("witcheryInfusionCharges", currentEnergy);
          syncPlayer(player.worldObj, player);
       }
 
+   }
+
+   public static void switchInfusionForSupreme(EntityPlayer player, int newInfusionID) {
+      if(!player.worldObj.isRemote) {
+         NBTTagCompound nbt = getNBT(player);
+         int prevCharges = nbt.hasKey("witcheryInfusionCharges") ? nbt.getInteger("witcheryInfusionCharges") : 3000;
+         nbt.setInteger("witcheryInfusionID", newInfusionID);
+         nbt.setInteger("witcheryInfusionCharges", Math.max(100, Math.min(prevCharges, 3000)));
+         nbt.setInteger("witcheryInfusionChargesMax", 3000);
+         syncPlayer(player.worldObj, player);
+      }
    }
 
    public static void syncPlayer(World world, EntityPlayer player) {
@@ -465,8 +488,10 @@ public class Infusion {
    }
 
    public static boolean aquireEnergy(World world, EntityPlayer player, NBTTagCompound nbtPlayer, int cost, boolean showMessages) {
+      boolean isSupreme = player != null && com.emoniph.witchery.common.SupremeWitchData.isPlayerSupreme(player);
+      int effectiveCost = isSupreme ? Math.max(1, cost / 2) : cost;
       if(nbtPlayer != null && nbtPlayer.hasKey("witcheryInfusionID") && nbtPlayer.hasKey("witcheryInfusionCharges")) {
-         if(!player.capabilities.isCreativeMode && nbtPlayer.getInteger("witcheryInfusionCharges") < cost) {
+         if(!player.capabilities.isCreativeMode && nbtPlayer.getInteger("witcheryInfusionCharges") < effectiveCost) {
             if(showMessages) {
                ChatUtil.sendTranslated(EnumChatFormatting.RED, player, "witchery.infuse.nocharges", new Object[0]);
                SoundEffect.NOTE_SNARE.playAtPlayer(world, player);
@@ -475,7 +500,7 @@ public class Infusion {
             return false;
          } else {
             if(!player.capabilities.isCreativeMode) {
-               setCurrentEnergy(player, nbtPlayer.getInteger("witcheryInfusionCharges") - cost);
+               setCurrentEnergy(player, nbtPlayer.getInteger("witcheryInfusionCharges") - effectiveCost);
             }
 
             return true;
@@ -522,6 +547,12 @@ public class Infusion {
       }
 
       public Infusion get(EntityPlayer player) {
+         if (player != null) {
+            com.emoniph.witchery.common.ExtendedPlayer playerEx = com.emoniph.witchery.common.ExtendedPlayer.get(player);
+            if (playerEx != null && playerEx.isSilenced() && !player.capabilities.isCreativeMode) {
+               return Infusion.DEFUSED;
+            }
+         }
          int infusionID = Infusion.getInfusionID(player);
          return infusionID > 0?(Infusion)this.registry.get(infusionID - 1):Infusion.DEFUSED;
       }
@@ -547,8 +578,15 @@ public class Infusion {
          priority = EventPriority.NORMAL
       )
       public void onEnderTeleport(EnderTeleportEvent event) {
-         if(!event.isCanceled() && event.entityLiving != null && !event.entityLiving.worldObj.isRemote && event.entityLiving instanceof EntityPlayer && ItemHunterClothes.isFullSetWorn(event.entityLiving, false)) {
-            event.setCanceled(true);
+         if(!event.isCanceled() && event.entityLiving != null && !event.entityLiving.worldObj.isRemote) {
+            if(event.entityLiving.getEntityData().getLong("WITCDimensionalLock") > event.entityLiving.worldObj.getTotalWorldTime()) {
+               event.setCanceled(true);
+               event.entityLiving.worldObj.playSoundAtEntity(event.entityLiving, "note.snare", 0.5F, 0.5F);
+               return;
+            }
+            if(event.entityLiving instanceof EntityPlayer && ItemHunterClothes.isFullSetWorn(event.entityLiving, false)) {
+               event.setCanceled(true);
+            }
          }
 
       }
@@ -711,6 +749,39 @@ public class Infusion {
             }
          }
 
+         if(!event.entityLiving.worldObj.isRemote) {
+            if(!(event.entityLiving instanceof EntityPlayer) && event.entityLiving.getEntityData().hasKey("WITCMantleTicks")) {
+               int mTicks = event.entityLiving.getEntityData().getInteger("WITCMantleTicks") - 1;
+               if(mTicks <= 0) {
+                  event.entityLiving.getEntityData().removeTag("WITCMantleTicks");
+                  event.entityLiving.getEntityData().removeTag("WITCMantleBrew");
+               } else {
+                  event.entityLiving.getEntityData().setInteger("WITCMantleTicks", mTicks);
+               }
+            }
+
+            if(counter % 20L == 0L && event.entityLiving.getEntityData().hasKey("WITCCorrosionUntil")) {
+               if(counter < event.entityLiving.getEntityData().getLong("WITCCorrosionUntil")) {
+                  boolean corrodedAny = false;
+                  for(int slot = 1; slot <= 4; ++slot) {
+                     ItemStack armor = event.entityLiving.getEquipmentInSlot(slot);
+                     if(armor != null && armor.isItemStackDamageable()) {
+                        armor.damageItem(2, event.entityLiving);
+                        if(armor.stackSize <= 0) {
+                           event.entityLiving.setCurrentItemOrArmor(slot, (ItemStack)null);
+                        }
+                        corrodedAny = true;
+                     }
+                  }
+                  if(corrodedAny) {
+                     ParticleEffect.SMOKE.send(SoundEffect.RANDOM_FIZZ, event.entityLiving, 0.5D, 1.5D, 8);
+                  }
+               } else {
+                  event.entityLiving.getEntityData().removeTag("WITCCorrosionUntil");
+               }
+            }
+         }
+
       }
 
       private void handleSeepingShoesEffect(EntityPlayer player, NBTTagCompound nbtTag) {
@@ -832,6 +903,24 @@ public class Infusion {
                } else {
                   player.worldObj.setBlock(j, k, l, Blocks.ice);
                }
+            }
+
+            // Patinaje veloz sobre hielo
+            Block under = player.worldObj.getBlock(MathHelper.floor_double(player.posX), k, MathHelper.floor_double(player.posZ));
+            if ((under == Blocks.ice || under == Blocks.packed_ice) && player.isSprinting()) {
+               player.motionX *= 1.06D;
+               player.motionZ *= 1.06D;
+            }
+
+            // Onda gélida al agacharse en suelo
+            if (player.isSneaking() && player.onGround && player.ticksExisted % 15 == 0) {
+               java.util.List nearby = player.worldObj.getEntitiesWithinAABB(net.minecraft.entity.monster.IMob.class, player.boundingBox.expand(6.0D, 2.0D, 6.0D));
+               for (Object o : nearby) {
+                  if (o instanceof net.minecraft.entity.EntityLivingBase) {
+                     ((net.minecraft.entity.EntityLivingBase) o).addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, 80, 2));
+                  }
+               }
+               ParticleEffect.SPELL.send(SoundEffect.NONE, player.worldObj, player.posX, player.posY, player.posZ, 1.5D, 0.2D, 6);
             }
          }
 

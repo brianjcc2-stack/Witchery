@@ -172,12 +172,22 @@ public class ItemSpectralStone extends ItemBase {
                return;
             }
 
+            boolean guardianMode = player.isSneaking();
+            int spawnX = guardianMode ? (int) player.posX : coords[0];
+            int spawnY = guardianMode ? (int) player.posY : coords[1];
+            int spawnZ = guardianMode ? (int) player.posZ : coords[2];
+
             for(int newStack = 0; newStack < quantity; ++newStack) {
-               EntitySummonedUndead entity = (EntitySummonedUndead)Infusion.spawnCreature(world, theClass, coords[0], coords[1], coords[2], (EntityLivingBase)null, 0, 1, ParticleEffect.INSTANT_SPELL, (SoundEffect)null);
+               EntitySummonedUndead entity = (EntitySummonedUndead)Infusion.spawnCreature(world, theClass, spawnX, spawnY, spawnZ, (EntityLivingBase)null, 0, 1, ParticleEffect.INSTANT_SPELL, (SoundEffect)null);
                if(entity != null) {
                   CreatureUtil.spawnWithEgg(entity, true);
                   entity.setSummoner(player.getCommandSenderName());
                   PotionEnslaved.setEnslaverForMob(entity, player);
+                  if (guardianMode) {
+                     entity.addPotionEffect(new net.minecraft.potion.PotionEffect(net.minecraft.potion.Potion.resistance.id, 1200, 1));
+                     entity.addPotionEffect(new net.minecraft.potion.PotionEffect(net.minecraft.potion.Potion.moveSpeed.id, 1200, 1));
+                     entity.func_110163_bv();
+                  }
                }
             }
 

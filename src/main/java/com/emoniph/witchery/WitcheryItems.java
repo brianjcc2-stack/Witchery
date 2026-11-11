@@ -280,13 +280,13 @@ public final class WitcheryItems {
       this.BUCKET_HOLLOWTEARS = WitcheryFluids.bind((ItemBucketSpirit)(new ItemBucketSpirit()).setUnlocalizedName("witchery:buckethollowtears").setTextureName("witchery:bucket_hollowtears").setContainerItem(Items.bucket), Witchery.Fluids.HOLLOW_TEARS, Witchery.Blocks.HOLLOW_TEARS);
       this.BUCKET_BREW = WitcheryFluids.bind((new ItemBrewBucket()).setUnlocalizedName("witchery:bucketbrew").setTextureName("witchery:bucket_brew").setContainerItem(Items.bucket), Witchery.Fluids.BREW, 1000);
       this.QUICKSILVER_MIRROR = (com.emoniph.witchery.item.ItemQuicksilverMirror)(new com.emoniph.witchery.item.ItemQuicksilverMirror()).setUnlocalizedName("witchery:quicksilvermirror").setTextureName("witchery:quicksilvermirror");
-      this.MIRROR_HELM = (com.emoniph.witchery.item.ItemMirrorArmor)(new com.emoniph.witchery.item.ItemMirrorArmor(0)).setUnlocalizedName("witchery:mirrorhelm").setTextureName("witchery:mysticbranch");
-      this.MIRROR_CHEST = (com.emoniph.witchery.item.ItemMirrorArmor)(new com.emoniph.witchery.item.ItemMirrorArmor(1)).setUnlocalizedName("witchery:mirrorchest").setTextureName("witchery:mysticbranch");
+      this.MIRROR_HELM = (com.emoniph.witchery.item.ItemMirrorArmor)(new com.emoniph.witchery.item.ItemMirrorArmor(0)).setUnlocalizedName("witchery:mirrorhelm").setTextureName("witchery:mirrorhelm");
+      this.MIRROR_CHEST = (com.emoniph.witchery.item.ItemMirrorArmor)(new com.emoniph.witchery.item.ItemMirrorArmor(1)).setUnlocalizedName("witchery:mirrorchest").setTextureName("witchery:mirrorchest");
       this.FLYING_MORTAR = (com.emoniph.witchery.item.ItemFlyingMortar)(new com.emoniph.witchery.item.ItemFlyingMortar()).setUnlocalizedName("witchery:flyingmortar").setTextureName("witchery:flyingmortar");
       this.INQUISITOR_CROSSBOW = (com.emoniph.witchery.item.ItemInquisitorCrossbow)(new com.emoniph.witchery.item.ItemInquisitorCrossbow()).setUnlocalizedName("witchery:inquisitorcrossbow").setTextureName("witchery:handbow");
       this.INQUISITOR_CLOAK = (com.emoniph.witchery.item.ItemInquisitorCloak)(new com.emoniph.witchery.item.ItemInquisitorCloak()).setUnlocalizedName("witchery:inquisitorcloak").setTextureName("witchery:huntercoat");
-      this.BOTTOMLESS_SATCHEL = (com.emoniph.witchery.item.ItemBottomlessSatchel)(new com.emoniph.witchery.item.ItemBottomlessSatchel()).setUnlocalizedName("witchery:bottomlesssatchel").setTextureName("witchery:brewbag");
+      this.BOTTOMLESS_SATCHEL = (com.emoniph.witchery.item.ItemBottomlessSatchel)(new com.emoniph.witchery.item.ItemBottomlessSatchel()).setUnlocalizedName("witchery:bottomlesssatchel").setTextureName("witchery:bottomlesssatchel");
       this.VOID_LOCKET = (com.emoniph.witchery.item.ItemVoidLocket)(new com.emoniph.witchery.item.ItemVoidLocket()).setUnlocalizedName("witchery:voidlocket").setTextureName("witchery:voidlocket");
-      this.APOTHECARY_POUCH = (com.emoniph.witchery.item.ItemApothecaryPouch)(new com.emoniph.witchery.item.ItemApothecaryPouch()).setUnlocalizedName("witchery:apothecarypouch").setTextureName("witchery:brewbag");
+      this.APOTHECARY_POUCH = (com.emoniph.witchery.item.ItemApothecaryPouch)(new com.emoniph.witchery.item.ItemApothecaryPouch()).setUnlocalizedName("witchery:apothecarypouch").setTextureName("witchery:apothecarypouch");
    }
 }

@@ -31,7 +31,7 @@ public class CommandCoven extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/coven <summon|follow|stay|attack|dismiss|task|whisper|weekly> [all]";
+        return "/coven <summon|follow|stay|attack|dismiss|task [claim|abandon|status]|whisper|weekly|raid|guia> [all]";
     }
 
     @Override
@@ -48,10 +48,12 @@ public class CommandCoven extends CommandBase {
     public List addTabCompletionOptions(ICommandSender sender, String[] args) {
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args, "summon", "follow", "stay", "attack", "dismiss",
-                    "task", "whisper", "weekly", "invocar", "seguir", "quieto", "atacar", "despedir",
-                    "tarea", "consejo", "susurro", "semanal");
+                    "task", "whisper", "weekly", "raid", "guia", "help", "ayuda", "invocar", "seguir", "quieto", "atacar", "despedir",
+                    "tarea", "consejo", "susurro", "semanal", "desafiar", "duelo");
         } else if (args.length == 2 && (args[0].equalsIgnoreCase("summon") || args[0].equalsIgnoreCase("invocar"))) {
             return getListOfStringsMatchingLastWord(args, "all");
+        } else if (args.length == 2 && (args[0].equalsIgnoreCase("task") || args[0].equalsIgnoreCase("tarea") || args[0].equalsIgnoreCase("mision"))) {
+            return getListOfStringsMatchingLastWord(args, "claim", "abandon", "status", "entregar", "abandonar", "ver");
         }
         return null;
     }
@@ -104,12 +106,35 @@ public class CommandCoven extends CommandBase {
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "/coven stay" + EnumChatFormatting.GRAY + " - Tus brujas montan guardia fija."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "/coven attack" + EnumChatFormatting.GRAY + " - Ordena atacar al objetivo que miras."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "/coven dismiss" + EnumChatFormatting.GRAY + " - Devuelve las brujas al plano espiritual."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "/coven raid / desafiar" + EnumChatFormatting.GRAY + " - Desafía o provoca el asalto de un Aquelarre Rival."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "/coven guia / help" + EnumChatFormatting.GRAY + " - Guía completa sobre el sistema de Aquelarre."));
             return;
         }
 
         String sub = args[0].toLowerCase();
 
-        if (sub.equals("whisper") || sub.equals("consejo") || sub.equals("susurro") || sub.equals("guia")) {
+        if (sub.equals("help") || sub.equals("ayuda") || sub.equals("guia")) {
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "╔════════════════════════════════════════════╗"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "  ★ GUÍA DEL AQUELARRE (COVEN) ★"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "╚════════════════════════════════════════════╝"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "1. Reclutar: " + EnumChatFormatting.WHITE + "Encuentra Brujas de Aquelarre en el mundo (requiere tener Familiar activo) y completa su favor para unirlas (máx. 6)."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "2. Poder Ritual y Varita: " + EnumChatFormatting.WHITE + "Cada bruja reclutada amplifica tus rituales de círculo/caldero y reduce los fallos de la Rama Mística hasta 0% (con 6 brujas)."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "3. Misiones y Decretos: " + EnumChatFormatting.WHITE + "Usa /coven task para misiones rápidas (+Maestría y Alijos) y /coven weekly para el Gran Decreto Semanal."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "4. Combate e Incursiones: " + EnumChatFormatting.WHITE + "Usa /coven summon [all], /coven attack o /coven raid para desafiar Aquelarres Rivales."));
+            return;
+        }
+
+        if (sub.equals("raid") || sub.equals("desafiar") || sub.equals("duelo") || sub.equals("emboscada")) {
+            boolean triggered = com.emoniph.witchery.common.CovenRaidManager.triggerRaid(player, true);
+            if (triggered) {
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "¡Has retado a las sombras! Un Aquelarre Rival ha respondido a tu llamado."));
+            } else {
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "No se pudo invocar la incursión en esta posición."));
+            }
+            return;
+        }
+
+        if (sub.equals("whisper") || sub.equals("consejo") || sub.equals("susurro")) {
             com.emoniph.witchery.common.WitchAdvisor.whisperProgression(player, "El Aquelarre");
             return;
         }
@@ -124,6 +149,34 @@ public class CommandCoven extends CommandBase {
             com.emoniph.witchery.common.CovenTask currentTask = (activeTaskId != null && !activeTaskId.isEmpty()) ?
                     com.emoniph.witchery.common.CovenTaskManager.getTask(activeTaskId) : null;
 
+            if (args.length >= 2) {
+                String sub2 = args[1].toLowerCase();
+                if (sub2.equals("abandon") || sub2.equals("abandonar") || sub2.equals("cancelar") || sub2.equals("skip")) {
+                    if (currentTask == null) {
+                        player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "No tienes ninguna tarea activa que cancelar."));
+                    } else {
+                        com.emoniph.witchery.common.CovenTaskManager.setActiveTask(player, "");
+                        player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "Has descartado la tarea «" + currentTask.getTitle() + "». Puedes solicitar una nueva con /coven task."));
+                    }
+                    return;
+                }
+                if (sub2.equals("status") || sub2.equals("info") || sub2.equals("ver")) {
+                    com.emoniph.witchery.common.CovenTaskManager.showCurrentTaskStatus(player, "El Aquelarre");
+                    return;
+                }
+                if (sub2.equals("claim") || sub2.equals("entregar") || sub2.equals("completar")) {
+                    if (currentTask == null) {
+                        player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "No tienes ninguna tarea activa. Solicita una con /coven task."));
+                    } else if (currentTask.canComplete(player)) {
+                        currentTask.completeAndReward(player, "El Aquelarre");
+                        com.emoniph.witchery.common.CovenTaskManager.setActiveTask(player, "");
+                    } else {
+                        player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Aún no tienes los tributos requeridos. Revisa tu objetivo con /coven task status."));
+                    }
+                    return;
+                }
+            }
+
             if (currentTask != null && currentTask.canComplete(player)) {
                 currentTask.completeAndReward(player, "El Aquelarre");
                 com.emoniph.witchery.common.CovenTaskManager.setActiveTask(player, "");
@@ -135,10 +188,12 @@ public class CommandCoven extends CommandBase {
                     player.addChatMessage(new ChatComponentText("§d<El Aquelarre> §f\"Hermana, te hemos encomendado una nueva tarea:\""));
                     player.addChatMessage(new ChatComponentText("§e📜 " + newTask.getCategory().colorPrefix + newTask.getTitle() + " §7- " + newTask.getDescription()));
                     player.addChatMessage(new ChatComponentText("§5★ Recompensa: §6Alijo Místico + Bendición: " + newTask.getBlessingName() + " (+" + newTask.getMasteryReward() + " pts)"));
+                    player.addChatMessage(new ChatComponentText("§8(Usa /coven task claim para entregarla, o /coven task abandon si deseas otra)"));
                     player.addChatMessage(new ChatComponentText("§5§m-----------------------------------------------------"));
                 }
             } else {
                 com.emoniph.witchery.common.CovenTaskManager.showCurrentTaskStatus(player, "El Aquelarre");
+                player.addChatMessage(new ChatComponentText("§8(Puedes descartarla con §e/coven task abandon§8 o entregarla con §a/coven task claim§8 cuando reúnas los ítems)"));
             }
             return;
         }

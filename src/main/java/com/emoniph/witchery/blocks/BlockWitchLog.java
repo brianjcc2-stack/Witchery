@@ -148,7 +148,12 @@ public class BlockWitchLog extends BlockBaseRotatedPillar implements IFuelHandle
    }
 
    public static int limitToValidMetadata(int par0) {
-      return par0 & WOOD_TYPES.length - 1;
+      return (par0 & 3) % WOOD_TYPES.length;
+   }
+
+   @Override
+   public int damageDropped(int metadata) {
+      return limitToValidMetadata(metadata);
    }
 
    @SideOnly(Side.CLIENT)

@@ -119,7 +119,7 @@ public class InfusionOtherwhere extends Infusion {
          } else {
             int MAX_TELEPORT_DISTANCE1 = 40 + 20 * (elapsedTicks / 20);
             MovingObjectPosition hitMOP = doCustomRayTrace(world, player, true, (double)MAX_TELEPORT_DISTANCE1);
-            if(hitMOP != null && !PotionEnderInhibition.isActive(player, 2) && this.consumeCharges(world, player, 1, false)) {
+            if(hitMOP != null && !PotionEnderInhibition.isActive(player, 2) && this.consumeCharges(world, player, 3, false)) {
                ParticleEffect.PORTAL.send(SoundEffect.MOB_ENDERMEN_PORTAL, player, 0.5D, 2.0D, 16);
                teleportEntity(player, hitMOP);
                ParticleEffect.PORTAL.send(SoundEffect.MOB_ENDERMEN_PORTAL, player, 0.5D, 2.0D, 16);

@@ -129,6 +129,10 @@ public class ComponentVillageWitchHut extends House1 {
             EntityCovenWitch entityvillager = new EntityCovenWitch(par1World);
             entityvillager.setLocationAndAngles((double)j1 + 0.5D, (double)k1, (double)l1 + 0.5D, 0.0F, 0.0F);
             entityvillager.func_110163_bv();
+            if(par1World.rand.nextBoolean()) {
+               entityvillager.getEntityData().setBoolean("WITCPuppeteerWitch", true);
+               entityvillager.setCustomNameTag("§5Bruja Manipuladora");
+            }
             par1World.spawnEntityInWorld(entityvillager);
          }
       }

@@ -219,6 +219,11 @@ public class EntityCovenWitch extends EntityTameable implements IRangedAttackMob
          }
       }
 
+      if(!super.worldObj.isRemote && this.getEntityData().getBoolean("WITCPuppeteerWitch")) {
+         EntityPlayer killer = damageSource.getEntity() instanceof EntityPlayer ? (EntityPlayer)damageSource.getEntity() : null;
+         com.emoniph.witchery.integration.ModHookMCA.onPuppeteerWitchDefeated(this, killer);
+      }
+
       super.onDeath(damageSource);
    }
 
@@ -367,8 +372,22 @@ public class EntityCovenWitch extends EntityTameable implements IRangedAttackMob
 
    }
 
+   @Override
+   public boolean attackEntityFrom(DamageSource source, float amount) {
+      if(!super.worldObj.isRemote && this.getEntityData().getBoolean("WITCPuppeteerWitch")) {
+         if(source.getEntity() instanceof EntityPlayer) {
+            com.emoniph.witchery.integration.ModHookMCA.triggerPuppeteerBattle(this, (EntityPlayer)source.getEntity());
+         }
+      }
+      return super.attackEntityFrom(source, amount);
+   }
+
    public boolean interact(EntityPlayer player) {
       if(!super.worldObj.isRemote && player != null) {
+         if (this.getEntityData().getBoolean("WITCPuppeteerWitch")) {
+            com.emoniph.witchery.integration.ModHookMCA.triggerPuppeteerBattle(this, player);
+            return true;
+         }
          if(!this.isTamed() && !this.getAggressive() && player.dimension != Config.instance().dimensionDreamID) {
             if(this.questAccepted) {
                if(this.questOfferedTo.equalsIgnoreCase(player.getCommandSenderName())) {
@@ -493,6 +512,9 @@ public class EntityCovenWitch extends EntityTameable implements IRangedAttackMob
    }
 
    private boolean isCovenFull(EntityPlayer player) {
+      if(player != null && com.emoniph.witchery.common.SupremeWitchData.isPlayerSupreme(player)) {
+         return false;
+      }
       return getCovenSize(player) >= 6;
    }
 
@@ -783,7 +805,21 @@ public class EntityCovenWitch extends EntityTameable implements IRangedAttackMob
 
    }
 
+   @Override
+   public void setAttackTarget(EntityLivingBase target) {
+      if(target instanceof EntityPlayer && com.emoniph.witchery.common.SupremeWitchData.isPlayerSupreme((EntityPlayer)target)) {
+         super.setAttackTarget((EntityLivingBase)null);
+         return;
+      }
+      super.setAttackTarget(target);
+   }
+
    public void attackEntityWithRangedAttack(EntityLivingBase par1EntityLivingBase, float par2) {
+      if(par1EntityLivingBase instanceof EntityPlayer && com.emoniph.witchery.common.SupremeWitchData.isPlayerSupreme((EntityPlayer)par1EntityLivingBase)) {
+         this.setAttackTarget((EntityLivingBase)null);
+         this.setRevengeTarget((EntityLivingBase)null);
+         return;
+      }
       if(!this.getAggressive()) {
          EntityPotion entitypotion = new EntityPotion(super.worldObj, this, 32732);
          entitypotion.rotationPitch -= -20.0F;

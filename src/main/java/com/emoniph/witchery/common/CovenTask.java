@@ -136,17 +136,30 @@ public class CovenTask {
         SoundEffect.RANDOM_LEVELUP.playAtPlayer(player.worldObj, player, 0.8F, 1.0F);
         ParticleEffect.INSTANT_SPELL.send(SoundEffect.RANDOM_ORB, player.worldObj, player.posX, player.posY + 1.0D, player.posZ, 1.0D, 1.5D, 24);
 
-        // 4. Update Supreme Witch Status
+        // 4. Update Coven Task Counter & Infusion Recharge
+        NBTTagCompound nbtPlayer = com.emoniph.witchery.infusion.Infusion.getNBT(player);
+        int totalDone = 1;
+        if (nbtPlayer != null) {
+            totalDone = nbtPlayer.getInteger("WITCCovenTasksCompleted") + 1;
+            nbtPlayer.setInteger("WITCCovenTasksCompleted", totalDone);
+        }
+        int curEnergy = com.emoniph.witchery.infusion.Infusion.getCurrentEnergy(player);
+        int maxEnergy = com.emoniph.witchery.infusion.Infusion.getMaxEnergy(player);
+        if (curEnergy < maxEnergy) {
+            com.emoniph.witchery.infusion.Infusion.setCurrentEnergy(player, Math.min(maxEnergy, curEnergy + 50));
+        }
+
+        // 5. Update Supreme Witch Status
         SupremeWitchData.updateSupremeStatus(player.worldObj);
 
-        // 5. Notify player in chat
+        // 6. Notify player in chat
         player.addChatMessage(new ChatComponentText("§2§m-----------------------------------------------------"));
-        player.addChatMessage(new ChatComponentText("§a§l✔ [Misión del Aquelarre Completada]"));
+        player.addChatMessage(new ChatComponentText("§a§l✔ [Misión del Aquelarre Completada - #" + totalDone + "]"));
         player.addChatMessage(new ChatComponentText("§f<" + witchName + "> §d\"¡Magnífico trabajo, hermana! Tu lealtad fortalece nuestras raíces.\""));
         if (bonusReward != null) {
-            player.addChatMessage(new ChatComponentText("§6🎁 Alijo Entregado: §f" + bonusReward.getDisplayName() + " x" + bonusReward.stackSize));
+            player.addChatMessage(new ChatComponentText("§6🎁 Alijo Místico del Aquelarre: §f" + bonusReward.getDisplayName() + " x" + bonusReward.stackSize));
         }
-        player.addChatMessage(new ChatComponentText("§d✨ Bendición Activa: §b" + blessingName));
+        player.addChatMessage(new ChatComponentText("§d✨ Bendición Activa: §b" + blessingName + " §a(+50 Poder de Infusión)"));
         player.addChatMessage(new ChatComponentText("§5★ Puntos de Maestría otorgados: §6+" + masteryReward + " pts"));
         player.addChatMessage(new ChatComponentText("§2§m-----------------------------------------------------"));
 
@@ -169,23 +182,39 @@ public class CovenTask {
 
     private ItemStack rollLoot(Random rand) {
         int roll = rand.nextInt(100);
-        if (roll < 20) {
+        if (roll < 15) {
             // Koboldite items
             return Witchery.Items.GENERIC.itemKobolditeNugget.createStack(rand.nextInt(3) + 1);
-        } else if (roll < 40) {
+        } else if (roll < 30) {
             // Tears of the goddess or high distillates
             return Witchery.Items.GENERIC.itemTearOfTheGoddess.createStack(rand.nextInt(2) + 1);
-        } else if (roll < 60) {
+        } else if (roll < 45) {
             // Refined Evil or Diamond Vapour
             return Witchery.Items.GENERIC.itemRefinedEvil.createStack(rand.nextInt(3) + 1);
-        } else if (roll < 80) {
-            // Attuned Stones or Breath of Goddess
+        } else if (roll < 60) {
+            // Breath of Goddess or Attuned Stone
             return Witchery.Items.GENERIC.itemBreathOfTheGoddess.createStack(rand.nextInt(3) + 1);
-        } else {
-            // Demon heart or Subdued Spirit
+        } else if (roll < 75) {
+            // Tarro de Boticario o Libro de Simbología
             return rand.nextBoolean() ?
-                    Witchery.Items.GENERIC.itemDemonHeart.createStack(1) :
-                    Witchery.Items.GENERIC.itemSubduedSpirit.createStack(1);
+                    new ItemStack(Witchery.Blocks.APOTHECARY_JAR, 2) :
+                    Witchery.Items.GENERIC.itemBookWands.createStack(1);
+        } else if (roll < 90) {
+            // Flores mágicas raras de la expansión
+            int flowerRoll = rand.nextInt(5);
+            switch (flowerRoll) {
+                case 0: return new ItemStack(Witchery.Blocks.MOON_ROSE, 2);
+                case 1: return new ItemStack(Witchery.Blocks.SUN_ROSE, 2);
+                case 2: return new ItemStack(Witchery.Blocks.GRAVE_ROSE, 2);
+                case 3: return new ItemStack(Witchery.Blocks.BANSHEE_ROSE, 1);
+                default: return new ItemStack(Witchery.Blocks.HECATES_TEARS, 1);
+            }
+        } else {
+            // Demon heart, Subdued Spirit o Lingote de Koboldita
+            int ultraRoll = rand.nextInt(3);
+            if (ultraRoll == 0) return Witchery.Items.GENERIC.itemDemonHeart.createStack(1);
+            else if (ultraRoll == 1) return Witchery.Items.GENERIC.itemSubduedSpirit.createStack(1);
+            else return Witchery.Items.GENERIC.itemKobolditeIngot.createStack(1);
         }
     }
 }

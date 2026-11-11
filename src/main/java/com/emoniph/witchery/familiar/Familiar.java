@@ -16,7 +16,10 @@ import net.minecraft.entity.passive.EntityOcelot;
 import net.minecraft.entity.passive.EntityTameable;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.potion.Potion;
+import net.minecraft.potion.PotionEffect;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -54,7 +57,7 @@ public abstract class Familiar {
                ((IFamiliar)currentFamiliar).clearFamiliar();
             }
 
-            if(familiarEntity instanceof EntityOcelot) {
+            if(familiarEntity instanceof EntityOcelot && !(familiarEntity instanceof EntityWitchCat)) {
                EntityOcelot familiar = (EntityOcelot)familiarEntity;
                EntityWitchCat nbtFamiliar = new EntityWitchCat(familiar.worldObj);
                nbtFamiliar.cloneOcelot(familiar);
@@ -92,6 +95,7 @@ public abstract class Familiar {
             nbtFamiliar1.setByte("FamiliarSummoned", Byte.valueOf((byte)1).byteValue());
             nbtTag.setTag("WITCFamiliar", nbtFamiliar1);
             familiar1.setMaxHealth(50.0F);
+            com.emoniph.witchery.common.SupremeWitchData.completeWonder(player, com.emoniph.witchery.common.SupremeWitchData.WONDER_DIVINATION);
          }
       }
 
@@ -247,6 +251,22 @@ public abstract class Familiar {
                if(redirectedDamage >= 1.0F) {
                   familiar.attackEntityFrom(event.source, redirectedDamage);
                }
+
+               if(familiar instanceof EntityWitchCat && event.source.getEntity() instanceof EntityLivingBase) {
+                  EntityLivingBase attacker = (EntityLivingBase)event.source.getEntity();
+                  attacker.addPotionEffect(new PotionEffect(Potion.weakness.id, 100, 0));
+               } else if(familiar instanceof EntityToad && event.source.getEntity() instanceof EntityLivingBase) {
+                  EntityLivingBase attacker = (EntityLivingBase)event.source.getEntity();
+                  attacker.addPotionEffect(new PotionEffect(Potion.poison.id, 60, 0));
+               } else if(familiar instanceof EntityOwl) {
+                  if(event.source == DamageSource.fall) {
+                     event.ammount *= 0.5F;
+                  } else if(event.source.getEntity() instanceof EntityLivingBase) {
+                     EntityLivingBase attacker = (EntityLivingBase)event.source.getEntity();
+                     attacker.addPotionEffect(new PotionEffect(Potion.blindness.id, 60, 0));
+                     attacker.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, 60, 1));
+                  }
+               }
             }
 
             event.ammount -= redirectedDamage;
@@ -275,6 +295,28 @@ public abstract class Familiar {
          } else if(event.entityLiving instanceof EntityPlayer) {
             EntityPlayer player1 = (EntityPlayer)event.entityLiving;
             EntityTameable familiar1 = getFamiliarEntity(player1);
+            if(familiar1 != null && !familiar1.isDead && familiar1 instanceof EntityWitchCat && ((IFamiliar)familiar1).isFamiliar()) {
+               long currentTime = player1.worldObj.getTotalWorldTime();
+               NBTTagCompound nbtTag = Infusion.getNBT(player1);
+               long lastUsed = (nbtTag != null && nbtTag.hasKey("WITCLastNineLives")) ? nbtTag.getLong("WITCLastNineLives") : 0L;
+               if(currentTime - lastUsed >= 6000L || currentTime < lastUsed) {
+                  if(nbtTag != null) {
+                     nbtTag.setLong("WITCLastNineLives", currentTime);
+                  }
+                  event.setCanceled(true);
+                  player1.setHealth(6.0F);
+                  player1.clearActivePotions();
+                  player1.addPotionEffect(new PotionEffect(Potion.regeneration.id, 100, 1));
+                  player1.addPotionEffect(new PotionEffect(Potion.resistance.id, 60, 2));
+                  player1.addPotionEffect(new PotionEffect(Potion.invisibility.id, 60, 0));
+                  ParticleEffect.PORTAL.send(SoundEffect.RANDOM_ORB, player1, 1.0D, 2.0D, 32);
+                  player1.worldObj.playSoundAtEntity(player1, "mob.cat.meow", 1.0F, 1.2F);
+                  player1.addChatComponentMessage(new ChatComponentTranslation("witchery.familiar.cat.ninelives"));
+                  dismissFamiliar(player1, familiar1);
+                  return;
+               }
+            }
+
             if(familiar1 != null && !familiar1.isDead) {
                dismissFamiliar(player1, familiar1);
             }

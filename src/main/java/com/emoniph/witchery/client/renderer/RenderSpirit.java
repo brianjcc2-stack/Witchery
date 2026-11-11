@@ -15,28 +15,33 @@ import org.lwjgl.opengl.GL11;
 @SideOnly(Side.CLIENT)
 public class RenderSpirit extends RenderLiving {
 
-   private static final ResourceLocation TEXTURE_URL = new ResourceLocation("witchery", "textures/entities/spirit.png");
-
+   private static final ResourceLocation TEXTURE_URL = new ResourceLocation("witchery", "textures/entities/spirit_white.png");
 
    public RenderSpirit() {
       super(new ModelSpirit(), 0.0F);
    }
 
+   @Override
+   protected void preRenderCallback(EntityLivingBase entity, float partialTicks) {
+      if(entity instanceof EntitySpirit) {
+         int color = ((EntitySpirit)entity).getFeatherColor();
+         if(color > 0) {
+            float red = (float)(color >> 16 & 255) / 255.0F;
+            float green = (float)(color >> 8 & 255) / 255.0F;
+            float blue = (float)(color & 255) / 255.0F;
+            GL11.glColor4f(red, green, blue, 0.75F);
+         } else {
+            GL11.glColor4f(0.33F, 1.0F, 1.0F, 0.75F);
+         }
+      }
+   }
+
    public void doRenderSpirit(EntitySpirit entity, double par2, double par4, double par6, float par8, float par9) {
       GL11.glPushMatrix();
       RenderUtil.blend(true);
-      int color = entity.getFeatherColor();
-      if(color > 0) {
-         float red = (float)(color >> 16 & 255) / 255.0F;
-         float green = (float)(color >> 8 & 255) / 255.0F;
-         float blue = (float)(color & 255) / 255.0F;
-         GL11.glColor4f(red, green, blue, 0.6F);
-      } else {
-         GL11.glColor4f(1.0F, 1.0F, 1.0F, 0.6F);
-      }
-
       super.doRender(entity, par2, par4, par6, par8, par9);
       RenderUtil.blend(false);
+      GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
       GL11.glPopMatrix();
    }
 

@@ -45,9 +45,18 @@ public class CommandWitcheryLevel extends CommandBase {
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Vampiro: " + EnumChatFormatting.WHITE + pEx.getVampireLevel() + "/10"));
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "Hombre Lobo: " + EnumChatFormatting.WHITE + pEx.getWerewolfLevel() + "/10"));
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "Espíritu: " + EnumChatFormatting.WHITE + pEx.getSpiritLevel() + "/10"));
-                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Uso para cambiar: /witcherylevel [jugador] <vampire|werewolf|spirit> <0-10>"));
+                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "Maestría Total: " + EnumChatFormatting.GOLD + SupremeWitchData.calculateWitcheryMasteryScore(p) + " pts"));
+                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Uso: /witcherylevel [jugador] <vampire|werewolf|spirit> <0-10> | /witcherylevel guia"));
                 return;
             }
+        }
+
+        if (args.length == 1 && (args[0].equalsIgnoreCase("guia") || args[0].equalsIgnoreCase("help") || args[0].equalsIgnoreCase("ayuda"))) {
+            sender.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "=== Guía de /witcherylevel ==="));
+            sender.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "• /witcherylevel" + EnumChatFormatting.WHITE + " - Consulta tus niveles de Vampiro, Licántropo, Espíritu y Maestría."));
+            sender.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "• /witcherylevel <vampire|werewolf|spirit> <0-10>" + EnumChatFormatting.WHITE + " - Ajusta tu propio nivel (0 a 10)."));
+            sender.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "• /witcherylevel <jugador> <vampire|werewolf|spirit> <0-10>" + EnumChatFormatting.WHITE + " - Ajusta el nivel de otro jugador."));
+            return;
         }
 
         if (args.length == 1) {

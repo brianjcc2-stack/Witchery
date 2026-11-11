@@ -8,6 +8,8 @@ import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.EntityAISwimming;
+import net.minecraft.entity.ai.EntityAILookIdle;
 import net.minecraft.entity.ai.EntityAIWatchClosest;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.player.EntityPlayer;
@@ -27,15 +29,18 @@ public class EntityMirrorClone extends EntityCreature {
    public EntityMirrorClone(World world) {
       super(world);
       this.setSize(0.6F, 1.8F);
-      this.tasks.addTask(1, new EntityAIWatchClosest(this, EntityPlayer.class, 8.0F));
+      this.tasks.addTask(1, new EntityAISwimming(this));
+      this.tasks.addTask(2, new EntityAIWatchClosest(this, EntityLivingBase.class, 12.0F));
+      this.tasks.addTask(3, new EntityAILookIdle(this));
       this.experienceValue = 0;
    }
 
    public EntityMirrorClone(World world, EntityPlayer owner) {
       this(world);
-      this.setPosition(owner.posX, owner.posY, owner.posZ);
       this.rotationYaw = owner.rotationYaw;
       this.rotationPitch = owner.rotationPitch;
+      this.rotationYawHead = owner.rotationYawHead;
+      this.renderYawOffset = owner.renderYawOffset;
       this.ownerName = owner.getCommandSenderName();
       this.setCustomNameTag(owner.getCommandSenderName() + " (Reflejo)");
 

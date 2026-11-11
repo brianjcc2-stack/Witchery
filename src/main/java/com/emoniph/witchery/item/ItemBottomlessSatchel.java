@@ -8,7 +8,10 @@ import com.emoniph.witchery.util.SoundEffect;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.ContainerChest;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.InventoryBasic;
+import net.minecraft.inventory.Slot;
 import net.minecraft.item.EnumRarity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -53,7 +56,7 @@ public class ItemBottomlessSatchel extends Item {
       }
 
       if (!world.isRemote) {
-         player.displayGUIChest(new InventorySatchel(stack, player));
+         player.openGui(Witchery.instance, 10, world, 0, 0, 0);
          SoundEffect.WITCHERY_RANDOM_WINDUP.playOnlyTo(player, 0.8F, 1.2F);
       }
 
@@ -140,6 +143,69 @@ public class ItemBottomlessSatchel extends Item {
             return false;
          }
          return super.isItemValidForSlot(slot, stack);
+      }
+   }
+
+   public static class ContainerSatchel extends ContainerChest {
+      private final ItemStack satchelStack;
+      private final IInventory satchelInventory;
+
+      public ContainerSatchel(IInventory playerInventory, IInventory satchelInventory, ItemStack satchelStack) {
+         super(playerInventory, satchelInventory);
+         this.satchelStack = satchelStack;
+         this.satchelInventory = satchelInventory;
+      }
+
+      @Override
+      public boolean canInteractWith(EntityPlayer player) {
+         ItemStack held = player.getCurrentEquippedItem();
+         return held != null && held.getItem() instanceof ItemBottomlessSatchel;
+      }
+
+      @Override
+      public ItemStack slotClick(int slotId, int clickedButton, int mode, EntityPlayer player) {
+         ItemStack held = player.getCurrentEquippedItem();
+         if (slotId >= 0 && slotId < this.inventorySlots.size()) {
+            Slot slot = (Slot) this.inventorySlots.get(slotId);
+            if (slot != null && slot.getHasStack() && slot.getStack() == held) {
+               return null;
+            }
+         }
+         if (mode == 2 && clickedButton == player.inventory.currentItem) {
+            return null;
+         }
+         return super.slotClick(slotId, clickedButton, mode, player);
+      }
+
+      @Override
+      public ItemStack transferStackInSlot(EntityPlayer player, int slotIndex) {
+         ItemStack returnStack = null;
+         Slot slot = (Slot) this.inventorySlots.get(slotIndex);
+         if (slot != null && slot.getHasStack()) {
+            ItemStack itemStack = slot.getStack();
+            returnStack = itemStack.copy();
+            int bagSize = this.satchelInventory.getSizeInventory();
+
+            if (slotIndex < bagSize) {
+               if (!this.mergeItemStack(itemStack, bagSize, this.inventorySlots.size(), true)) {
+                  return null;
+               }
+            } else {
+               if (itemStack == player.getCurrentEquippedItem() || (itemStack.getItem() instanceof ItemBottomlessSatchel)) {
+                  return null;
+               }
+               if (!this.mergeItemStack(itemStack, 0, bagSize, false)) {
+                  return null;
+               }
+            }
+
+            if (itemStack.stackSize == 0) {
+               slot.putStack(null);
+            } else {
+               slot.onSlotChanged();
+            }
+         }
+         return returnStack;
       }
    }
 }

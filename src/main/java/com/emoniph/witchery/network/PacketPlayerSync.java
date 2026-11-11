@@ -1,10 +1,12 @@
 package com.emoniph.witchery.network;
 
 import com.emoniph.witchery.Witchery;
+import com.emoniph.witchery.common.SupremeWitchData;
 import com.emoniph.witchery.infusion.InfusedBrewEffect;
 import com.emoniph.witchery.infusion.Infusion;
 import com.emoniph.witchery.infusion.infusions.creature.CreaturePower;
 import com.emoniph.witchery.util.TimeUtil;
+import cpw.mods.fml.common.network.ByteBufUtils;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
@@ -22,6 +24,7 @@ public class PacketPlayerSync implements IMessage {
    private int sinkingCurseLevel;
    private int brewEffect;
    private long brewTime;
+   private NBTTagCompound spellBookTag;
 
 
    public PacketPlayerSync() {}
@@ -44,6 +47,12 @@ public class PacketPlayerSync implements IMessage {
             this.brewTime = (long)((int)Math.ceil((double)remainingTicks / 1200.0D));
          }
       }
+      this.spellBookTag = (nbtPlayer != null && nbtPlayer.hasKey("WITCSpellBook"))
+         ? (NBTTagCompound)nbtPlayer.getCompoundTag("WITCSpellBook").copy()
+         : new NBTTagCompound();
+      if(player != null && player.worldObj != null && !player.worldObj.isRemote) {
+         this.spellBookTag.setBoolean("_IsSupreme", SupremeWitchData.isPlayerSupreme(player));
+      }
 
    }
 
@@ -56,6 +65,7 @@ public class PacketPlayerSync implements IMessage {
       buffer.writeInt(this.sinkingCurseLevel);
       buffer.writeInt(this.brewEffect);
       buffer.writeLong(this.brewTime);
+      ByteBufUtils.writeTag(buffer, this.spellBookTag);
    }
 
    public void fromBytes(ByteBuf buffer) {
@@ -67,6 +77,7 @@ public class PacketPlayerSync implements IMessage {
       this.sinkingCurseLevel = buffer.readInt();
       this.brewEffect = buffer.readInt();
       this.brewTime = buffer.readLong();
+      this.spellBookTag = ByteBufUtils.readTag(buffer);
    }
 
    public static class Handler implements IMessageHandler<PacketPlayerSync, IMessage> {
@@ -77,8 +88,12 @@ public class PacketPlayerSync implements IMessage {
             Infusion.setEnergy(player, message.infusionID, message.curEnergy, message.maxEnergy);
             CreaturePower.setCreaturePowerID(player, message.creatureID, message.creatureCharges);
             Infusion.setSinkingCurseLevel(player, message.sinkingCurseLevel);
+            NBTTagCompound nbtPlayer = Infusion.getNBT(player);
             if(message.brewEffect > 0) {
-               InfusedBrewEffect.setActiveBrewInfo(Infusion.getNBT(player), message.brewEffect, message.brewTime);
+               InfusedBrewEffect.setActiveBrewInfo(nbtPlayer, message.brewEffect, message.brewTime);
+            }
+            if(message.spellBookTag != null && nbtPlayer != null) {
+               nbtPlayer.setTag("WITCSpellBook", message.spellBookTag);
             }
          }
 

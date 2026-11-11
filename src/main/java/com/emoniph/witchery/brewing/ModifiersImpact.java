@@ -29,7 +29,7 @@ public class ModifiersImpact {
    }
 
    public Dispersal getDispersal() {
-      return (Dispersal)(this.onlyInstant?new DispersalInstant():this.dispersal);
+      return (Dispersal)(this.onlyInstant || this.dispersal == null ? new DispersalInstant() : this.dispersal);
    }
 
    public ModifiersImpact setOnlyInstant() {

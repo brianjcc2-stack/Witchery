@@ -377,33 +377,34 @@ public class BlockKettle extends BlockBaseContainer {
                boolean wasPowered;
                float powerNeeded;
                IPowerSource powerSource;
-               if(this.allFilled()) {
-                  recipe = KettleRecipes.instance().getResult(this.furnaceItemStacks, this.furnaceItemStacks.length - 2, false, super.worldObj);
-                  if(recipe == null) {
-                     this.color = 0;
-                     this.isRuined = true;
-                     this.furnaceItemStacks[6] = null;
+               int filledCount = this.getFilledCount();
+               KettleRecipes.KettleRecipe completeRecipe = filledCount > 0 ? KettleRecipes.instance().getResult(this.furnaceItemStacks, filledCount, false, super.worldObj) : null;
+
+               if(completeRecipe != null) {
+                  recipe = completeRecipe;
+                  this.color = recipe.getColor();
+                  wasPowered = this.isPowered;
+                  powerNeeded = recipe.getRequiredPower();
+                  if(powerNeeded == 0.0F) {
+                     this.isPowered = true;
                   } else {
-                     this.color = recipe.getColor();
-                     wasPowered = this.isPowered;
-                     powerNeeded = recipe.getRequiredPower();
-                     if(powerNeeded == 0.0F) {
-                        this.isPowered = true;
-                     } else {
-                        powerSource = BlockKettle.findNewPowerSource(super.worldObj, super.xCoord, super.yCoord, super.zCoord);
-                        this.isPowered = powerSource != null && powerSource.consumePower(powerNeeded);
-                     }
-
-                     if(this.isPowered) {
-                        this.furnaceItemStacks[6] = recipe.getOutput((EntityPlayer)null, true);
-
-                        for(int var6 = 0; var6 < this.furnaceItemStacks.length - 2; ++var6) {
-                           this.furnaceItemStacks[var6] = null;
-                        }
-                     }
-
-                     sendPacket = this.isPowered || wasPowered != this.isPowered;
+                     powerSource = BlockKettle.findNewPowerSource(super.worldObj, super.xCoord, super.yCoord, super.zCoord);
+                     this.isPowered = powerSource != null && powerSource.consumePower(powerNeeded);
                   }
+
+                  if(this.isPowered) {
+                     this.furnaceItemStacks[6] = recipe.getOutput((EntityPlayer)null, true);
+
+                     for(int var6 = 0; var6 < this.furnaceItemStacks.length - 2; ++var6) {
+                        this.furnaceItemStacks[var6] = null;
+                     }
+                  }
+
+                  sendPacket = this.isPowered || wasPowered != this.isPowered;
+               } else if(this.allFilled()) {
+                  this.color = 0;
+                  this.isRuined = true;
+                  this.furnaceItemStacks[6] = null;
                } else {
                   recipe = KettleRecipes.instance().getResult(this.furnaceItemStacks, this.furnaceItemStacks.length - 2, true, super.worldObj);
                   if(recipe != null && recipe.getColor() != 0) {
@@ -457,6 +458,16 @@ public class BlockKettle extends BlockBaseContainer {
             super.worldObj.markBlockForUpdate(super.xCoord, super.yCoord, super.zCoord);
          }
 
+      }
+
+      public int getFilledCount() {
+         int count = 0;
+         for(int i = 0; i < this.furnaceItemStacks.length - 2; ++i) {
+            if(this.furnaceItemStacks[i] != null) {
+               ++count;
+            }
+         }
+         return count;
       }
 
       public boolean allFilled() {

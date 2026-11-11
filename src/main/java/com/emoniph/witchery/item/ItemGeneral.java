@@ -9,6 +9,7 @@ import com.emoniph.witchery.blocks.BlockPlacedItem;
 import com.emoniph.witchery.blocks.BlockWickerBundle;
 import com.emoniph.witchery.brewing.BrewItemKey;
 import com.emoniph.witchery.brewing.potions.PotionEnslaved;
+import com.emoniph.witchery.brewing.potions.PotionEnderInhibition;
 import com.emoniph.witchery.common.ExtendedPlayer;
 import com.emoniph.witchery.common.Shapeshift;
 import com.emoniph.witchery.dimension.WorldProviderDreamWorld;
@@ -694,20 +695,30 @@ public class ItemGeneral extends ItemBase {
 
    @SideOnly(Side.CLIENT)
    public int getColorFromItemStack(ItemStack stack, int pass) {
-      if(this.itemBroomEnchanted.isMatch(stack) && pass != 0) {
-         int j = this.getBroomItemColor(stack);
-         if(j > 15) {
-            return super.getColorFromItemStack(stack, pass);
-         } else {
-            if(j < 0) {
-               j = 12;
+      if(this.itemBroomEnchanted.isMatch(stack) || this.itemBroom.isMatch(stack)) {
+         if(pass == 0) {
+            int wood = this.getBroomWoodType(stack);
+            if(wood == 0) {
+               return 0xD2691E;
+            } else if(wood == 1) {
+               return 0x8B4513;
+            } else {
+               return 0xE6DFD3;
             }
+         } else if(this.itemBroomEnchanted.isMatch(stack)) {
+            int j = this.getBroomItemColor(stack);
+            if(j > 15) {
+               return super.getColorFromItemStack(stack, pass);
+            } else {
+               if(j < 0) {
+                  j = 12;
+               }
 
-            return ItemDye.field_150922_c[BlockColored.func_150031_c(j)];
+               return ItemDye.field_150922_c[BlockColored.func_150031_c(j)];
+            }
          }
-      } else {
-         return super.getColorFromItemStack(stack, pass);
       }
+      return super.getColorFromItemStack(stack, pass);
    }
 
    @SideOnly(Side.CLIENT)
@@ -726,7 +737,15 @@ public class ItemGeneral extends ItemBase {
       while(i$.hasNext()) {
          ItemGeneral.SubItem subItem = (ItemGeneral.SubItem)i$.next();
          if(subItem != null && subItem.showInCreativeTab) {
-            itemList.add(subItem.createStack());
+            if(subItem == this.itemBroomEnchanted || subItem == this.itemBroom) {
+               for(int wood = 0; wood < 3; ++wood) {
+                  ItemStack broom = subItem.createStack();
+                  this.setBroomWoodType(broom, wood);
+                  itemList.add(broom);
+               }
+            } else {
+               itemList.add(subItem.createStack());
+            }
          }
       }
 
@@ -737,8 +756,33 @@ public class ItemGeneral extends ItemBase {
       return EnumRarity.values()[((ItemGeneral.SubItem)this.subItems.get(itemstack.getItemDamage())).rarity];
    }
 
+   @Override
+   public String getItemStackDisplayName(ItemStack stack) {
+      if(this.itemBroomEnchanted.isMatch(stack) || this.itemBroom.isMatch(stack)) {
+         int wood = this.getBroomWoodType(stack);
+         String baseName = super.getItemStackDisplayName(stack);
+         String woodNameKey = wood == 0 ? "witchery.wood.rowan" : (wood == 1 ? "witchery.wood.alder" : "witchery.wood.hawthorn");
+         return baseName + " (" + net.minecraft.util.StatCollector.translateToLocal(woodNameKey) + ")";
+      }
+      return super.getItemStackDisplayName(stack);
+   }
+
    @SideOnly(Side.CLIENT)
    public void addInformation(ItemStack stack, EntityPlayer player, List list, boolean includeHandlers) {
+      if(this.itemBroomEnchanted.isMatch(stack) || this.itemBroom.isMatch(stack)) {
+         int wood = this.getBroomWoodType(stack);
+         if(wood == 0) {
+            list.add(net.minecraft.util.EnumChatFormatting.GOLD + net.minecraft.util.StatCollector.translateToLocal("witchery.broom.rowan.desc1"));
+            list.add(net.minecraft.util.EnumChatFormatting.GRAY + net.minecraft.util.StatCollector.translateToLocal("witchery.broom.rowan.desc2"));
+         } else if(wood == 1) {
+            list.add(net.minecraft.util.EnumChatFormatting.RED + net.minecraft.util.StatCollector.translateToLocal("witchery.broom.alder.desc1"));
+            list.add(net.minecraft.util.EnumChatFormatting.GRAY + net.minecraft.util.StatCollector.translateToLocal("witchery.broom.alder.desc2"));
+         } else {
+            list.add(net.minecraft.util.EnumChatFormatting.AQUA + net.minecraft.util.StatCollector.translateToLocal("witchery.broom.hawthorn.desc1"));
+            list.add(net.minecraft.util.EnumChatFormatting.GRAY + net.minecraft.util.StatCollector.translateToLocal("witchery.broom.hawthorn.desc2"));
+         }
+      }
+
       String location = this.getBoundDisplayName(stack);
       if(location != null && !location.isEmpty()) {
          list.add(location);
@@ -1366,6 +1410,11 @@ public class ItemGeneral extends ItemBase {
    }
 
    private void openWitchcraftBook(World world, EntityPlayer player, ItemStack itemstack) {
+      if(this.itemBookWands.isMatch(itemstack)) {
+         if(!world.isRemote) {
+            Infusion.syncPlayer(world, player);
+         }
+      }
       int posX = MathHelper.floor_double(player.posX);
       int posY = MathHelper.floor_double(player.posY);
       int posZ = MathHelper.floor_double(player.posZ);
@@ -1850,7 +1899,7 @@ public class ItemGeneral extends ItemBase {
                mutableBlock = new MutableBlock[]{new MutableBlock(Blocks.flower_pot, 1), new MutableBlock(Blocks.flower_pot, 2), new MutableBlock(Blocks.flower_pot, 3), new MutableBlock(Blocks.flower_pot, 4), new MutableBlock(Blocks.flower_pot, 5), new MutableBlock(Blocks.flower_pot, 6), new MutableBlock(Blocks.flower_pot, 7), new MutableBlock(Blocks.flower_pot, 8), new MutableBlock(Blocks.flower_pot, 9), new MutableBlock(Blocks.flower_pot, 10), new MutableBlock(Blocks.flower_pot, 11)};
                list = new ArrayList(Arrays.asList(mutableBlock));
             } else {
-               mutableBlock = new MutableBlock[]{new MutableBlock(Blocks.sapling, 0), new MutableBlock(Blocks.sapling, 1), new MutableBlock(Blocks.sapling, 2), new MutableBlock(Blocks.sapling, 3), new MutableBlock(Blocks.sapling, 4), new MutableBlock(Blocks.sapling, 5), new MutableBlock(Witchery.Blocks.SAPLING, 0), new MutableBlock(Witchery.Blocks.SAPLING, 1), new MutableBlock(Witchery.Blocks.SAPLING, 2), new MutableBlock(Witchery.Blocks.EMBER_MOSS, 0), new MutableBlock(Blocks.tallgrass, 1), new MutableBlock(Blocks.waterlily), new MutableBlock(Blocks.brown_mushroom), new MutableBlock(Blocks.red_mushroom), new MutableBlock(Blocks.red_flower, 0), new MutableBlock(Blocks.yellow_flower), new MutableBlock(Witchery.Blocks.SPANISH_MOSS, 1)};
+               mutableBlock = new MutableBlock[]{new MutableBlock(Blocks.sapling, 0), new MutableBlock(Blocks.sapling, 1), new MutableBlock(Blocks.sapling, 2), new MutableBlock(Blocks.sapling, 3), new MutableBlock(Blocks.sapling, 4), new MutableBlock(Blocks.sapling, 5), new MutableBlock(Witchery.Blocks.SAPLING, 0), new MutableBlock(Witchery.Blocks.SAPLING, 1), new MutableBlock(Witchery.Blocks.SAPLING, 2), new MutableBlock(Witchery.Blocks.EMBER_MOSS, 0), new MutableBlock(Blocks.tallgrass, 1), new MutableBlock(Blocks.waterlily), new MutableBlock(Blocks.brown_mushroom), new MutableBlock(Blocks.red_mushroom), new MutableBlock(Blocks.red_flower, 0), new MutableBlock(Blocks.yellow_flower), new MutableBlock(Witchery.Blocks.SPANISH_MOSS, 1), new MutableBlock(Witchery.Blocks.MOON_ROSE, 0), new MutableBlock(Witchery.Blocks.SUN_ROSE, 0), new MutableBlock(Witchery.Blocks.GRAVE_ROSE, 0), new MutableBlock(Witchery.Blocks.BANSHEE_ROSE, 0), new MutableBlock(Witchery.Blocks.HECATES_TEARS, 0)};
                list = new ArrayList(Arrays.asList(mutableBlock));
                String[] index = Config.instance().mutandisExtras;
                int len$ = index.length;
@@ -1943,6 +1992,7 @@ public class ItemGeneral extends ItemBase {
                }
 
                this.setBroomEntityColor(var41, itemstack);
+               var41.setWoodType(this.getBroomWoodType(itemstack));
                var41.rotationYaw = player.rotationYaw;
                if(!world.getCollidingBoundingBoxes(var41, var41.boundingBox.expand(-0.1D, -0.1D, -0.1D)).isEmpty()) {
                   super.onItemUse(itemstack, player, world, posX, posY, posZ, side, par8, par9, par10);
@@ -1967,6 +2017,7 @@ public class ItemGeneral extends ItemBase {
 
    private void setBroomEntityColor(EntityBroom broomEntity, ItemStack itemstack) {
       broomEntity.setBrushColor(this.getBroomItemColor(itemstack));
+      broomEntity.setWoodType(this.getBroomWoodType(itemstack));
    }
 
    public void setBroomItemColor(ItemStack itemstack, int brushColor) {
@@ -1984,6 +2035,22 @@ public class ItemGeneral extends ItemBase {
    public int getBroomItemColor(ItemStack stack) {
       NBTTagCompound nbtTag = stack.getTagCompound();
       return nbtTag != null && nbtTag.hasKey("BrushColor")?nbtTag.getByte("BrushColor") & 15:-1;
+   }
+
+   public void setBroomWoodType(ItemStack itemstack, int woodType) {
+      if(woodType >= 0 && woodType <= 2) {
+         if(!itemstack.hasTagCompound()) {
+            itemstack.setTagCompound(new NBTTagCompound());
+         }
+
+         NBTTagCompound nbtTag = itemstack.getTagCompound();
+         nbtTag.setByte("WoodType", Byte.valueOf((byte)woodType).byteValue());
+      }
+   }
+
+   public int getBroomWoodType(ItemStack stack) {
+      NBTTagCompound nbtTag = stack != null ? stack.getTagCompound() : null;
+      return nbtTag != null && nbtTag.hasKey("WoodType") ? (nbtTag.getByte("WoodType") & 3) : 2;
    }
 
    private boolean placeBlock(Block spawnBlock, ItemStack itemstack, EntityPlayer player, World world, int posX, int posY, int posZ, int side, float par8, float par9, float par10) {
@@ -2152,6 +2219,10 @@ public class ItemGeneral extends ItemBase {
    }
 
    public static void teleportToLocation(World world, double posX, double posY, double posZ, int dimension, Entity entity, boolean presetPosition, ParticleEffect particle, SoundEffect sound) {
+      if(PotionEnderInhibition.isActive(entity, 0)) {
+         SoundEffect.NOTE_SNARE.playOnlyTo(entity instanceof EntityPlayer ? (EntityPlayer)entity : null, 1.0F, 0.5F);
+         return;
+      }
       boolean isVampire = CreatureUtil.isVampire(entity);
       if(isVampire) {
          Witchery.packetPipeline.sendToAllAround(new PacketParticles(ParticleEffect.SMOKE, SoundEffect.WITCHERY_RANDOM_POOF, entity, 0.5D, 2.0D), TargetPointUtil.from(entity, 16.0D));

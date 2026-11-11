@@ -140,6 +140,22 @@ public class RiteSummonItem extends Rite {
                   }
                }
 
+               if(Witchery.Items.GENERIC.itemBroomEnchanted.isMatch(itemstack)) {
+                  Iterator itBroom = ritual.sacrificedItems.iterator();
+                  while(itBroom.hasNext()) {
+                     RitualStep.SacrificedItem si = (RitualStep.SacrificedItem)itBroom.next();
+                     if(Witchery.Items.GENERIC.itemBroom.isMatch(si.itemstack)) {
+                        int wood = Witchery.Items.GENERIC.getBroomWoodType(si.itemstack);
+                        Witchery.Items.GENERIC.setBroomWoodType(itemstack, wood);
+                        int color = Witchery.Items.GENERIC.getBroomItemColor(si.itemstack);
+                        if(color >= 0) {
+                           Witchery.Items.GENERIC.setBroomItemColor(itemstack, color);
+                        }
+                        break;
+                     }
+                  }
+               }
+
                if(itemstack.getItem() == Item.getItemFromBlock(Witchery.Blocks.CRYSTAL_BALL)) {
                   EntityPlayer entity1 = ritual.getInitiatingPlayer(world);
                   if(entity1 != null) {

@@ -411,6 +411,44 @@ public class CovenTaskManager {
                 "La Rama Mística Tallada",
                 "Talla 1 Rama Mística (Mystic Branch) de madera viva de Ent.",
                 new ItemStack(Witchery.Items.MYSTIC_BRANCH), 1, 45, "Canalizador Antiguo"));
+
+        // =========================================================================
+        // CATEGORÍA 9: EXPANSIÓN ARCANA & BOTÁNICA RARA (7 Tareas)
+        // =========================================================================
+        register(new CovenTask("botany_moon_rose", CovenTask.TaskCategory.HARVEST,
+                "Rosas de la Luna Plateada",
+                "Cultiva en la caldera o recolecta 4 Rosas Lunares (Moon Rose) que florecen bajo la noche.",
+                new ItemStack(Witchery.Blocks.MOON_ROSE, 4), 4, 35, "Luz Nocturna"));
+
+        register(new CovenTask("botany_sun_rose", CovenTask.TaskCategory.HARVEST,
+                "Flores del Sol Radiante",
+                "Prepara 4 Rosas Solares (Sun Rose) ardientes con polvo de blaze en el caldero.",
+                new ItemStack(Witchery.Blocks.SUN_ROSE, 4), 4, 35, "Furia Solar"));
+
+        register(new CovenTask("botany_grave_rose", CovenTask.TaskCategory.HARVEST,
+                "Rosas de la Cripta",
+                "Elabora 4 Rosas de Tumba (Grave Rose) con polvo de cementerio para el aquelarre.",
+                new ItemStack(Witchery.Blocks.GRAVE_ROSE, 4), 4, 30, "Bendición de Cripta"));
+
+        register(new CovenTask("botany_banshee_rose", CovenTask.TaskCategory.HARVEST,
+                "El Lamento de la Banshee",
+                "Sintetiza 2 Rosas Banshee (Banshee Rose) con miedo condensado para salvaguardar el círculo.",
+                new ItemStack(Witchery.Blocks.BANSHEE_ROSE, 2), 2, 45, "Alarido Espectral"));
+
+        register(new CovenTask("botany_hecates_tears", CovenTask.TaskCategory.HARVEST,
+                "Lágrimas de Hécate",
+                "Cocina en el caldero 2 plantas de Lágrimas de Hécate (Hecate's Tears) para restaurar el maná.",
+                new ItemStack(Witchery.Blocks.HECATES_TEARS, 2), 2, 50, "Fuente de Hécate"));
+
+        register(new CovenTask("storage_apothecary_jar", CovenTask.TaskCategory.RITUAL,
+                "El Tarro del Boticario",
+                "Fabrica 2 Tarros de Boticario (Apothecary Jar) con losas de madera y cristal para la despensa mística.",
+                new ItemStack(Witchery.Blocks.APOTHECARY_JAR, 2), 2, 35, "Despensa Arcana"));
+
+        register(new CovenTask("symbology_study", CovenTask.TaskCategory.RITUAL,
+                "Sabiduría de Simbología",
+                "Entrega 1 ejemplar encuadernado del libro 'Brujería: Simbología' para instruir al aquelarre.",
+                Witchery.Items.GENERIC.itemBookWands.createStack(1), 1, 40, "Iluminación del Grimorio"));
     }
 
     public static CovenTask getRandomTask(EntityPlayer player) {

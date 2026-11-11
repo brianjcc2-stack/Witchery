@@ -72,9 +72,18 @@ public class EntityBroom extends Entity {
       super.dataWatcher.addObject(17, new Integer(0));
       super.dataWatcher.addObject(18, new Integer(1));
       super.dataWatcher.addObject(19, new Float(0.0F));
+      super.dataWatcher.addObject(20, Byte.valueOf((byte)2));
    }
 
    protected void dealFireDamage(int par1) {}
+
+   public void setWoodType(int wood) {
+      super.dataWatcher.updateObject(20, Byte.valueOf((byte)(wood & 3)));
+   }
+
+   public int getWoodType() {
+      return super.dataWatcher.getWatchableObjectByte(20) & 3;
+   }
 
    public void setBrushColor(int color) {
       super.dataWatcher.updateObject(16, Byte.valueOf((byte)color));
@@ -121,7 +130,8 @@ public class EntityBroom extends Entity {
          this.setDamageTaken(this.getDamageTaken() + par2 * 10.0F);
          this.setBeenAttacked();
          boolean flag = par1DamageSource.getEntity() instanceof EntityPlayer && ((EntityPlayer)par1DamageSource.getEntity()).capabilities.isCreativeMode;
-         if(flag || this.getDamageTaken() > 40.0F) {
+         float maxDmg = (this.getWoodType() == 0 ? 80.0F : 40.0F);
+         if(flag || this.getDamageTaken() > maxDmg) {
             if(super.riddenByEntity != null) {
                super.riddenByEntity.mountEntity(this);
             }
@@ -136,6 +146,7 @@ public class EntityBroom extends Entity {
                if(brushColor >= 0 && brushColor <= 15) {
                   Witchery.Items.GENERIC.setBroomItemColor(broomStack, brushColor);
                }
+               Witchery.Items.GENERIC.setBroomWoodType(broomStack, this.getWoodType());
 
                this.entityDropItem(broomStack, 0.0F);
             }
@@ -245,13 +256,32 @@ public class EntityBroom extends Entity {
       } else {
          double SPEED_LIMIT;
          double MAX_ACCELERATION;
+         int wood = this.getWoodType();
          if(super.riddenByEntity != null && super.riddenByEntity instanceof EntityLivingBase) {
+            if(super.riddenByEntity instanceof EntityPlayer) {
+               EntityPlayer rider = (EntityPlayer)super.riddenByEntity;
+               rider.getEntityData().setLong("witcheryLastBroomRiddenTime", super.worldObj.getTotalWorldTime());
+               rider.getEntityData().setByte("witcheryLastBroomWood", (byte)wood);
+               if(wood == 0) {
+                  rider.getEntityData().setLong("witcheryRowanFallProtected", super.worldObj.getTotalWorldTime() + 140L);
+               } else if(wood == 1) {
+                  rider.addPotionEffect(new net.minecraft.potion.PotionEffect(net.minecraft.potion.Potion.fireResistance.id, 60, 0, true));
+                  if(rider.isBurning()) {
+                     rider.extinguish();
+                  }
+                  this.extinguish();
+               }
+            }
             newHorzVelocity = (double)((EntityLivingBase)super.riddenByEntity).moveForward;
             if(newHorzVelocity > 0.0D) {
                d5 = -Math.sin((double)(super.riddenByEntity.rotationYaw * 3.1415927F / 180.0F));
                d11 = Math.cos((double)(super.riddenByEntity.rotationYaw * 3.1415927F / 180.0F));
-               super.motionX += d5 * this.speedMultiplier * (0.1D + (this.riderHasSoaringBrew?0.1D:0.0D) + (this.riderHasOwlFamiliar?0.2D:0.0D));
-               super.motionZ += d11 * this.speedMultiplier * (0.1D + (this.riderHasSoaringBrew?0.1D:0.0D) + (this.riderHasOwlFamiliar?0.2D:0.0D));
+               double woodSpeedBonus = (wood == 1 ? 0.04D : (wood == 2 && super.worldObj.provider.dimensionId == -37 ? 0.05D : 0.0D));
+               if(wood == 1 && super.worldObj.provider.dimensionId == -1) {
+                  woodSpeedBonus += 0.05D;
+               }
+               super.motionX += d5 * this.speedMultiplier * (0.1D + woodSpeedBonus + (this.riderHasSoaringBrew?0.1D:0.0D) + (this.riderHasOwlFamiliar?0.2D:0.0D));
+               super.motionZ += d11 * this.speedMultiplier * (0.1D + woodSpeedBonus + (this.riderHasSoaringBrew?0.1D:0.0D) + (this.riderHasOwlFamiliar?0.2D:0.0D));
                SPEED_LIMIT = -Math.sin((double)(super.riddenByEntity.rotationPitch * 3.1415927F / 180.0F));
                if(SPEED_LIMIT > -0.5D && SPEED_LIMIT < 0.2D) {
                   SPEED_LIMIT = 0.0D;
@@ -276,13 +306,25 @@ public class EntityBroom extends Entity {
          }
 
          newHorzVelocity = Math.sqrt(super.motionX * super.motionX + super.motionZ * super.motionZ);
-         SPEED_LIMIT = 0.9D + (this.riderHasOwlFamiliar?0.3D:0.0D) + (this.riderHasSoaringBrew?0.3D:0.0D);
+         double extraLimit = (wood == 1 ? 0.25D : 0.0D);
+         if(wood == 1 && super.worldObj.provider.dimensionId == -1) {
+            extraLimit += 0.35D;
+         }
+         if(wood == 2 && super.worldObj.provider.dimensionId == -37) {
+            extraLimit += 0.35D;
+         }
+         SPEED_LIMIT = 0.9D + extraLimit + (this.riderHasOwlFamiliar?0.3D:0.0D) + (this.riderHasSoaringBrew?0.3D:0.0D);
          if(newHorzVelocity > SPEED_LIMIT) {
             d5 = SPEED_LIMIT / newHorzVelocity;
             super.motionX *= d5;
             super.motionZ *= d5;
             super.motionY *= d5;
             newHorzVelocity = SPEED_LIMIT;
+         }
+
+         if(wood == 2 && super.riddenByEntity != null) {
+            super.motionX *= 0.975D;
+            super.motionZ *= 0.975D;
          }
 
          MAX_ACCELERATION = !this.riderHasSoaringBrew && !this.riderHasOwlFamiliar?0.35D:0.35D;
@@ -296,6 +338,16 @@ public class EntityBroom extends Entity {
             this.speedMultiplier -= (this.speedMultiplier - 0.07D) / MAX_ACCELERATION_FACTOR;
             if(this.speedMultiplier < 0.07D) {
                this.speedMultiplier = 0.07D;
+            }
+         }
+
+         if(super.worldObj.isRemote && super.ticksExisted % 4 == 0 && newHorzVelocity > 0.15D && super.riddenByEntity != null) {
+            if(wood == 1) {
+               super.worldObj.spawnParticle("flame", super.posX, super.posY + 0.1D, super.posZ, -super.motionX * 0.2D, 0.02D, -super.motionZ * 0.2D);
+            } else if(wood == 2) {
+               super.worldObj.spawnParticle("portal", super.posX, super.posY + 0.1D, super.posZ, (super.worldObj.rand.nextDouble() - 0.5D) * 0.2D, -0.1D, (super.worldObj.rand.nextDouble() - 0.5D) * 0.2D);
+            } else if(wood == 0) {
+               super.worldObj.spawnParticle("happyVillager", super.posX, super.posY + 0.1D, super.posZ, 0.0D, 0.05D, 0.0D);
             }
          }
 
@@ -343,7 +395,7 @@ public class EntityBroom extends Entity {
       if(brushColor >= 0) {
          par1NBTTagCompound.setByte("BrushColor", Byte.valueOf((byte)brushColor).byteValue());
       }
-
+      par1NBTTagCompound.setByte("WoodType", (byte)this.getWoodType());
    }
 
    protected void readEntityFromNBT(NBTTagCompound par1NBTTagCompound) {
@@ -355,6 +407,9 @@ public class EntityBroom extends Entity {
          this.setBrushColor(par1NBTTagCompound.getByte("BrushColor"));
       }
 
+      if(par1NBTTagCompound.hasKey("WoodType")) {
+         this.setWoodType(par1NBTTagCompound.getByte("WoodType"));
+      }
    }
 
    @SideOnly(Side.CLIENT)
@@ -424,8 +479,9 @@ public class EntityBroom extends Entity {
       public void onLivingFall(LivingFallEvent event) {
          if(event.entityLiving instanceof EntityPlayer) {
             EntityPlayer player = (EntityPlayer)event.entityLiving;
-            if(player.isRiding() && player.ridingEntity instanceof EntityBroom) {
+            if((player.isRiding() && player.ridingEntity instanceof EntityBroom) || player.getEntityData().getLong("witcheryRowanFallProtected") >= player.worldObj.getTotalWorldTime()) {
                event.distance = 0.0F;
+               event.setCanceled(true);
             }
          }
 

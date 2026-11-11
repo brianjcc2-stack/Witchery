@@ -35,7 +35,7 @@ public class BabaYagaMobilePowerSource implements IPowerSource {
          this.power -= amount;
          return true;
       }
-      return true; // Baba Yaga's ancient power constantly channels
+      return false;
    }
 
    @Override

@@ -75,8 +75,10 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
    private int vampireLevel;
    private int vampireLevelCap;
    private int spiritLevel;
+   private long silencedUntil;
    private boolean getPlayerData;
    private boolean isAstralProjecting;
+   private boolean wasPossessing;
    private int bloodPower;
    private int bloodReserve;
    private int vampireUltimate;
@@ -114,6 +116,19 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
       return this.voidVault;
    }
    private String unbreakableVowID = "";
+   private int subduedSpiritStyle = 0;
+
+   public int getSubduedSpiritStyle() {
+      return this.subduedSpiritStyle;
+   }
+
+   public void setSubduedSpiritStyle(int style) {
+      this.subduedSpiritStyle = style;
+      if (!this.player.worldObj.isRemote) {
+         Witchery.packetPipeline.sendToAll((IMessage)(new PacketPlayerStyle(this.player)));
+         this.sync();
+      }
+   }
 
 
    public static final void register(EntityPlayer player) {
@@ -143,6 +158,8 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
       props.setInteger("CreatureType", this.creatureType);
       props.setInteger("VampireLevel", this.vampireLevel);
       props.setInteger("SpiritLevel", this.spiritLevel);
+      props.setInteger("SubduedSpiritStyle", this.subduedSpiritStyle);
+      props.setLong("SilencedUntil", this.silencedUntil);
       props.setBoolean("AstralProjecting", this.isAstralProjecting);
       props.setInteger("BloodPower", this.bloodPower);
       props.setInteger("PotionThrowing", this.skillLevelPotionThrowing);
@@ -229,6 +246,10 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
          this.werewolfLevel = MathHelper.clamp_int(nbtRoot.getInteger("WerewolfLevel"), 0, 10);
          this.vampireLevel = nbtRoot.getInteger("VampireLevel");
          this.spiritLevel = nbtRoot.getInteger("SpiritLevel");
+         if (nbtRoot.hasKey("SubduedSpiritStyle")) {
+            this.subduedSpiritStyle = nbtRoot.getInteger("SubduedSpiritStyle");
+         }
+         this.silencedUntil = nbtRoot.getLong("SilencedUntil");
          this.isAstralProjecting = nbtRoot.getBoolean("AstralProjecting");
          this.bloodPower = nbtRoot.getInteger("BloodPower");
          this.wolfmanQuestState = MathHelper.clamp_int(nbtRoot.getInteger("WolfmanQuestState"), 0, ExtendedPlayer.QuestState.values().length - 1);
@@ -434,6 +455,24 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
       return this.spiritLevel;
    }
 
+   public int getEffectiveSpiritLevel() {
+      return (this.isSupremeWitch() || (this.player != null && this.player.capabilities.isCreativeMode))
+         ? this.spiritLevel
+         : Math.min(3, this.spiritLevel);
+   }
+
+   public boolean isSilenced() {
+      return System.currentTimeMillis() < this.silencedUntil;
+   }
+
+   public long getSilencedUntil() {
+      return this.silencedUntil;
+   }
+
+   public void setSilenced(int seconds) {
+      this.silencedUntil = System.currentTimeMillis() + (seconds * 1000L);
+   }
+
    public boolean isSupremeWitch() {
       return this.player != null && SupremeWitchData.isPlayerSupreme(this.player);
    }
@@ -448,6 +487,54 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
    public void increaseSpiritLevel() {
       if(this.spiritLevel < 10) {
          this.setSpiritLevel(this.spiritLevel + 1);
+      }
+   }
+
+   public void tryAdvanceSpiritMilestone(int maxTargetLevel, String reason) {
+      if(this.player == null || this.player.worldObj == null || this.player.worldObj.isRemote) return;
+      int allowedCap = this.isSupremeWitch() ? Math.min(10, maxTargetLevel) : Math.min(3, maxTargetLevel);
+      if(this.spiritLevel >= 3 && !this.isSupremeWitch() && maxTargetLevel > 3) {
+         return; // Levels 4-10 are exclusive to the Supreme Witch
+      }
+      if(this.spiritLevel < allowedCap) {
+         int newLevel = Math.min(allowedCap, this.spiritLevel + 1);
+         this.setSpiritLevel(newLevel);
+         com.emoniph.witchery.util.SoundEffect.RANDOM_LEVELUP.playAtPlayer(this.player.worldObj, this.player);
+         com.emoniph.witchery.util.ParticleEffect.PORTAL.send(com.emoniph.witchery.util.SoundEffect.RANDOM_ORB, this.player, 1.0D, 2.0D, 20);
+         this.player.addChatMessage(new net.minecraft.util.ChatComponentText(
+            net.minecraft.util.EnumChatFormatting.DARK_PURPLE + "✦ " +
+            net.minecraft.util.EnumChatFormatting.AQUA + "[Senda del Espíritu] " +
+            net.minecraft.util.EnumChatFormatting.LIGHT_PURPLE + "¡Tu comunión espiritual ha ascendido al " +
+            net.minecraft.util.EnumChatFormatting.GOLD + "Nivel " + newLevel + "/10" +
+            net.minecraft.util.EnumChatFormatting.LIGHT_PURPLE + "! " +
+            net.minecraft.util.EnumChatFormatting.GRAY + "(" + reason + ")"
+         ));
+         if(newLevel == 3) {
+            this.player.addChatMessage(new net.minecraft.util.ChatComponentText(net.minecraft.util.EnumChatFormatting.AQUA + "  ↳ Desbloqueado: Forma de Vuelo de Humo Dementor/Auror (/spirit subdued o 'dementor'/'auror')."));
+            if(!this.isSupremeWitch()) {
+               this.player.addChatMessage(new net.minecraft.util.ChatComponentText(net.minecraft.util.EnumChatFormatting.LIGHT_PURPLE + "  ↳ Has alcanzado el límite espiritual terrenal (Nivel 3). Conviértete en Bruja Suprema para trascender a los Niveles 4–10."));
+            }
+         } else if(newLevel == 5) {
+            this.player.addChatMessage(new net.minecraft.util.ChatComponentText(net.minecraft.util.EnumChatFormatting.AQUA + "  ↳ Desbloqueado: Danza de Espíritus Guardianes (/spirit summon)."));
+         } else if(newLevel == 6) {
+            this.player.addChatMessage(new net.minecraft.util.ChatComponentText(net.minecraft.util.EnumChatFormatting.AQUA + "  ↳ Desbloqueado: Manto de Sigilo Espectral (/spirit invisible o agacharse para ocultarte)."));
+         } else if(newLevel == 7) {
+            this.player.addChatMessage(new net.minecraft.util.ChatComponentText(net.minecraft.util.EnumChatFormatting.AQUA + "  ↳ Desbloqueado: Resistencia Etérea (Inmunidad a asfixia y efectos ralentizadores)."));
+         } else if(newLevel == 8) {
+            this.player.addChatMessage(new net.minecraft.util.ChatComponentText(net.minecraft.util.EnumChatFormatting.AQUA + "  ↳ Desbloqueado: Relicario del Vacío (Cofre dimensional de 54 ranuras)."));
+            if (!this.player.inventory.hasItem(com.emoniph.witchery.Witchery.Items.VOID_LOCKET)) {
+               net.minecraft.item.ItemStack locket = new net.minecraft.item.ItemStack(com.emoniph.witchery.Witchery.Items.VOID_LOCKET);
+               if (!this.player.inventory.addItemStackToInventory(locket)) {
+                  this.player.dropPlayerItemWithRandomChoice(locket, false);
+               }
+               this.player.addChatMessage(new net.minecraft.util.ChatComponentText(net.minecraft.util.EnumChatFormatting.LIGHT_PURPLE + "  ✦ Has recibido tu [Relicario del Vacío] vinculado a tu alma."));
+            }
+         } else if(newLevel == 9) {
+            this.player.addChatMessage(new net.minecraft.util.ChatComponentText(net.minecraft.util.EnumChatFormatting.AQUA + "  ↳ Desbloqueado: Paso Etéreo (Atravesar muros sólidos en forma espiritual)."));
+         } else if(newLevel == 10) {
+            this.player.addChatMessage(new net.minecraft.util.ChatComponentText(net.minecraft.util.EnumChatFormatting.GOLD + "  ↳ ¡Desbloqueada la Maestría Espiritual: Proyección Astral y Posesión de Criaturas (/spirit astral o 'ex corpus')!"));
+         }
+         SupremeWitchData.updateSupremeStatus(this.player.worldObj);
       }
    }
 
@@ -496,7 +583,7 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
    public static boolean trySayAstralProjection(EntityPlayer player, String message) {
       if(message != null && (message.equalsIgnoreCase("ex corpus") || message.equalsIgnoreCase("astral"))) {
          ExtendedPlayer playerEx = get(player);
-         if(playerEx != null && playerEx.getSpiritLevel() >= 10 && player.dimension != Config.instance().dimensionDreamID) {
+         if(playerEx != null && (playerEx.getSpiritLevel() >= 10 || playerEx.isSupremeWitch()) && player.dimension != Config.instance().dimensionDreamID) {
             if (!playerEx.isAstralProjecting()) {
                com.emoniph.witchery.entity.EntityCorpse var21 = new com.emoniph.witchery.entity.EntityCorpse(player.worldObj);
                var21.setHealth(player.getHealth());
@@ -508,7 +595,9 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
                net.minecraft.nbt.NBTTagCompound nbt = com.emoniph.witchery.infusion.Infusion.getNBT(player);
                com.emoniph.witchery.dimension.WorldProviderDreamWorld.setPlayerIsGhost(nbt, true);
                playerEx.setAstralProjecting(true);
-               
+               SupremeWitchData.completeWonder(player, SupremeWitchData.WONDER_DESCENSUM);
+               com.emoniph.witchery.Witchery.packetPipeline.sendToAll(new com.emoniph.witchery.network.PacketPlayerStyle(player));
+               playerEx.sync();
                com.emoniph.witchery.util.SoundEffect.RANDOM_FIZZ.playAtPlayer(player.worldObj, player);
             } else {
                java.util.List corpses = player.worldObj.getEntitiesWithinAABB(com.emoniph.witchery.entity.EntityCorpse.class, player.boundingBox.expand(256.0D, 256.0D, 256.0D));
@@ -527,6 +616,16 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
                com.emoniph.witchery.dimension.WorldProviderDreamWorld.setPlayerIsGhost(nbt, false);
                playerEx.setAstralProjecting(false);
                player.removePotionEffect(net.minecraft.potion.Potion.invisibility.id);
+               player.setInvisible(false);
+               if (!player.capabilities.isCreativeMode) {
+                  player.capabilities.isFlying = false;
+                  player.capabilities.allowFlying = false;
+                  player.noClip = false;
+                  player.sendPlayerAbilities();
+               }
+               player.fallDistance = 0.0F;
+               com.emoniph.witchery.Witchery.packetPipeline.sendToAll(new com.emoniph.witchery.network.PacketPlayerStyle(player));
+               playerEx.sync();
                com.emoniph.witchery.util.SoundEffect.RANDOM_FIZZ.playAtPlayer(player.worldObj, player);
             }
             return true;
@@ -542,22 +641,47 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
 
          boolean isSupreme = SupremeWitchData.isPlayerSupreme(player);
 
-         if(message.equalsIgnoreCase("ex subduo") || message.equalsIgnoreCase("orbe") || message.equalsIgnoreCase("subdued")) {
-            if(playerEx.getSpiritLevel() >= 3 || isSupreme) {
-               if(playerEx.getCreatureType() == com.emoniph.witchery.util.TransformCreature.SUBDUED_SPIRIT) {
-                  com.emoniph.witchery.common.Shapeshift.INSTANCE.shiftTo(player, com.emoniph.witchery.util.TransformCreature.NONE);
-               } else {
-                  com.emoniph.witchery.common.Shapeshift.INSTANCE.shiftTo(player, com.emoniph.witchery.util.TransformCreature.SUBDUED_SPIRIT);
+         if(message.equalsIgnoreCase("ex humanus") || message.equalsIgnoreCase("humano") || message.equalsIgnoreCase("mortal") || message.equalsIgnoreCase("human")) {
+            if(playerEx.getCreatureType() != com.emoniph.witchery.util.TransformCreature.NONE) {
+               com.emoniph.witchery.common.Shapeshift.INSTANCE.shiftTo(player, com.emoniph.witchery.util.TransformCreature.NONE);
+               if(!player.isPotionActive(net.minecraft.potion.Potion.invisibility)) {
+                  player.setInvisible(false);
                }
                com.emoniph.witchery.util.SoundEffect.RANDOM_FIZZ.playAtPlayer(player.worldObj, player);
                return true;
             }
-         } else if(message.equalsIgnoreCase("ex spiritus") || message.equalsIgnoreCase("spirit")) {
-            if(playerEx.getSpiritLevel() >= 4) {
-               if(playerEx.getCreatureType() == com.emoniph.witchery.util.TransformCreature.SPIRIT) {
+         } else if(message.equalsIgnoreCase("dementor")) {
+            if(playerEx.getSpiritLevel() >= 3 || isSupreme) {
+               playerEx.setSubduedSpiritStyle(1);
+               com.emoniph.witchery.common.Shapeshift.INSTANCE.shiftTo(player, com.emoniph.witchery.util.TransformCreature.SUBDUED_SPIRIT);
+               SupremeWitchData.completeWonder(player, SupremeWitchData.WONDER_DESCENSUM);
+               com.emoniph.witchery.util.SoundEffect.RANDOM_FIZZ.playAtPlayer(player.worldObj, player);
+               player.addChatMessage(new net.minecraft.util.ChatComponentText(
+                  net.minecraft.util.EnumChatFormatting.DARK_PURPLE + "★ " + net.minecraft.util.EnumChatFormatting.GRAY + "Modo Dementor activo (" + net.minecraft.util.EnumChatFormatting.DARK_GRAY + "Humo Oscuro" + net.minecraft.util.EnumChatFormatting.GRAY + ")."
+               ));
+               return true;
+            }
+         } else if(message.equalsIgnoreCase("auror")) {
+            if(playerEx.getSpiritLevel() >= 3 || isSupreme) {
+               playerEx.setSubduedSpiritStyle(2);
+               com.emoniph.witchery.common.Shapeshift.INSTANCE.shiftTo(player, com.emoniph.witchery.util.TransformCreature.SUBDUED_SPIRIT);
+               SupremeWitchData.completeWonder(player, SupremeWitchData.WONDER_DESCENSUM);
+               com.emoniph.witchery.util.SoundEffect.RANDOM_FIZZ.playAtPlayer(player.worldObj, player);
+               player.addChatMessage(new net.minecraft.util.ChatComponentText(
+                  net.minecraft.util.EnumChatFormatting.DARK_PURPLE + "★ " + net.minecraft.util.EnumChatFormatting.GRAY + "Modo Auror activo (" + net.minecraft.util.EnumChatFormatting.WHITE + "Humo Luminoso" + net.minecraft.util.EnumChatFormatting.GRAY + ")."
+               ));
+               return true;
+            }
+         } else if(message.equalsIgnoreCase("ex subduo") || message.equalsIgnoreCase("orbe") || message.equalsIgnoreCase("subdued")) {
+            if(playerEx.getSpiritLevel() >= 3 || isSupreme) {
+               if(playerEx.getCreatureType() == com.emoniph.witchery.util.TransformCreature.SUBDUED_SPIRIT) {
                   com.emoniph.witchery.common.Shapeshift.INSTANCE.shiftTo(player, com.emoniph.witchery.util.TransformCreature.NONE);
+                  if(!player.isPotionActive(net.minecraft.potion.Potion.invisibility)) {
+                     player.setInvisible(false);
+                  }
                } else {
-                  com.emoniph.witchery.common.Shapeshift.INSTANCE.shiftTo(player, com.emoniph.witchery.util.TransformCreature.SPIRIT);
+                  com.emoniph.witchery.common.Shapeshift.INSTANCE.shiftTo(player, com.emoniph.witchery.util.TransformCreature.SUBDUED_SPIRIT);
+                  SupremeWitchData.completeWonder(player, SupremeWitchData.WONDER_DESCENSUM);
                }
                com.emoniph.witchery.util.SoundEffect.RANDOM_FIZZ.playAtPlayer(player.worldObj, player);
                return true;
@@ -988,11 +1112,26 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
          --this.vampireCooldown;
       }
       
+      if (!this.player.worldObj.isRemote && this.player.ticksExisted % 100 == 0 && this.player.dimension == Config.instance().dimensionDreamID) {
+          this.tryAdvanceSpiritMilestone(2, "Caminar por el Mundo de los Sueños");
+          SupremeWitchData.completeWonder(this.player, SupremeWitchData.WONDER_DESCENSUM);
+      }
+
+      if (!this.player.worldObj.isRemote) {
+          if (this.player.ridingEntity != null && this.isAstralProjecting()) {
+             this.wasPossessing = true;
+          } else if (this.wasPossessing && this.player.ridingEntity == null) {
+             this.wasPossessing = false;
+             if (this.isAstralProjecting()) {
+                com.emoniph.witchery.util.ChatUtil.sendTranslated(net.minecraft.util.EnumChatFormatting.LIGHT_PURPLE, this.player, "witchery.spirit.unpossessing");
+                com.emoniph.witchery.util.ParticleEffect.SPELL_COLORED.send(com.emoniph.witchery.util.SoundEffect.WITCHERY_RANDOM_POOF, this.player.worldObj, this.player.posX, this.player.posY + 1.0D, this.player.posZ, 0.4D, 0.8D, 12, 0x88CCFF);
+             }
+          }
+      }
+
       if (!this.player.worldObj.isRemote && this.isAstralProjecting()) {
-          this.player.addPotionEffect(new net.minecraft.potion.PotionEffect(net.minecraft.potion.Potion.invisibility.id, 40, 0, true));
-          
           if (this.player.ticksExisted % 20 == 0) {
-              boolean hasEnergy = com.emoniph.witchery.infusion.Infusion.aquireEnergy(this.player.worldObj, this.player, 3, false);
+              boolean hasEnergy = com.emoniph.witchery.infusion.Infusion.aquireEnergy(this.player.worldObj, this.player, 1, false);
               if (!hasEnergy) {
               // Forced return because out of energy
               trySayAstralProjection(this.player, "ex corpus");
@@ -1144,6 +1283,9 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
    public void setCreatureTypeOrdinal(int type) {
       if(type != this.creatureType) {
          this.creatureType = type;
+         if(type == 0 && !this.player.isPotionActive(net.minecraft.potion.Potion.invisibility)) {
+            this.player.setInvisible(false);
+         }
          if(!this.player.worldObj.isRemote) {
             Witchery.packetPipeline.sendToAll((IMessage)(new PacketPlayerStyle(this.player)));
          }

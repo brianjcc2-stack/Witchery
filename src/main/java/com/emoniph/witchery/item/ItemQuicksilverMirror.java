@@ -47,13 +47,20 @@ public class ItemQuicksilverMirror extends Item {
          if (now < readyTime && !player.capabilities.isCreativeMode) {
             long remainingSecs = (readyTime - now) / 20L + 1L;
             SoundEffect.NOTE_SNARE.playOnlyTo(player, 1.0F, 0.5F);
+            com.emoniph.witchery.util.ChatUtil.sendTranslated(EnumChatFormatting.RED, player, "witchery.quicksilvermirror.cooldown", new Object[]{Long.valueOf(remainingSecs).toString()});
             return stack;
          }
 
+         double angle = Math.toRadians((double)player.rotationYaw);
+         double forwardX = -Math.sin(angle) * 1.5D;
+         double forwardZ = Math.cos(angle) * 1.5D;
+
          EntityMirrorClone clone = new EntityMirrorClone(world, player);
+         clone.setPosition(player.posX + forwardX, player.posY, player.posZ + forwardZ);
          world.spawnEntityInWorld(clone);
 
-         ParticleEffect.SPELL_COLORED.send(SoundEffect.RANDOM_GLASS, world, player.posX, player.posY + 1.0D, player.posZ, 0.8D, 1.2D, 16, 0x88CCFF);
+         ParticleEffect.SPELL_COLORED.send(SoundEffect.RANDOM_GLASS, world, clone.posX, clone.posY + 1.0D, clone.posZ, 0.8D, 1.2D, 16, 0x88CCFF);
+         com.emoniph.witchery.util.ChatUtil.sendTranslated(EnumChatFormatting.AQUA, player, "witchery.quicksilvermirror.summoned", new Object[0]);
          stack.getTagCompound().setLong("ReadyTime", now + COOLDOWN_TICKS);
          stack.damageItem(1, player);
       }

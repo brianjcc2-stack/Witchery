@@ -5,15 +5,23 @@ import com.emoniph.witchery.entity.ai.EntityAIDimensionalFollowOwner;
 import com.emoniph.witchery.entity.ai.EntityAISitAndStay;
 import com.emoniph.witchery.familiar.Familiar;
 import com.emoniph.witchery.familiar.IFamiliar;
+import com.emoniph.witchery.util.ParticleEffect;
+import com.emoniph.witchery.util.SoundEffect;
 import com.emoniph.witchery.util.TameableUtil;
+import java.util.List;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAITasks.EntityAITaskEntry;
 import net.minecraft.entity.passive.EntityOcelot;
+import net.minecraft.entity.passive.EntityTameable;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.potion.Potion;
+import net.minecraft.potion.PotionEffect;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
@@ -46,6 +54,54 @@ public class EntityWitchCat extends EntityOcelot implements IFamiliar {
    public void onUpdate() {
       super.isImmuneToFire = this.isFamiliar();
       super.onUpdate();
+
+      if(this.isFamiliar() && !super.worldObj.isRemote) {
+         EntityLivingBase owner = this.getOwner();
+         if(this.ticksExisted % 30 == 0) {
+            AxisAlignedBB aabb = super.boundingBox.expand(16.0D, 6.0D, 16.0D);
+            List nearby = super.worldObj.getEntitiesWithinAABB(EntityLivingBase.class, aabb);
+            boolean foundThreat = false;
+            if(nearby != null) {
+               for(int i = 0; i < nearby.size(); ++i) {
+                  EntityLivingBase entity = (EntityLivingBase)nearby.get(i);
+                  if(entity != this && entity != owner) {
+                     boolean isInvis = entity.isInvisible() || entity.isPotionActive(Potion.invisibility);
+                     boolean isSneakPlayer = (entity instanceof EntityPlayer) && ((EntityPlayer)entity).isSneaking();
+                     boolean isAttacker = (entity instanceof EntityLiving) && ((EntityLiving)entity).getAttackTarget() == owner;
+                     if(isInvis || isSneakPlayer || isAttacker) {
+                        ParticleEffect.INSTANT_SPELL.send(SoundEffect.NONE, entity, 0.5D, 1.5D, 6);
+                        if(isInvis) {
+                           entity.removePotionEffect(Potion.invisibility.id);
+                           entity.setInvisible(false);
+                        }
+                        foundThreat = true;
+                     }
+                  }
+               }
+            }
+
+            if(foundThreat && this.ticksExisted % 60 == 0) {
+               super.worldObj.playSoundAtEntity(this, "mob.cat.hiss", 0.7F, 1.2F);
+            }
+         }
+
+         if(this.ticksExisted % 30 == 0 && owner instanceof EntityPlayer) {
+            EntityPlayer p = (EntityPlayer)owner;
+            EntityLivingBase combatTarget = null;
+            if(p.getAITarget() != null && p.getAITarget().isEntityAlive()) {
+               combatTarget = p.getAITarget();
+            } else if(p.getLastAttacker() != null && p.getLastAttacker().isEntityAlive() && p.ticksExisted - p.getLastAttackerTime() < 80) {
+               combatTarget = p.getLastAttacker();
+            }
+            if(combatTarget != null && combatTarget != this && combatTarget != owner && !(combatTarget instanceof EntityTameable && ((EntityTameable)combatTarget).getOwner() == owner) && this.getDistanceSqToEntity(combatTarget) <= 144.0D) {
+               if(!combatTarget.isPotionActive(Potion.weakness)) {
+                  combatTarget.addPotionEffect(new PotionEffect(Potion.weakness.id, 120, 1));
+                  combatTarget.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, 80, 0));
+                  ParticleEffect.SPELL.send(SoundEffect.NONE, combatTarget, 0.5D, 1.0D, 8);
+               }
+            }
+         }
+      }
    }
 
    public int getTotalArmorValue() {
@@ -66,6 +122,16 @@ public class EntityWitchCat extends EntityOcelot implements IFamiliar {
       boolean result = super.attackEntityFrom(par1DamageSource, par2);
       if(sitting && this.isFamiliar()) {
          this.setSitting(true);
+      }
+
+      if(this.isFamiliar() && !super.worldObj.isRemote && par1DamageSource.getEntity() instanceof EntityLivingBase) {
+         EntityLivingBase attacker = (EntityLivingBase)par1DamageSource.getEntity();
+         if(attacker != this.getOwner()) {
+            attacker.addPotionEffect(new PotionEffect(Potion.weakness.id, 140, 1));
+            attacker.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, 100, 1));
+            super.worldObj.playSoundAtEntity(this, "mob.cat.hiss", 0.9F, 1.0F);
+            ParticleEffect.PORTAL.send(SoundEffect.NONE, attacker, 0.5D, 1.0D, 8);
+         }
       }
 
       return result;

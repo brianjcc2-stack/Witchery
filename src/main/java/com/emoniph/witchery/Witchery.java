@@ -290,8 +290,10 @@ public class Witchery {
       event.registerServerCommand(new com.emoniph.witchery.commands.CommandCrucio());
       event.registerServerCommand(new com.emoniph.witchery.commands.CommandCoven());
       event.registerServerCommand(new com.emoniph.witchery.commands.CommandSpirit());
+      event.registerServerCommand(new com.emoniph.witchery.commands.CommandSupreme());
       event.registerServerCommand(new com.emoniph.witchery.commands.CommandVampire());
       event.registerServerCommand(new com.emoniph.witchery.commands.CommandWerewolf());
+      event.registerServerCommand(new com.emoniph.witchery.commands.CommandSpells());
       PowerSources.initiate();
       BlockAreaMarker.AreaMarkerRegistry.serverStart();
       worldGenerator.initiate();

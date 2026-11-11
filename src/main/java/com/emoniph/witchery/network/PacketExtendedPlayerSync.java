@@ -20,6 +20,7 @@ public class PacketExtendedPlayerSync implements IMessage {
    private int ultimateCharges;
    private int reserveBlood;
    private boolean isAstralProjecting;
+   private int subduedStyle;
 
 
    public PacketExtendedPlayerSync() {}
@@ -35,6 +36,7 @@ public class PacketExtendedPlayerSync implements IMessage {
       this.ultimateCharges = extendedPlayer.getVampireUltimateCharges();
       this.reserveBlood = extendedPlayer.getBloodReserve();
       this.isAstralProjecting = extendedPlayer.isAstralProjecting();
+      this.subduedStyle = extendedPlayer.getSubduedSpiritStyle();
    }
 
    public void toBytes(ByteBuf buffer) {
@@ -48,6 +50,7 @@ public class PacketExtendedPlayerSync implements IMessage {
       buffer.writeInt(this.ultimateCharges);
       buffer.writeInt(this.reserveBlood);
       buffer.writeBoolean(this.isAstralProjecting);
+      buffer.writeInt(this.subduedStyle);
    }
 
    public void fromBytes(ByteBuf buffer) {
@@ -61,6 +64,11 @@ public class PacketExtendedPlayerSync implements IMessage {
       this.ultimateCharges = buffer.readInt();
       this.reserveBlood = buffer.readInt();
       this.isAstralProjecting = buffer.readBoolean();
+      if (buffer.readableBytes() >= 4) {
+         this.subduedStyle = buffer.readInt();
+      } else {
+         this.subduedStyle = 0;
+      }
    }
 
    public static class Handler implements IMessageHandler<PacketExtendedPlayerSync, IMessage> {
@@ -76,6 +84,7 @@ public class PacketExtendedPlayerSync implements IMessage {
          }
          playerEx.applySyncData(message.werewolfLevel, message.creatureOrdinal, message.vampireLevel, message.spiritLevel, message.bloodLevel, message.selected, message.ultimate, message.ultimateCharges, message.reserveBlood);
          playerEx.setAstralProjecting(message.isAstralProjecting);
+         playerEx.setSubduedSpiritStyle(message.subduedStyle);
          return null;
       }
    }

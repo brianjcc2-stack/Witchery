@@ -73,6 +73,12 @@ public class RiteSoulThief extends Rite {
                 if (!stolen) {
                     return RitualStep.Result.ABORTED_REFUND;
                 }
+                if (initiator != null) {
+                    com.emoniph.witchery.common.ExtendedPlayer pEx = com.emoniph.witchery.common.ExtendedPlayer.get(initiator);
+                    if (pEx != null) {
+                        pEx.tryAdvanceSpiritMilestone(8, "Arrebatar un alma con el Rito del Ladrón de Almas");
+                    }
+                }
                 ParticleEffect.PORTAL.send(SoundEffect.MOB_WITHER_SPAWN, world, 0.5D + (double)x, (double)y + 1.0D, 0.5D + (double)z, 1.0D, 2.0D, 16);
             }
             return RitualStep.Result.COMPLETED;

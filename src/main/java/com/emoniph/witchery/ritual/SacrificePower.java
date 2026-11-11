@@ -51,11 +51,19 @@ public class SacrificePower extends Sacrifice {
          if(ticks % (long)this.sacrifice.powerFrequencyInTicks != 0L) {
             return RitualStep.Result.STARTING;
          } else {
+            boolean isSupreme = false;
+            if(ritual.getInitiatingPlayerName() != null) {
+               net.minecraft.entity.player.EntityPlayer initiator = world.getPlayerEntityByName(ritual.getInitiatingPlayerName());
+               if(initiator != null && com.emoniph.witchery.common.SupremeWitchData.isPlayerSupreme(initiator)) {
+                  isSupreme = true;
+               }
+            }
+            float requiredPower = isSupreme ? this.sacrifice.powerRequired * 0.5F : this.sacrifice.powerRequired;
             IPowerSource powerSource = this.findNewPowerSource(world, posX, posY, posZ);
             if(powerSource == null) {
                RiteRegistry.RiteError("witchery.rite.missingpowersource", ritual.getInitiatingPlayerName(), world);
                return RitualStep.Result.ABORTED_REFUND;
-            } else if(powerSource.consumePower(this.sacrifice.powerRequired)) {
+            } else if(powerSource.consumePower(requiredPower)) {
                return RitualStep.Result.COMPLETED;
             } else {
                RiteRegistry.RiteError("witchery.rite.insufficientpower", ritual.getInitiatingPlayerName(), world);
@@ -65,8 +73,7 @@ public class SacrificePower extends Sacrifice {
       }
 
       private IPowerSource findNewPowerSource(World world, int posX, int posY, int posZ) {
-         ArrayList sources = PowerSources.instance() != null?PowerSources.instance().get(world, new Coord(posX, posY, posZ), 16):null;
-         return sources != null && sources.size() > 0?((PowerSources.RelativePowerSource)sources.get(0)).source():null;
+         return PowerSources.findClosestPowerSource(world, posX, posY, posZ);
       }
    }
 }

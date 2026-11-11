@@ -35,8 +35,14 @@ public class ChantCommand implements ICommand {
    }
 
    public void processCommand(ICommandSender sender, String[] args) {
-      if(args.length == 0) {
-         ChatUtil.sendTranslated(EnumChatFormatting.RED, sender, "witchery.rite.unknownchant", new Object[0]);
+      if(args.length == 0 || args[0].equalsIgnoreCase("guia") || args[0].equalsIgnoreCase("help") || args[0].equalsIgnoreCase("ayuda")) {
+         ChatUtil.sendPlain(EnumChatFormatting.DARK_PURPLE, sender, "=== Guía de Cánticos Místicos (/chant) ===");
+         ChatUtil.sendPlain(EnumChatFormatting.YELLOW, sender, "• /chant ex subduo" + EnumChatFormatting.WHITE + " - Alterna Forma de Orbe Espiritual Subyugado (Espíritu Nvl 3+).");
+         ChatUtil.sendPlain(EnumChatFormatting.YELLOW, sender, "• /chant ex humanus" + EnumChatFormatting.WHITE + " - Regresa a tu forma terrenal humana.");
+         ChatUtil.sendPlain(EnumChatFormatting.YELLOW, sender, "• /chant ex corpus" + EnumChatFormatting.WHITE + " - Activa o finaliza la Proyección Astral (Espíritu Nvl 10).");
+         ChatUtil.sendPlain(EnumChatFormatting.YELLOW, sender, "• /chant there's no place like home" + EnumChatFormatting.WHITE + " - Teletransporte a casa con Zapatillas de Rubí.");
+         ChatUtil.sendPlain(EnumChatFormatting.YELLOW, sender, "• /chant mirror mirror send me home" + EnumChatFormatting.WHITE + " - Regresa a través de un Espejo Mágico.");
+         ChatUtil.sendPlain(EnumChatFormatting.YELLOW, sender, "• /chant <destino>" + EnumChatFormatting.WHITE + " - Viaja por la Red Flu (estando dentro de Fuego Flu).");
       } else {
          World world = sender.getEntityWorld();
          if(world != null) {

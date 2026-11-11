@@ -9,6 +9,8 @@ import com.emoniph.witchery.brewing.potions.WitcheryPotions;
 import com.emoniph.witchery.common.GenericEvents;
 import com.emoniph.witchery.entity.EntityBroom;
 import com.emoniph.witchery.infusion.Infusion;
+import com.emoniph.witchery.item.ItemApothecaryPouch;
+import com.emoniph.witchery.item.ItemBottomlessSatchel;
 import com.emoniph.witchery.item.ItemBrewBag;
 import com.emoniph.witchery.item.ItemGoblinClothes;
 import com.emoniph.witchery.item.ItemLeonardsUrn;
@@ -84,6 +86,10 @@ public class CommonProxy implements IGuiHandler {
          return new ItemBrewBag.ContainerBrewBag(player.inventory, new ItemBrewBag.InventoryBrewBag(player), player.getHeldItem());
       case 8:
          return new ItemLeonardsUrn.ContainerLeonardsUrn(player.inventory, new ItemLeonardsUrn.InventoryLeonardsUrn(player), player.getHeldItem());
+      case 9:
+         return new ItemApothecaryPouch.ContainerApothecary(player.inventory, new ItemApothecaryPouch.InventoryApothecary(player.getHeldItem(), player), player.getHeldItem());
+      case 10:
+         return new ItemBottomlessSatchel.ContainerSatchel(player.inventory, new ItemBottomlessSatchel.InventorySatchel(player.getHeldItem(), player), player.getHeldItem());
       }
    }
 

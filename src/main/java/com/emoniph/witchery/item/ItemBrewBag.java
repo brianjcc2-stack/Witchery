@@ -10,11 +10,14 @@ import com.emoniph.witchery.util.ChatUtil;
 import com.emoniph.witchery.util.Dye;
 import com.emoniph.witchery.util.SoundEffect;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.projectile.EntityPotion;
+import net.minecraft.init.Items;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemPotion;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -170,6 +173,15 @@ public class ItemBrewBag extends ItemBase {
                         if(!world.isRemote) {
                            world.spawnEntityInWorld(new EntityBrew(world, player, brew, false));
                         }
+                     } else if(brew.getItem() instanceof ItemPotion || brew.getItem() == Items.potionitem) {
+                        if(!player.capabilities.isCreativeMode) {
+                           --brew.stackSize;
+                        }
+
+                        world.playSoundAtEntity(player, "random.bow", 0.5F, 0.4F / (Item.itemRand.nextFloat() * 0.4F + 0.8F));
+                        if(!world.isRemote) {
+                           world.spawnEntityInWorld(new EntityPotion(world, player, brew));
+                        }
                      } else {
                         Witchery.Items.GENERIC.throwBrew(brew, world, player);
                      }
@@ -235,6 +247,21 @@ public class ItemBrewBag extends ItemBase {
          return itemStack != null && itemStack.getItem() == Witchery.Items.BREW_BAG;
       }
 
+      @Override
+      public ItemStack slotClick(int slotId, int clickedButton, int mode, EntityPlayer player) {
+         ItemStack held = player.getCurrentEquippedItem();
+         if (slotId >= 0 && slotId < this.inventorySlots.size()) {
+            Slot slot = (Slot) this.inventorySlots.get(slotId);
+            if (slot != null && slot.getHasStack() && slot.getStack() == held) {
+               return null;
+            }
+         }
+         if (mode == 2 && clickedButton == player.inventory.currentItem) {
+            return null;
+         }
+         return super.slotClick(slotId, clickedButton, mode, player);
+      }
+
       public ItemStack transferStackInSlot(EntityPlayer player, int index) {
          ItemStack returnStack = null;
          Slot slot = (Slot)super.inventorySlots.get(index);
@@ -243,13 +270,17 @@ public class ItemBrewBag extends ItemBase {
             if(!ItemBrewBag.SlotBrewBag.isBrew(itemStack)) {
                return returnStack;
             }
+            if(itemStack == player.getCurrentEquippedItem()) {
+               return null;
+            }
 
             returnStack = itemStack.copy();
-            if(index < this.numRows * 9) {
-               if(!this.mergeItemStack(itemStack, this.numRows * 9, super.inventorySlots.size(), true)) {
+            int bagSlots = this.numRows * 8;
+            if(index < bagSlots) {
+               if(!this.mergeItemStack(itemStack, bagSlots, super.inventorySlots.size(), true)) {
                   return null;
                }
-            } else if(!this.mergeItemStack(itemStack, 0, this.numRows * 9, false)) {
+            } else if(!this.mergeItemStack(itemStack, 0, bagSlots, false)) {
                return null;
             }
 
@@ -275,7 +306,13 @@ public class ItemBrewBag extends ItemBase {
       }
 
       public static boolean isBrew(ItemStack stack) {
-         return stack != null && (Witchery.Items.GENERIC.isBrew(stack) || Witchery.Items.BREW == stack.getItem() && WitcheryBrewRegistry.INSTANCE.isSplash(stack.getTagCompound()));
+         if (stack == null || stack.getItem() == null) {
+            return false;
+         }
+         return stack.getItem() == Witchery.Items.BREW ||
+                Witchery.Items.GENERIC.isBrew(stack) ||
+                stack.getItem() instanceof ItemPotion ||
+                stack.getItem() == Items.potionitem;
       }
    }
 

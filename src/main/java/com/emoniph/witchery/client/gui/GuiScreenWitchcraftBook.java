@@ -15,7 +15,10 @@ import com.emoniph.witchery.util.Const;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import java.util.Iterator;
+import java.util.List;
 import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.Tessellator;
@@ -67,30 +70,19 @@ public class GuiScreenWitchcraftBook extends GuiScreen {
       this.bookPages = new NBTTagList();
       NBTTagCompound stackCompound;
       if(Witchery.Items.GENERIC.itemBookOven.isMatch(itemstack)) {
-         stackCompound = new NBTTagCompound();
-         stackCompound.setString("Summary", Witchery.resource("witchery.book.oven1"));
-         this.bookPages.appendTag(stackCompound);
-         stackCompound = new NBTTagCompound();
-         stackCompound.setString("Summary", Witchery.resource("witchery.book.oven2"));
-         this.bookPages.appendTag(stackCompound);
-         stackCompound = new NBTTagCompound();
-         stackCompound.setString("Summary", Witchery.resource("witchery.book.oven3"));
-         this.bookPages.appendTag(stackCompound);
+         this.addSummaryPage(Witchery.resource("witchery.book.oven1"));
+         this.addSummaryPage(Witchery.resource("witchery.book.oven2"));
+         this.addSummaryPage(Witchery.resource("witchery.book.oven3"));
       } else {
          String intro;
          Iterator i$;
          if(Witchery.Items.GENERIC.itemBookDistilling.isMatch(itemstack)) {
-            stackCompound = new NBTTagCompound();
-            intro = Witchery.resource("witchery.book.distillery1");
-            stackCompound.setString("Summary", intro);
-            this.bookPages.appendTag(stackCompound);
+            this.addSummaryPage(Witchery.resource("witchery.book.distillery1"));
             i$ = DistilleryRecipes.instance().recipes.iterator();
 
             while(i$.hasNext()) {
                DistilleryRecipes.DistilleryRecipe recipe = (DistilleryRecipes.DistilleryRecipe)i$.next();
-               stackCompound = new NBTTagCompound();
-               stackCompound.setString("Summary", recipe.getDescription());
-               this.bookPages.appendTag(stackCompound);
+               this.addSummaryPage(recipe.getDescription());
             }
          } else {
             String var15;
@@ -135,55 +127,37 @@ public class GuiScreenWitchcraftBook extends GuiScreen {
                   }
                }
             } else if(Witchery.Items.GENERIC.itemBookInfusions.isMatch(itemstack)) {
-               stackCompound = new NBTTagCompound();
-               intro = Witchery.resource("witchery.book.brews1");
-               stackCompound.setString("Summary", intro);
-               this.bookPages.appendTag(stackCompound);
+               this.addSummaryPage(Witchery.resource("witchery.book.brews1"));
                i$ = KettleRecipes.instance().recipes.iterator();
 
                while(i$.hasNext()) {
                   KettleRecipes.KettleRecipe var16 = (KettleRecipes.KettleRecipe)i$.next();
                   if(var16.inBook) {
-                     stackCompound = new NBTTagCompound();
-                     stackCompound.setString("Summary", var16.getDescription());
-                     this.bookPages.appendTag(stackCompound);
+                     this.addSummaryPage(var16.getDescription());
                   }
                }
             } else if(Witchery.Items.GENERIC.itemBookBurning.isMatch(itemstack)) {
-               stackCompound = new NBTTagCompound();
-               intro = Witchery.resource("witchery.book.burning1");
-               stackCompound.setString("Summary", intro);
-               this.bookPages.appendTag(stackCompound);
+               this.addSummaryPage(Witchery.resource("witchery.book.burning1"));
                i$ = BrazierRecipes.instance().recipes.iterator();
 
                while(i$.hasNext()) {
                   BrazierRecipes.BrazierRecipe var20 = (BrazierRecipes.BrazierRecipe)i$.next();
                   if(var20.inBook) {
-                     stackCompound = new NBTTagCompound();
-                     stackCompound.setString("Summary", var20.getDescription());
-                     this.bookPages.appendTag(stackCompound);
+                     this.addSummaryPage(var20.getDescription());
                   }
                }
 
-               stackCompound = new NBTTagCompound();
-               var15 = Witchery.resource("witchery.book.burning2");
-               stackCompound.setString("Summary", var15);
-               this.bookPages.appendTag(stackCompound);
+               this.addSummaryPage(Witchery.resource("witchery.book.burning2"));
                Iterator var18 = InfusedSpiritEffect.effectList.iterator();
 
                while(var18.hasNext()) {
                   InfusedSpiritEffect var19 = (InfusedSpiritEffect)var18.next();
                   if(var19 != null && var19.isInBook()) {
-                     stackCompound = new NBTTagCompound();
-                     stackCompound.setString("Summary", var19.getDescription());
-                     this.bookPages.appendTag(stackCompound);
+                     this.addSummaryPage(var19.getDescription());
                   }
                }
             } else if(Witchery.Items.GENERIC.itemBookHerbology.isMatch(itemstack)) {
-               stackCompound = new NBTTagCompound();
-               intro = Witchery.resource("witchery.book.herbology1");
-               stackCompound.setString("Summary", intro);
-               this.bookPages.appendTag(stackCompound);
+               this.addSummaryPage(Witchery.resource("witchery.book.herbology1"));
                this.addPlantPage((Block)Witchery.Blocks.CROP_BELLADONNA, "witchery.book.herbology.belladonna", "witchery:textures/blocks/belladonna_stage_4.png");
                this.addPlantPage(Witchery.Blocks.EMBER_MOSS, "witchery.book.herbology.embermoss", "witchery:textures/blocks/embermoss.png");
                this.addPlantPage(Witchery.Blocks.GLINT_WEED, "witchery.book.herbology.glintweed", "witchery:textures/blocks/glintWeed.png");
@@ -197,6 +171,11 @@ public class GuiScreenWitchcraftBook extends GuiScreen {
                this.addPlantPage(Witchery.Blocks.GRASSPER, "witchery.book.herbology.grassper", "witchery:textures/blocks/grassperIcon.png");
                this.addPlantPage(Witchery.Blocks.CRITTER_SNARE, "witchery.book.herbology.crittersnare", "witchery:textures/blocks/critterSnare_empty.png");
                this.addPlantPage(Witchery.Blocks.BLOOD_ROSE, "witchery.book.herbology.bloodrose", "witchery:textures/blocks/bloodrose.png");
+               this.addPlantPage(Witchery.Blocks.MOON_ROSE, "witchery.book.herbology.moonrose", "witchery:textures/blocks/moonrose.png");
+               this.addPlantPage(Witchery.Blocks.SUN_ROSE, "witchery.book.herbology.sunrose", "witchery:textures/blocks/sunrose.png");
+               this.addPlantPage(Witchery.Blocks.GRAVE_ROSE, "witchery.book.herbology.graverose", "witchery:textures/blocks/graverose.png");
+               this.addPlantPage(Witchery.Blocks.BANSHEE_ROSE, "witchery.book.herbology.bansheerose", "witchery:textures/blocks/bansheerose.png");
+               this.addPlantPage(Witchery.Blocks.HECATES_TEARS, "witchery.book.herbology.hecatestears", "witchery:textures/blocks/hecatestears.png");
                this.addPlantPage(Witchery.Blocks.WISPY_COTTON, "witchery.book.herbology.somniancotton", "witchery:textures/blocks/somnianCotton.png");
                this.addPlantPage((Block)Witchery.Blocks.CROP_WOLFSBANE, "witchery.book.herbology.wolfsbane", "witchery:textures/blocks/wolfsbane_stage_7.png");
                this.addPlantPage((Block)Witchery.Blocks.CROP_GARLIC, "witchery.book.herbology.garlic", "witchery:textures/blocks/garlic_stage_5.png");
@@ -204,10 +183,7 @@ public class GuiScreenWitchcraftBook extends GuiScreen {
                this.addPlantPage(new ItemStack(Witchery.Blocks.SAPLING, 1, 2), "witchery.book.herbology.hawthorn", "witchery:textures/blocks/sapling_hawthorn.png");
                this.addPlantPage(new ItemStack(Witchery.Blocks.SAPLING, 1, 0), "witchery.book.herbology.rowan", "witchery:textures/blocks/sapling_rowan.png");
             } else if(Witchery.Items.GENERIC.itemBookBiomes.isMatch(itemstack)) {
-               stackCompound = new NBTTagCompound();
-               intro = Witchery.resource("witchery.book.biomes1");
-               stackCompound.setString("Summary", intro);
-               this.bookPages.appendTag(stackCompound);
+               this.addSummaryPage(Witchery.resource("witchery.book.biomes1"));
                this.addBiomes(Type.FOREST);
                this.addBiomes(Type.PLAINS);
                this.addBiomes(Type.MOUNTAIN);
@@ -222,18 +198,31 @@ public class GuiScreenWitchcraftBook extends GuiScreen {
                this.addBiomes(Type.MUSHROOM);
                this.addBiomes(Type.MAGICAL);
             } else if(Witchery.Items.GENERIC.itemBookWands.isMatch(itemstack)) {
-               stackCompound = new NBTTagCompound();
-               intro = Witchery.resource("witchery.book.wands1");
-               stackCompound.setString("Summary", intro);
-               this.bookPages.appendTag(stackCompound);
-               i$ = EffectRegistry.instance().getEffects().iterator();
+               int totalSpells = 0;
+               int masteredCount = 0;
+               Iterator countIt = EffectRegistry.instance().getEffects().iterator();
+               while(countIt.hasNext()) {
+                  SymbolEffect eff = (SymbolEffect)countIt.next();
+                  if(eff != null && eff.getDefaultStrokes() != null) {
+                     totalSpells++;
+                     if(SymbolEffect.isSpellMastered(player, eff)) masteredCount++;
+                  }
+               }
+               // Page 1: Lore / Symbology Introduction
+               this.addSummaryPage(Witchery.resource("witchery.book.wands1"));
 
+               // Page 2: Status
+               String symbologyStatus = "§n§5Libro de Simbología§r\n\n"
+                  + "§2✔ Dominados: " + masteredCount + " / " + totalSpells + "§0\n\n"
+                  + "§8Consulta en las siguientes páginas las fórmulas y trazos de cada hechizo para canalizarlos con la Rama Mística.§0\n\n"
+                  + "§8Lanzar un hechizo por primera vez te otorgará maestría sobre él (+10 pts).§0";
+               this.addSummaryPage(symbologyStatus);
+
+               i$ = EffectRegistry.instance().getEffects().iterator();
                while(i$.hasNext()) {
                   SymbolEffect var21 = (SymbolEffect)i$.next();
                   if(var21.isVisible(player)) {
-                     stackCompound = new NBTTagCompound();
-                     stackCompound.setString("Summary", var21.getDescription());
-                     this.bookPages.appendTag(stackCompound);
+                     this.addSummaryPage(var21.getDescription(player));
                   }
                }
             }
@@ -246,6 +235,138 @@ public class GuiScreenWitchcraftBook extends GuiScreen {
          this.currPage = Math.min(Math.max(stackCompound.getInteger("CurrentPage"), 0), Math.max(this.bookTotalPages, 1) - 1);
       }
 
+   }
+
+   private void addSummaryPage(String text) {
+      if(text == null || text.trim().isEmpty()) {
+         return;
+      }
+      FontRenderer font = Minecraft.getMinecraft() != null ? Minecraft.getMinecraft().fontRenderer : null;
+      if(font == null) {
+         NBTTagCompound tag = new NBTTagCompound();
+         tag.setString("Summary", text);
+         this.bookPages.appendTag(tag);
+         return;
+      }
+
+      int wrapWidth = 116;
+      int maxLines = 12;
+      List lines = font.listFormattedStringToWidth(text, wrapWidth);
+      if(lines.size() <= maxLines) {
+         NBTTagCompound tag = new NBTTagCompound();
+         tag.setString("Summary", text);
+         this.bookPages.appendTag(tag);
+         return;
+      }
+
+      String title = "";
+      if(!lines.isEmpty()) {
+         String firstLine = (String)lines.get(0);
+         if(firstLine.startsWith("§n")) {
+            int endIdx = firstLine.indexOf("§r");
+            if(endIdx != -1) {
+               title = firstLine.substring(0, endIdx + 2);
+            } else {
+               title = firstLine;
+            }
+         }
+      }
+
+      int currentLine = 0;
+      int totalLines = lines.size();
+      int pageNum = 1;
+
+      while(currentLine < totalLines) {
+         int avail = maxLines;
+         StringBuilder sb = new StringBuilder();
+         if(pageNum > 1 && !title.isEmpty()) {
+            sb.append(title).append(" §8(cont.)§0\n\n");
+            avail -= 2;
+         }
+
+         int toTake = Math.min(avail, totalLines - currentLine);
+         while(pageNum > 1 && toTake > 0 && currentLine < totalLines && ((String)lines.get(currentLine)).trim().isEmpty()) {
+            currentLine++;
+            toTake = Math.min(avail, totalLines - currentLine);
+         }
+
+         for(int i = 0; i < toTake; ++i) {
+            if(i > 0) {
+               sb.append("\n");
+            }
+            sb.append((String)lines.get(currentLine + i));
+         }
+         currentLine += toTake;
+         pageNum++;
+
+         NBTTagCompound tag = new NBTTagCompound();
+         tag.setString("Summary", sb.toString());
+         this.bookPages.appendTag(tag);
+      }
+   }
+
+   private void addPlantPage(String plantName, String descriptionResourceID, String imageResourceID) {
+      String desc = Witchery.resource(descriptionResourceID);
+      FontRenderer font = Minecraft.getMinecraft() != null ? Minecraft.getMinecraft().fontRenderer : null;
+      if(font == null || desc == null || desc.isEmpty()) {
+         NBTTagCompound compound = new NBTTagCompound();
+         compound.setString("Summary", plantName);
+         compound.setString("Details", desc != null ? desc : "");
+         compound.setString("Image", imageResourceID);
+         this.bookPages.appendTag(compound);
+         return;
+      }
+
+      int wrapWidth = 116;
+      int maxLinesUnderImage = 8;
+      List lines = font.listFormattedStringToWidth(desc, wrapWidth);
+      if(lines.size() <= maxLinesUnderImage) {
+         NBTTagCompound compound = new NBTTagCompound();
+         compound.setString("Summary", plantName);
+         compound.setString("Details", desc);
+         compound.setString("Image", imageResourceID);
+         this.bookPages.appendTag(compound);
+         return;
+      }
+
+      StringBuilder page1Desc = new StringBuilder();
+      for(int i = 0; i < maxLinesUnderImage; ++i) {
+         if(i > 0) page1Desc.append("\n");
+         page1Desc.append((String)lines.get(i));
+      }
+      NBTTagCompound page1 = new NBTTagCompound();
+      page1.setString("Summary", plantName);
+      page1.setString("Details", page1Desc.toString());
+      page1.setString("Image", imageResourceID);
+      this.bookPages.appendTag(page1);
+
+      int currentLine = maxLinesUnderImage;
+      int totalLines = lines.size();
+      while(currentLine < totalLines) {
+         int toTake = Math.min(10, totalLines - currentLine);
+         StringBuilder cont = new StringBuilder();
+         cont.append(plantName).append(" §8(cont.)§0\n\n");
+         while(toTake > 0 && currentLine < totalLines && ((String)lines.get(currentLine)).trim().isEmpty()) {
+            currentLine++;
+            toTake = Math.min(10, totalLines - currentLine);
+         }
+         for(int i = 0; i < toTake; ++i) {
+            if(i > 0) cont.append("\n");
+            cont.append((String)lines.get(currentLine + i));
+         }
+         currentLine += toTake;
+         NBTTagCompound page2 = new NBTTagCompound();
+         page2.setString("Summary", cont.toString());
+         this.bookPages.appendTag(page2);
+      }
+   }
+
+   private void addPlantPage(ItemStack plantStack, String descriptionResourceID, String imageResourceID) {
+      this.addPlantPage("§n" + plantStack.getDisplayName() + "§r", descriptionResourceID, imageResourceID);
+   }
+
+   private void addPlantPage(Block plantBlock, String descriptionResourceID, String imageResourceID) {
+      this.addPlantPage("§n" + plantBlock.getLocalizedName() + "§r", descriptionResourceID, imageResourceID);
    }
 
    private void addBiomes(Type biomeType) {
@@ -261,29 +382,11 @@ public class GuiScreenWitchcraftBook extends GuiScreen {
          sb.append(biomes[glowstone - 1].biomeName);
          sb.append(Const.BOOK_NEWLINE);
          if(glowstone % 8 == 0 || glowstone == biomes.length) {
-            NBTTagCompound compound = new NBTTagCompound();
-            compound.setString("Summary", title + Const.BOOK_NEWLINE + sb.toString());
-            this.bookPages.appendTag(compound);
+            this.addSummaryPage(title + Const.BOOK_NEWLINE + sb.toString());
             sb = new StringBuilder();
          }
       }
 
-   }
-
-   private void addPlantPage(ItemStack plantStack, String descriptionResourceID, String imageResourceID) {
-      NBTTagCompound compound = new NBTTagCompound();
-      compound.setString("Summary", "§n" + plantStack.getDisplayName() + "§r");
-      compound.setString("Details", Witchery.resource(descriptionResourceID));
-      compound.setString("Image", imageResourceID);
-      this.bookPages.appendTag(compound);
-   }
-
-   private void addPlantPage(Block plantBlock, String descriptionResourceID, String imageResourceID) {
-      NBTTagCompound compound = new NBTTagCompound();
-      compound.setString("Summary", "§n" + plantBlock.getLocalizedName() + "§r");
-      compound.setString("Details", Witchery.resource(descriptionResourceID));
-      compound.setString("Image", imageResourceID);
-      this.bookPages.appendTag(compound);
    }
 
    private void storeCurrentPage() {
@@ -411,7 +514,7 @@ public class GuiScreenWitchcraftBook extends GuiScreen {
 
          int hasImage = super.fontRendererObj.getStringWidth(s);
          super.fontRendererObj.drawString(s, k - hasImage + this.bookImageWidth - 16, b0 + 16, 0);
-         super.fontRendererObj.drawSplitString(s1, k + 20, b0 + 16, 98, 0);
+         this.drawSplitStringClipped(super.fontRendererObj, s1, k + 20, b0 + 16, 98, 14, 0);
          if(!s2.isEmpty()) {
             int var18 = super.fontRendererObj.getStringWidth(s2);
             if(var18 < 90) {
@@ -459,13 +562,24 @@ public class GuiScreenWitchcraftBook extends GuiScreen {
 
          int var17 = super.fontRendererObj.getStringWidth(s);
          super.fontRendererObj.drawString(s, k - var17 + this.bookImageWidth - 44, b0 + 16, 0);
-         super.fontRendererObj.drawSplitString(s1, k + 36, b0 + 32, 116 - (var19?34:0), 0);
+         this.drawSplitStringClipped(super.fontRendererObj, s1, k + 36, b0 + 32, 116 - (var19?34:0), var19 ? 3 : 12, 0);
          if(s2 != null && !s2.isEmpty()) {
-            super.fontRendererObj.drawSplitString(s2, k + 36, b0 + 32 + 34, 116, 0);
+            this.drawSplitStringClipped(super.fontRendererObj, s2, k + 36, b0 + 32 + 34, 116, 8, 0);
          }
       }
 
       super.drawScreen(par1, par2, par3);
+   }
+
+   private void drawSplitStringClipped(FontRenderer font, String text, int x, int y, int wrapWidth, int maxLines, int color) {
+      if(text == null || text.isEmpty()) {
+         return;
+      }
+      List lines = font.listFormattedStringToWidth(text, wrapWidth);
+      int count = Math.min(lines.size(), maxLines);
+      for(int i = 0; i < count; ++i) {
+         font.drawString((String)lines.get(i), x, y + i * font.FONT_HEIGHT, color);
+      }
    }
 
    public static void drawTexturedQuadFit(double x, double y, double width, double height, double zLevel) {

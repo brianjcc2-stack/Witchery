@@ -37,7 +37,7 @@ public class CommandWerewolf extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/werewolf <form|wolf|beast|human|howl|leap|scent|status|level <0-10>>";
+        return "/werewolf <form|wolf|beast|human|howl|leap|scent|status|level <0-10>|guia>";
     }
 
     @Override
@@ -53,7 +53,7 @@ public class CommandWerewolf extends CommandBase {
     @Override
     public List addTabCompletionOptions(ICommandSender sender, String[] args) {
         if (args.length == 1) {
-            return getListOfStringsMatchingLastWord(args, "form", "wolf", "beast", "human", "howl", "leap", "scent", "status", "level",
+            return getListOfStringsMatchingLastWord(args, "form", "wolf", "beast", "human", "howl", "leap", "scent", "status", "level", "guia", "help", "ayuda",
                     "forma", "lobo", "bestia", "humano", "aullar", "saltar", "olfato", "estado", "nivel");
         }
         if (args.length == 2 && (args[0].equalsIgnoreCase("form") || args[0].equalsIgnoreCase("forma"))) {
@@ -81,10 +81,23 @@ public class CommandWerewolf extends CommandBase {
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/werewolf scent" + EnumChatFormatting.GRAY + " (o olfato) - Rastrea presas y criaturas en 32 bloques (Req. Nvl 3)."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/werewolf status" + EnumChatFormatting.GRAY + " (o estado) - Muestra estado y fase lunar."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/werewolf level <0-10>" + EnumChatFormatting.GRAY + " (o nivel) - Ajusta tu nivel de licantropía."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/werewolf guia" + EnumChatFormatting.GRAY + " (o help) - Guía de niveles y poderes de licántropo."));
             return;
         }
 
         String sub = args[0].toLowerCase();
+
+        if (sub.equals("guia") || sub.equals("help") || sub.equals("ayuda")) {
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "╔════════════════════════════════════════════╗"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "  ★ GUÍA DE LA SENDA DEL LICÁNTROPO ★"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "╚════════════════════════════════════════════╝"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "• Nivel 2: " + EnumChatFormatting.WHITE + "Transformación voluntaria en Lobo (/werewolf wolf) y Embestida (/werewolf leap)."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "• Nivel 3: " + EnumChatFormatting.WHITE + "Rastreo de presas por el viento en 32 bloques (/werewolf scent)."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "• Nivel 5: " + EnumChatFormatting.WHITE + "Transformación en Hombre Bestia (/werewolf beast) y Aullido de manada (/werewolf howl)."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "• Nivel 7-10: " + EnumChatFormatting.WHITE + "Desgarro de armaduras, invocación de manada e infección licántropa."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "✦ Sobrecarga de Varita: " + EnumChatFormatting.GRAY + "Si agotas tu energía de infusión, puedes canalizar tu vigor y hambre para lanzar hechizos."));
+            return;
+        }
 
         if (sub.equals("status") || sub.equals("estado")) {
             boolean fullMoon = CreatureUtil.isFullMoon(player.worldObj);
