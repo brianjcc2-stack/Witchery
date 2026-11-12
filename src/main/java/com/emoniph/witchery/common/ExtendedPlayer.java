@@ -151,6 +151,20 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
 
    public void init(Entity entity, World world) {}
 
+   private NBTTagCompound storedSuccessorNBT;
+
+   public NBTTagCompound getStoredSuccessorNBT() {
+      return this.storedSuccessorNBT;
+   }
+
+   public void setStoredSuccessorNBT(NBTTagCompound tag) {
+      this.storedSuccessorNBT = tag;
+   }
+
+   public boolean hasStoredSuccessor() {
+      return this.storedSuccessorNBT != null;
+   }
+
    public void saveNBTData(NBTTagCompound compound) {
       NBTTagCompound props = new NBTTagCompound();
       props.setInteger("PotionBottling", this.skillLevelPotionBottling);
@@ -234,12 +248,20 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
          }
       }
       props.setTag("PreservedDeathItems", nbtPreserved);
+      if (this.storedSuccessorNBT != null) {
+         props.setTag("StoredSuccessorNBT", this.storedSuccessorNBT);
+      }
       compound.setTag("WitcheryExtendedPlayer", props);
    }
 
    public void loadNBTData(NBTTagCompound compound) {
       if(compound.hasKey("WitcheryExtendedPlayer")) {
          NBTTagCompound nbtRoot = (NBTTagCompound)compound.getTag("WitcheryExtendedPlayer");
+         if (nbtRoot.hasKey("StoredSuccessorNBT")) {
+            this.storedSuccessorNBT = nbtRoot.getCompoundTag("StoredSuccessorNBT");
+         } else {
+            this.storedSuccessorNBT = null;
+         }
          this.skillLevelPotionBottling = MathHelper.clamp_int(nbtRoot.getInteger("PotionBottling"), 0, 100);
          this.skillLevelPotionThrowing = MathHelper.clamp_int(nbtRoot.getInteger("PotionThrowing"), 0, 100);
          this.setCreatureTypeOrdinal(nbtRoot.getInteger("CreatureType"));

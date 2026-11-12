@@ -70,6 +70,18 @@ import net.minecraft.village.MerchantRecipe;
 import net.minecraft.village.MerchantRecipeList;
 import net.minecraft.village.Village;
 import net.minecraft.world.World;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.EnumChatFormatting;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import com.emoniph.witchery.blocks.BlockWitchesOven;
+import com.emoniph.witchery.blocks.BlockDistillery;
+import com.emoniph.witchery.blocks.BlockKettle;
+import com.emoniph.witchery.crafting.DistilleryRecipes;
+import com.emoniph.witchery.crafting.KettleRecipes;
+import net.minecraft.tileentity.TileEntityFurnace;
+import net.minecraft.nbt.NBTTagString;
+import java.util.ArrayList;
+import java.util.List;
 
 public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEntitySelector, EntityAIAvoidEntityConditionally.IAvoidEntities {
 
@@ -95,6 +107,10 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
    public boolean isSitting = false;
    public boolean isFollowing = false;
    public boolean isWorking = false;
+   public boolean isSuccessor = false;
+   public long lastBarrierTime = 0L;
+   public long lastChatterTime = 0L;
+   public String successorRole = "follow";
    public InventoryBasic goblinInventory = new InventoryBasic("Mochila de Hobgoblin", false, 9);
 
 
@@ -281,7 +297,9 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
       if(this.isTamed && this.tamedOwnerName != null && !this.tamedOwnerName.isEmpty()) {
          EntityPlayerMP owner = net.minecraft.server.MinecraftServer.getServer().getConfigurationManager().func_152612_a(this.tamedOwnerName);
          if(owner != null) {
-            if(!this.isSitting && TimeUtil.secondsElapsed(2, super.ticksExisted)) {
+            if(this.isSuccessor()) {
+               this.performSuccessorTick(owner);
+            } else if(!this.isSitting && TimeUtil.secondsElapsed(2, super.ticksExisted)) {
                int currentEnergy = com.emoniph.witchery.infusion.Infusion.getCurrentEnergy(owner);
                int maxEnergy = com.emoniph.witchery.infusion.Infusion.getMaxEnergy(owner);
                if(currentEnergy < maxEnergy) {
@@ -443,6 +461,1217 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
       }
    }
 
+   public boolean isSuccessor() {
+      return (super.dataWatcher.getWatchableObjectByte(19) & 1) != 0;
+   }
+
+   public void setSuccessor(boolean val) {
+      this.isSuccessor = val;
+      byte b = super.dataWatcher.getWatchableObjectByte(19);
+      if (val) b = (byte)(b | 1);
+      else b = (byte)(b & ~1);
+      super.dataWatcher.updateObject(19, Byte.valueOf(b));
+      if (val) {
+         if (this.getEntityAttribute(SharedMonsterAttributes.maxHealth) != null) {
+            this.getEntityAttribute(SharedMonsterAttributes.maxHealth).setBaseValue(60.0D);
+            this.setHealth(60.0F);
+         }
+         this.setCustomNameTag("§d★ Sucesor Arcano");
+         this.setAlwaysRenderNameTag(true);
+      }
+   }
+
+   public void sendWhisper(EntityPlayer player, String message) {
+      if (player != null) {
+         player.addChatMessage(new ChatComponentText(
+            EnumChatFormatting.DARK_GRAY + "[" + 
+            EnumChatFormatting.LIGHT_PURPLE + "★ Sucesor" + 
+            EnumChatFormatting.DARK_GRAY + " ➔ " + 
+            EnumChatFormatting.WHITE + "Tú" + 
+            EnumChatFormatting.DARK_GRAY + "] " + 
+            EnumChatFormatting.YELLOW + message
+         ));
+         com.emoniph.witchery.util.SoundEffect.NOTE_HARP.playOnlyTo(player);
+      }
+   }
+
+   public void awakenAsSuccessor(EntityPlayer player) {
+      this.isTamed = true;
+      this.tamedOwnerName = player.getCommandSenderName();
+      this.setSuccessor(true);
+      this.preventDespawn = true;
+      this.isFollowing = true;
+      this.isSitting = false;
+      this.successorRole = "follow";
+
+      com.emoniph.witchery.util.ParticleEffect.INSTANT_SPELL.send(com.emoniph.witchery.util.SoundEffect.RANDOM_LEVELUP, this, 1.5D, 2.0D, 32);
+      com.emoniph.witchery.util.ParticleEffect.PORTAL.send(com.emoniph.witchery.util.SoundEffect.WITCHERY_RANDOM_HYPNOSIS, this, 1.5D, 2.0D, 40);
+      com.emoniph.witchery.util.ParticleEffect.ENCHANTMENT_TABLE.send(com.emoniph.witchery.util.SoundEffect.NOTE_HARP, this, 2.0D, 2.0D, 40);
+
+      this.sendWhisper(player, "§6¡Maestro! §eMi mente se ha elevado. El poder puro de Koboldite ha transformado mi cuerpo en un tono §fpálido y eterno§e. No volverás a estar solo: seré tu aprendiz, tu escudo y tu sucesor. Escribe §b/hobgoblin ayuda §epara conocer todas mis habilidades.");
+   }
+
+   public static boolean checkAndTriggerDefensiveBarrier(EntityPlayer player, LivingHurtEvent event) {
+      if (player.worldObj.isRemote) return false;
+      AxisAlignedBB bb = player.boundingBox.expand(20.0D, 10.0D, 20.0D);
+      java.util.List<EntityGoblin> goblins = player.worldObj.getEntitiesWithinAABB(EntityGoblin.class, bb);
+      for (EntityGoblin goblin : goblins) {
+         if (goblin != null && goblin.isEntityAlive() && goblin.isTamed && goblin.isSuccessor() && player.getCommandSenderName().equalsIgnoreCase(goblin.tamedOwnerName)) {
+            if (goblin.triggerDefensiveBarrier(player, event)) {
+               return true;
+            }
+         }
+      }
+      return false;
+   }
+
+   public boolean triggerDefensiveBarrier(EntityPlayer master, LivingHurtEvent event) {
+      long now = super.worldObj.getTotalWorldTime();
+      if (now - this.lastBarrierTime < 160L) {
+         return false;
+      }
+      this.lastBarrierTime = now;
+
+      event.ammount = Math.max(0.0F, event.ammount * 0.15F);
+
+      com.emoniph.witchery.util.ParticleEffect.INSTANT_SPELL.send(com.emoniph.witchery.util.SoundEffect.WITCHERY_RANDOM_HYPNOSIS, master, 1.5D, 2.0D, 36);
+      com.emoniph.witchery.util.ParticleEffect.ENCHANTMENT_TABLE.send(com.emoniph.witchery.util.SoundEffect.RANDOM_LEVELUP, master, 2.0D, 2.0D, 48);
+
+      master.addPotionEffect(new PotionEffect(Potion.resistance.id, 140, 1));
+      master.addPotionEffect(new PotionEffect(Potion.field_76444_x.id, 240, 1));
+      master.addPotionEffect(new PotionEffect(Potion.regeneration.id, 100, 1));
+
+      AxisAlignedBB repelBox = master.boundingBox.expand(8.0D, 4.0D, 8.0D);
+      java.util.List entities = super.worldObj.getEntitiesWithinAABBExcludingEntity(master, repelBox);
+      for (Object obj : entities) {
+         if (obj instanceof EntityLivingBase && !(obj instanceof EntityPlayer) && !(obj instanceof EntityGoblin && ((EntityGoblin)obj).isTamed)) {
+            EntityLivingBase enemy = (EntityLivingBase) obj;
+            double dx = enemy.posX - master.posX;
+            double dz = enemy.posZ - master.posZ;
+            double dist = Math.max(0.1D, Math.sqrt(dx * dx + dz * dz));
+            enemy.motionX = (dx / dist) * 1.6D;
+            enemy.motionY = 0.45D;
+            enemy.motionZ = (dz / dist) * 1.6D;
+            enemy.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, 120, 2));
+            enemy.addPotionEffect(new PotionEffect(Potion.weakness.id, 120, 1));
+            this.setAttackTarget(enemy);
+         }
+      }
+
+      this.sendWhisper(master, "§c¡PELIGRO! §eHe levantado una §d★ Barrera Arcana §epara protegerte. ¡Repele a los agresores!");
+      return true;
+   }
+
+   public boolean triggerSelfBarrier(LivingHurtEvent event) {
+      if (!this.isSuccessor()) return false;
+      long now = super.worldObj.getTotalWorldTime();
+      if (now - this.lastBarrierTime < 160L) return false;
+      this.lastBarrierTime = now;
+
+      event.ammount = Math.max(0.0F, event.ammount * 0.20F);
+      this.addPotionEffect(new PotionEffect(Potion.resistance.id, 160, 2));
+      this.addPotionEffect(new PotionEffect(Potion.regeneration.id, 120, 1));
+      com.emoniph.witchery.util.ParticleEffect.INSTANT_SPELL.send(com.emoniph.witchery.util.SoundEffect.WITCHERY_RANDOM_HYPNOSIS, this, 1.0D, 1.5D, 24);
+      return true;
+   }
+
+   public void dropItemInCircle(double x, double y, double z, ItemStack stack) {
+      if (stack != null && stack.stackSize > 0) {
+         EntityItem entityItem = new EntityItem(super.worldObj, x, y, z, stack);
+         entityItem.delayBeforeCanPickup = 20;
+         entityItem.motionX = 0.0D;
+         entityItem.motionY = 0.1D;
+         entityItem.motionZ = 0.0D;
+         super.worldObj.spawnEntityInWorld(entityItem);
+         com.emoniph.witchery.util.ParticleEffect.INSTANT_SPELL.send(com.emoniph.witchery.util.SoundEffect.RANDOM_POP, entityItem, 0.5D, 0.5D, 8);
+      }
+   }
+
+   public boolean loadAndActivateCircle(EntityPlayer player, String ritualName) {
+      int gx = MathHelper.floor_double(super.posX);
+      int gy = MathHelper.floor_double(super.posY);
+      int gz = MathHelper.floor_double(super.posZ);
+      int range = 16;
+
+      for (int dy = -3; dy <= 3; dy++) {
+         for (int dz = -range; dz <= range; dz++) {
+            for (int dx = -range; dx <= range; dx++) {
+               int bx = gx + dx;
+               int by = gy + dy;
+               int bz = gz + dz;
+               Block block = super.worldObj.getBlock(bx, by, bz);
+               if (block == Witchery.Blocks.CIRCLE) {
+                  TileEntity te = super.worldObj.getTileEntity(bx, by, bz);
+                  if (te instanceof com.emoniph.witchery.blocks.BlockCircle.TileEntityCircle) {
+                     com.emoniph.witchery.blocks.BlockCircle.TileEntityCircle tileCircle = (com.emoniph.witchery.blocks.BlockCircle.TileEntityCircle)te;
+                     double cx = (double)bx + 0.5D;
+                     double cy = (double)by + 0.1D;
+                     double cz = (double)bz + 0.5D;
+
+                     this.getNavigator().tryMoveToXYZ(cx, (double)by, cz, 0.9D);
+
+                     java.util.List<IInventory> nearbyChests = this.getNearbyChests(10);
+                     int itemsLoaded = 0;
+
+                     if (ritualName != null && !ritualName.isEmpty()) {
+                        String rName = ritualName.toLowerCase();
+                        java.util.List<ItemStack> neededItems = new java.util.ArrayList<ItemStack>();
+
+                        if (rName.contains("tormenta") || rName.contains("lluvia") || rName.contains("storm")) {
+                           neededItems.add(Witchery.Items.GENERIC.itemArtichoke.createStack());
+                           neededItems.add(Witchery.Items.GENERIC.itemBelladonnaFlower.createStack());
+                           neededItems.add(new ItemStack(Items.gunpowder));
+                        } else if (rName.contains("dia") || rName.contains("sol") || rName.contains("dawn")) {
+                           neededItems.add(new ItemStack(Witchery.Blocks.SUN_ROSE));
+                           neededItems.add(new ItemStack(Items.gold_nugget));
+                        } else if (rName.contains("noche") || rName.contains("luna") || rName.contains("night")) {
+                           neededItems.add(Witchery.Items.GENERIC.itemMandrakeRoot.createStack());
+                           neededItems.add(new ItemStack(Items.bone));
+                        } else if (rName.contains("bendicion") || rName.contains("vida") || rName.contains("heal")) {
+                           neededItems.add(new ItemStack(Items.apple));
+                           neededItems.add(new ItemStack(Items.wheat_seeds));
+                           neededItems.add(Witchery.Items.GENERIC.itemMandrakeRoot.createStack());
+                        } else if (rName.contains("proteccion") || rName.contains("barrera") || rName.contains("escudo")) {
+                           neededItems.add(new ItemStack(Witchery.Blocks.SAPLING, 1, 0));
+                           neededItems.add(new ItemStack(Items.iron_ingot));
+                        }
+
+                        for (ItemStack req : neededItems) {
+                           for (IInventory ch : nearbyChests) {
+                              for (int s = 0; s < ch.getSizeInventory(); s++) {
+                                 ItemStack inSlot = ch.getStackInSlot(s);
+                                 if (inSlot != null && inSlot.isItemEqual(req)) {
+                                    ItemStack taken = ch.decrStackSize(s, 1);
+                                    ch.markDirty();
+                                    this.dropItemInCircle(cx, cy, cz, taken);
+                                    itemsLoaded++;
+                                    break;
+                                 }
+                              }
+                           }
+                        }
+                     } else {
+                        IInventory recipeChest = this.getClosestChest(bx, by, bz, 8);
+                        if (recipeChest != null) {
+                           for (int s = 0; s < recipeChest.getSizeInventory(); s++) {
+                              ItemStack inSlot = recipeChest.getStackInSlot(s);
+                              if (inSlot != null && !(inSlot.getItem() instanceof net.minecraft.item.ItemTool)) {
+                                 ItemStack taken = recipeChest.decrStackSize(s, 1);
+                                 recipeChest.markDirty();
+                                 this.dropItemInCircle(cx, cy, cz, taken);
+                                 itemsLoaded++;
+                              }
+                           }
+                        } else {
+                           for (IInventory ch : nearbyChests) {
+                              TileEntity chestTe = (TileEntity)ch;
+                              double distSq = (chestTe.xCoord - bx) * (chestTe.xCoord - bx) + (chestTe.zCoord - bz) * (chestTe.zCoord - bz);
+                              if (distSq <= 20.0D) {
+                                 for (int s = 0; s < ch.getSizeInventory(); s++) {
+                                    ItemStack inSlot = ch.getStackInSlot(s);
+                                    if (inSlot != null && !(inSlot.getItem() instanceof net.minecraft.item.ItemTool)) {
+                                       ItemStack taken = ch.decrStackSize(s, 1);
+                                       ch.markDirty();
+                                       this.dropItemInCircle(cx, cy, cz, taken);
+                                       itemsLoaded++;
+                                    }
+                                 }
+                              }
+                           }
+                        }
+                     }
+
+                     Witchery.Blocks.CIRCLE.onBlockActivated(super.worldObj, bx, by, bz, player, 1, 0.5F, 0.5F, 0.5F);
+                     com.emoniph.witchery.util.ParticleEffect.INSTANT_SPELL.send(com.emoniph.witchery.util.SoundEffect.WITCHERY_RANDOM_CHALK, super.worldObj, cx, cy + 0.2D, cz, 1.0D, 1.0D, 24);
+
+                     if (tileCircle.isRitualActive()) {
+                        this.sendWhisper(player, "§a¡Círculo cargado con " + itemsLoaded + " ingredientes! El ritual en (" + bx + ", " + by + ", " + bz + ") ha comenzado con éxito, Maestro.");
+                     } else if (itemsLoaded > 0) {
+                        this.sendWhisper(player, "§eHe cargado " + itemsLoaded + " ingredientes en el círculo (" + bx + ", " + by + ", " + bz + "). Asegúrate de que el altar tenga suficiente poder para completarlo.");
+                     } else {
+                        this.sendWhisper(player, "§eHe activado los glifos en (" + bx + ", " + by + ", " + bz + "). Coloca ingredientes en un cofre cercano o dime qué rito preparar (ej: §b/hobgoblin rito tormenta§e).");
+                     }
+                     return true;
+                  }
+               }
+            }
+         }
+      }
+      this.sendWhisper(player, "§cNo he detectado ningún círculo de glifos en un radio de 16 bloques, Maestro.");
+      return false;
+   }
+
+   public boolean activateNearestCircle(EntityPlayer player) {
+      return this.loadAndActivateCircle(player, "");
+   }
+
+   public java.util.List<IInventory> getNearbyChests(int radius) {
+      java.util.List<IInventory> list = new java.util.ArrayList<IInventory>();
+      int gx = MathHelper.floor_double(super.posX);
+      int gy = MathHelper.floor_double(super.posY);
+      int gz = MathHelper.floor_double(super.posZ);
+      for (int dy = -2; dy <= 2; dy++) {
+         for (int dz = -radius; dz <= radius; dz++) {
+            for (int dx = -radius; dx <= radius; dx++) {
+               TileEntity te = super.worldObj.getTileEntity(gx + dx, gy + dy, gz + dz);
+               if (te instanceof IInventory && !(te instanceof BlockWitchesOven.TileEntityWitchesOven) 
+                   && !(te instanceof BlockDistillery.TileEntityDistillery)
+                   && !(te instanceof BlockKettle.TileEntityKettle)
+                   && !(te instanceof com.emoniph.witchery.blocks.BlockBrazier.TileEntityBrazier)) {
+                  list.add((IInventory)te);
+               }
+            }
+         }
+      }
+      return list;
+   }
+
+   /** Retorna el cofre/inventario más cercano a las coordenadas dadas dentro del radio. */
+   public IInventory getClosestChest(int targetX, int targetY, int targetZ, int maxDist) {
+      java.util.List<IInventory> chests = this.getNearbyChests(maxDist);
+      IInventory best = null;
+      double bestDistSq = Double.MAX_VALUE;
+      for (IInventory inv : chests) {
+         if (inv instanceof TileEntity) {
+            TileEntity te = (TileEntity)inv;
+            double dSq = (te.xCoord - targetX) * (te.xCoord - targetX) + (te.yCoord - targetY) * (te.yCoord - targetY) + (te.zCoord - targetZ) * (te.zCoord - targetZ);
+            if (dSq < bestDistSq) {
+               bestDistSq = dSq;
+               best = inv;
+            }
+         }
+      }
+      return best;
+   }
+
+   public boolean depositStackToChests(ItemStack stack, java.util.List<IInventory> chests) {
+      if (stack == null || stack.stackSize <= 0) return true;
+      for (IInventory chest : chests) {
+         for (int slot = 0; slot < chest.getSizeInventory(); slot++) {
+            ItemStack inSlot = chest.getStackInSlot(slot);
+            if (inSlot == null) {
+               chest.setInventorySlotContents(slot, stack.copy());
+               stack.stackSize = 0;
+               chest.markDirty();
+               return true;
+            } else if (inSlot.isItemEqual(stack) && inSlot.stackSize < inSlot.getMaxStackSize()) {
+               int add = Math.min(stack.stackSize, inSlot.getMaxStackSize() - inSlot.stackSize);
+               inSlot.stackSize += add;
+               stack.stackSize -= add;
+               chest.markDirty();
+               if (stack.stackSize <= 0) return true;
+            }
+         }
+      }
+      return stack.stackSize <= 0;
+   }
+
+   public ItemStack pullClayJarsFromChests(java.util.List<IInventory> chests, int maxCount) {
+      for (IInventory chest : chests) {
+         for (int slot = 0; slot < chest.getSizeInventory(); slot++) {
+            ItemStack inSlot = chest.getStackInSlot(slot);
+            if (inSlot != null && Witchery.Items.GENERIC.itemEmptyClayJar.isMatch(inSlot)) {
+               int take = Math.min(maxCount, inSlot.stackSize);
+               ItemStack res = inSlot.splitStack(take);
+               if (inSlot.stackSize <= 0) chest.setInventorySlotContents(slot, null);
+               chest.markDirty();
+               return res;
+            }
+         }
+      }
+      return null;
+   }
+
+   public ItemStack pullFuelFromChests(java.util.List<IInventory> chests, int maxCount) {
+      for (IInventory chest : chests) {
+         for (int slot = 0; slot < chest.getSizeInventory(); slot++) {
+            ItemStack inSlot = chest.getStackInSlot(slot);
+            if (inSlot != null && TileEntityFurnace.isItemFuel(inSlot)) {
+               int take = Math.min(maxCount, inSlot.stackSize);
+               ItemStack res = inSlot.splitStack(take);
+               if (inSlot.stackSize <= 0) chest.setInventorySlotContents(slot, null);
+               chest.markDirty();
+               return res;
+            }
+         }
+      }
+      return null;
+   }
+
+   public ItemStack pullOvenMaterialFromChests(java.util.List<IInventory> chests, int maxCount) {
+      for (IInventory chest : chests) {
+         for (int slot = 0; slot < chest.getSizeInventory(); slot++) {
+            ItemStack inSlot = chest.getStackInSlot(slot);
+            if (inSlot != null) {
+               Item item = inSlot.getItem();
+               if (item == Item.getItemFromBlock(Blocks.sapling) 
+                   || item == Item.getItemFromBlock(Blocks.log)
+                   || item == Item.getItemFromBlock(Blocks.log2)
+                   || item == Item.getItemFromBlock(Witchery.Blocks.LOG)
+                   || item == Item.getItemFromBlock(Witchery.Blocks.SAPLING)
+                   || item == Items.clay_ball
+                   || item == Item.getItemFromBlock(Blocks.clay)) {
+                  int take = Math.min(maxCount, inSlot.stackSize);
+                  ItemStack res = inSlot.splitStack(take);
+                  if (inSlot.stackSize <= 0) chest.setInventorySlotContents(slot, null);
+                  chest.markDirty();
+                  return res;
+               }
+            }
+         }
+      }
+      return null;
+   }
+
+   public ItemStack pullItemFromChests(java.util.List<IInventory> chests, Item item, int meta, int maxQuantity) {
+      for (IInventory chest : chests) {
+         for (int slot = 0; slot < chest.getSizeInventory(); slot++) {
+            ItemStack inSlot = chest.getStackInSlot(slot);
+            if (inSlot != null && inSlot.getItem() == item && (meta < 0 || inSlot.getItemDamage() == meta)) {
+               int take = Math.min(maxQuantity, inSlot.stackSize);
+               ItemStack result = inSlot.splitStack(take);
+               if (inSlot.stackSize <= 0) {
+                  chest.setInventorySlotContents(slot, null);
+               }
+               chest.markDirty();
+               return result;
+            }
+         }
+      }
+      return null;
+   }
+
+   /**
+    * Lee un libro de receta de destilería del cofre.
+    * Si encuentra un libro/papel cuyo displayName coincide con el output de una receta,
+    * carga esa receta. Si no, busca la primera receta con ingredientes disponibles.
+    */
+   public boolean feedDistilleryRecipeFromChests(BlockDistillery.TileEntityDistillery dist, java.util.List<IInventory> chests) {
+      // Paso 1: buscar libro de receta en cofres con nombre de producto
+      DistilleryRecipes.DistilleryRecipe targetRecipe = null;
+      ItemStack recipeBook = null;
+      int bookChestIdx = -1, bookSlotIdx = -1;
+
+      for (int c = 0; c < chests.size() && targetRecipe == null; c++) {
+         IInventory chest = chests.get(c);
+         for (int s = 0; s < chest.getSizeInventory() && targetRecipe == null; s++) {
+            ItemStack stack = chest.getStackInSlot(s);
+            if (stack != null && (stack.getItem() == Items.written_book || stack.getItem() == Items.writable_book || stack.getItem() == Items.paper)) {
+               String bookName = stack.hasDisplayName() ? stack.getDisplayName().toLowerCase().trim() : "";
+               if (!bookName.isEmpty()) {
+                  // Buscar receta cuyo output coincida con el nombre del libro
+                  for (Object obj : DistilleryRecipes.instance().recipes) {
+                     if (obj instanceof DistilleryRecipes.DistilleryRecipe) {
+                        DistilleryRecipes.DistilleryRecipe rec = (DistilleryRecipes.DistilleryRecipe)obj;
+                        for (ItemStack out : rec.outputs) {
+                           if (out != null) {
+                              String outName = out.getDisplayName().toLowerCase().trim();
+                              if (outName.contains(bookName) || bookName.contains(outName)) {
+                                 targetRecipe = rec;
+                                 recipeBook = stack;
+                                 bookChestIdx = c;
+                                 bookSlotIdx = s;
+                                 break;
+                              }
+                           }
+                        }
+                        if (targetRecipe != null) break;
+                     }
+                  }
+               }
+            }
+         }
+      }
+
+      // Paso 2: si encontramos receta por libro, intentar cargar esa receta
+      if (targetRecipe != null) {
+         if (this.loadDistilleryRecipe(dist, chests, targetRecipe)) {
+            return true;
+         }
+         // Si no hay ingredientes para la receta del libro, seguimos buscando
+      }
+
+      // Paso 3: modo auto - primera receta con ingredientes disponibles
+      for (Object obj : DistilleryRecipes.instance().recipes) {
+         if (obj instanceof DistilleryRecipes.DistilleryRecipe) {
+            DistilleryRecipes.DistilleryRecipe rec = (DistilleryRecipes.DistilleryRecipe)obj;
+            if (this.loadDistilleryRecipe(dist, chests, rec)) {
+               return true;
+            }
+         }
+      }
+      return false;
+   }
+
+   private boolean loadDistilleryRecipe(BlockDistillery.TileEntityDistillery dist, java.util.List<IInventory> chests, DistilleryRecipes.DistilleryRecipe rec) {
+      ItemStack in0 = rec.inputs[0];
+      ItemStack in1 = rec.inputs[1];
+      if (in0 == null) return false;
+
+      int slot0ChestIdx = -1, slot0Idx = -1;
+      int slot1ChestIdx = -1, slot1Idx = -1;
+
+      for (int c = 0; c < chests.size(); c++) {
+         IInventory chest = chests.get(c);
+         for (int s = 0; s < chest.getSizeInventory(); s++) {
+            ItemStack stack = chest.getStackInSlot(s);
+            if (stack != null) {
+               if (slot0ChestIdx == -1 && stack.isItemEqual(in0)) {
+                  slot0ChestIdx = c; slot0Idx = s;
+               } else if (in1 != null && slot1ChestIdx == -1 && stack.isItemEqual(in1)) {
+                  slot1ChestIdx = c; slot1Idx = s;
+               }
+            }
+         }
+      }
+
+      if (slot0ChestIdx != -1 && (in1 == null || slot1ChestIdx != -1)) {
+         ItemStack stack0 = chests.get(slot0ChestIdx).decrStackSize(slot0Idx, 4);
+         chests.get(slot0ChestIdx).markDirty();
+         dist.setInventorySlotContents(0, stack0);
+         if (in1 != null && slot1ChestIdx != -1) {
+            ItemStack stack1 = chests.get(slot1ChestIdx).decrStackSize(slot1Idx, 4);
+            chests.get(slot1ChestIdx).markDirty();
+            dist.setInventorySlotContents(1, stack1);
+         }
+         return true;
+      }
+      return false;
+   }
+
+   public int manageNearbyOvens() {
+      int gx = MathHelper.floor_double(super.posX);
+      int gy = MathHelper.floor_double(super.posY);
+      int gz = MathHelper.floor_double(super.posZ);
+      int ovensServiced = 0;
+      java.util.List<IInventory> chests = this.getNearbyChests(14);
+
+      for (int dy = -3; dy <= 3; dy++) {
+         for (int dz = -12; dz <= 12; dz++) {
+            for (int dx = -12; dx <= 12; dx++) {
+               TileEntity te = super.worldObj.getTileEntity(gx + dx, gy + dy, gz + dz);
+               if (te instanceof BlockWitchesOven.TileEntityWitchesOven) {
+                  BlockWitchesOven.TileEntityWitchesOven oven = (BlockWitchesOven.TileEntityWitchesOven)te;
+                  boolean touched = false;
+
+                  ItemStack cooked = oven.getStackInSlot(2);
+                  if (cooked != null) {
+                     this.depositStackToChests(cooked, chests);
+                     oven.setInventorySlotContents(2, null);
+                     touched = true;
+                  }
+                  ItemStack byProduct = oven.getStackInSlot(3);
+                  if (byProduct != null) {
+                     this.depositStackToChests(byProduct, chests);
+                     oven.setInventorySlotContents(3, null);
+                     touched = true;
+                  }
+
+                  ItemStack jars = oven.getStackInSlot(4);
+                  if (jars == null || jars.stackSize < 16) {
+                     int needed = jars == null ? 16 : 16 - jars.stackSize;
+                     ItemStack foundJars = this.pullClayJarsFromChests(chests, needed);
+                     if (foundJars != null) {
+                        if (jars == null) oven.setInventorySlotContents(4, foundJars);
+                        else jars.stackSize += foundJars.stackSize;
+                        touched = true;
+                     }
+                  }
+
+                  ItemStack fuel = oven.getStackInSlot(1);
+                  if (fuel == null && oven.furnaceBurnTime < 200) {
+                     ItemStack foundFuel = this.pullFuelFromChests(chests, 8);
+                     if (foundFuel != null) {
+                        oven.setInventorySlotContents(1, foundFuel);
+                        touched = true;
+                     }
+                  }
+
+                  ItemStack toCook = oven.getStackInSlot(0);
+                  if (toCook == null) {
+                     ItemStack foundMaterial = this.pullOvenMaterialFromChests(chests, 16);
+                     if (foundMaterial != null) {
+                        oven.setInventorySlotContents(0, foundMaterial);
+                        touched = true;
+                     }
+                  }
+
+                  if (touched) {
+                     oven.markDirty();
+                     ovensServiced++;
+                  }
+               }
+            }
+         }
+      }
+      if (ovensServiced > 0) {
+         this.swingItem();
+         super.worldObj.playSoundAtEntity(this, "random.pop", 0.5F, 1.0F);
+      }
+      return ovensServiced;
+   }
+
+   public int manageNearbyDistilleries() {
+      int gx = MathHelper.floor_double(super.posX);
+      int gy = MathHelper.floor_double(super.posY);
+      int gz = MathHelper.floor_double(super.posZ);
+      int distilleriesServiced = 0;
+      java.util.List<IInventory> chests = this.getNearbyChests(14);
+
+      for (int dy = -3; dy <= 3; dy++) {
+         for (int dz = -12; dz <= 12; dz++) {
+            for (int dx = -12; dx <= 12; dx++) {
+               TileEntity te = super.worldObj.getTileEntity(gx + dx, gy + dy, gz + dz);
+               if (te instanceof BlockDistillery.TileEntityDistillery) {
+                  BlockDistillery.TileEntityDistillery dist = (BlockDistillery.TileEntityDistillery)te;
+                  boolean touched = false;
+
+                  for (int outSlot = 3; outSlot <= 6; outSlot++) {
+                     ItemStack out = dist.getStackInSlot(outSlot);
+                     if (out != null) {
+                        this.depositStackToChests(out, chests);
+                        dist.setInventorySlotContents(outSlot, null);
+                        touched = true;
+                     }
+                  }
+
+                  ItemStack jars = dist.getStackInSlot(2);
+                  if (jars == null || jars.stackSize < 16) {
+                     int needed = jars == null ? 16 : 16 - jars.stackSize;
+                     ItemStack foundJars = this.pullClayJarsFromChests(chests, needed);
+                     if (foundJars != null) {
+                        if (jars == null) dist.setInventorySlotContents(2, foundJars);
+                        else jars.stackSize += foundJars.stackSize;
+                        touched = true;
+                     }
+                  }
+
+                  if (dist.getStackInSlot(0) == null && dist.getStackInSlot(1) == null) {
+                     // Prioridad 1: Si hay un cofre cerca de la destilería con ingredientes en orden (slots 0 y 1)
+                     IInventory recipeChest = this.getClosestChest(gx + dx, gy + dy, gz + dz, 6);
+                     boolean loaded = false;
+                     if (recipeChest != null) {
+                        int distSlot = 0;
+                        for (int s = 0; s < recipeChest.getSizeInventory() && distSlot < 2; s++) {
+                           ItemStack stack = recipeChest.getStackInSlot(s);
+                           if (stack != null && stack.stackSize > 0) {
+                              Item item = stack.getItem();
+                              if (Witchery.Items.GENERIC.itemEmptyClayJar.isMatch(stack) || item == Items.glass_bottle || item == Items.water_bucket) {
+                                 continue;
+                              }
+                              ItemStack taken = recipeChest.decrStackSize(s, Math.min(stack.stackSize, 4));
+                              recipeChest.markDirty();
+                              dist.setInventorySlotContents(distSlot, taken);
+                              distSlot++;
+                              loaded = true;
+                           }
+                        }
+                     }
+                     if (loaded) {
+                        touched = true;
+                     } else if (this.feedDistilleryRecipeFromChests(dist, chests)) {
+                        touched = true;
+                     }
+                  }
+
+                  if (touched) {
+                     dist.markDirty();
+                     distilleriesServiced++;
+                  }
+               }
+            }
+         }
+      }
+      if (distilleriesServiced > 0) {
+         this.swingItem();
+         super.worldObj.playSoundAtEntity(this, "random.pop", 0.5F, 1.2F);
+      }
+      return distilleriesServiced;
+   }
+
+   public int manageNearbyKettles() {
+      int gx = MathHelper.floor_double(super.posX);
+      int gy = MathHelper.floor_double(super.posY);
+      int gz = MathHelper.floor_double(super.posZ);
+      int kettlesServiced = 0;
+      java.util.List<IInventory> chests = this.getNearbyChests(14);
+
+      for (int dy = -3; dy <= 3; dy++) {
+         for (int dz = -12; dz <= 12; dz++) {
+            for (int dx = -12; dx <= 12; dx++) {
+               TileEntity te = super.worldObj.getTileEntity(gx + dx, gy + dy, gz + dz);
+               if (te instanceof BlockKettle.TileEntityKettle) {
+                  BlockKettle.TileEntityKettle kettle = (BlockKettle.TileEntityKettle)te;
+                  boolean touched = false;
+
+                  // 1. Si hay resultado listo en slot 6, sacarlo
+                  ItemStack result = kettle.getStackInSlot(6);
+                  if (result != null) {
+                     // Asegurarse de que haya botellas en slot 7 para la siguiente tanda
+                     ItemStack bottles = kettle.getStackInSlot(7);
+                     if (bottles == null) {
+                        ItemStack foundBottles = this.pullItemFromChests(chests, Items.glass_bottle, 0, 8);
+                        if (foundBottles != null) {
+                           kettle.setInventorySlotContents(7, foundBottles);
+                        }
+                     }
+                     this.depositStackToChests(result, chests);
+                     kettle.setInventorySlotContents(6, null);
+                     touched = true;
+                  }
+
+                  // 2. Si el calderito no tiene ingredientes (slots 0-5 vacíos) y está lleno de agua, cargar receta
+                  boolean hasIngredients = false;
+                  for (int slot = 0; slot < 6; slot++) {
+                     if (kettle.getStackInSlot(slot) != null) { hasIngredients = true; break; }
+                  }
+
+                  if (!hasIngredients && kettle.isFilled()) {
+                     boolean loaded = false;
+                     // Prioridad 1: Si hay un cofre cerca del calderito con ingredientes en orden (slots 0..5), cargarlos directamente
+                     IInventory recipeChest = this.getClosestChest(gx + dx, gy + dy, gz + dz, 6);
+                     if (recipeChest != null) {
+                        int kettleSlot = 0;
+                        for (int s = 0; s < recipeChest.getSizeInventory() && kettleSlot < 6; s++) {
+                           ItemStack stack = recipeChest.getStackInSlot(s);
+                           if (stack != null && stack.stackSize > 0) {
+                              Item item = stack.getItem();
+                              if (item == Items.glass_bottle || item == Items.water_bucket || item == Items.bucket || item == Items.flint_and_steel) {
+                                 continue;
+                              }
+                              ItemStack single = recipeChest.decrStackSize(s, 1);
+                              recipeChest.markDirty();
+                              kettle.setInventorySlotContents(kettleSlot, single);
+                              kettleSlot++;
+                              loaded = true;
+                           }
+                        }
+                     }
+
+                     // Prioridad 2: Buscar libro de receta o recetas conocidas
+                     if (!loaded) {
+                        KettleRecipes.KettleRecipe targetKettleRecipe = this.findKettleRecipeFromChests(chests);
+                        if (targetKettleRecipe != null) {
+                           loaded = this.loadKettleRecipe(kettle, chests, targetKettleRecipe);
+                        } else {
+                           // Auto: buscar primera receta con ingredientes disponibles
+                           for (Object obj : KettleRecipes.instance().recipes) {
+                              if (obj instanceof KettleRecipes.KettleRecipe) {
+                                 KettleRecipes.KettleRecipe rec = (KettleRecipes.KettleRecipe)obj;
+                                 if (this.loadKettleRecipe(kettle, chests, rec)) {
+                                    loaded = true;
+                                    break;
+                                 }
+                              }
+                           }
+                        }
+                     }
+
+                     if (loaded) touched = true;
+
+                     // Poner botellas en slot 7 si no hay
+                     if (kettle.getStackInSlot(7) == null) {
+                        ItemStack foundBottles = this.pullItemFromChests(chests, Items.glass_bottle, 0, 8);
+                        if (foundBottles != null) {
+                           kettle.setInventorySlotContents(7, foundBottles);
+                           touched = true;
+                        }
+                     }
+                  }
+
+                  if (touched) {
+                     kettle.markDirty();
+                     kettlesServiced++;
+                  }
+               }
+            }
+         }
+      }
+      if (kettlesServiced > 0) {
+         this.swingItem();
+         super.worldObj.playSoundAtEntity(this, "random.pop", 0.5F, 1.1F);
+         EntityPlayerMP owner = this.getSuccessorOwner();
+         if (owner != null) this.sendWhisper(owner, "§b[Calderito] §7Receta cargada y botellas listas.");
+      }
+      return kettlesServiced;
+   }
+
+   /** Busca un libro/papel con nombre de receta Kettle en los cofres. Retorna la receta si la encuentra. */
+   private KettleRecipes.KettleRecipe findKettleRecipeFromChests(java.util.List<IInventory> chests) {
+      for (IInventory chest : chests) {
+         for (int s = 0; s < chest.getSizeInventory(); s++) {
+            ItemStack stack = chest.getStackInSlot(s);
+            if (stack != null && (stack.getItem() == Items.written_book || stack.getItem() == Items.writable_book || stack.getItem() == Items.paper)) {
+               String bookName = stack.hasDisplayName() ? stack.getDisplayName().toLowerCase().trim() : "";
+               if (!bookName.isEmpty()) {
+                  for (Object obj : KettleRecipes.instance().recipes) {
+                     if (obj instanceof KettleRecipes.KettleRecipe) {
+                        KettleRecipes.KettleRecipe rec = (KettleRecipes.KettleRecipe)obj;
+                        ItemStack out = rec.getOutput(null, false);
+                        if (out != null) {
+                           String outName = out.getDisplayName().toLowerCase().trim();
+                           if (outName.contains(bookName) || bookName.contains(outName)) {
+                              return rec;
+                           }
+                        }
+                     }
+                  }
+               }
+            }
+         }
+      }
+      return null;
+   }
+
+   /** Carga los ingredientes de una KettleRecipe desde los cofres al Kettle. */
+   private boolean loadKettleRecipe(BlockKettle.TileEntityKettle kettle, java.util.List<IInventory> chests, KettleRecipes.KettleRecipe rec) {
+      ItemStack[] inputs = rec.inputs;
+      if (inputs == null || inputs.length == 0) return false;
+      // Verificar que todos los ingredientes estén disponibles
+      java.util.List<ItemStack> needed = new java.util.ArrayList<ItemStack>();
+      for (ItemStack inp : inputs) { if (inp != null) needed.add(inp.copy()); }
+      for (ItemStack need : needed) {
+         boolean found = false;
+         for (IInventory chest : chests) {
+            for (int s = 0; s < chest.getSizeInventory(); s++) {
+               ItemStack cs = chest.getStackInSlot(s);
+               if (cs != null && cs.isItemEqual(need) && cs.stackSize >= need.stackSize) { found = true; break; }
+            }
+            if (found) break;
+         }
+         if (!found) return false;
+      }
+      // Cargar ingredientes en slots libres del kettle (0-5)
+      int emptySlot = 0;
+      boolean anyLoaded = false;
+      for (ItemStack need : needed) {
+         // Buscar slot libre en kettle
+         while (emptySlot < 6 && kettle.getStackInSlot(emptySlot) != null) emptySlot++;
+         if (emptySlot >= 6) break;
+         ItemStack pulled = this.pullItemFromChests(chests, need.getItem(), need.getItemDamage(), need.stackSize);
+         if (pulled != null) {
+            kettle.setInventorySlotContents(emptySlot, pulled);
+            emptySlot++;
+            anyLoaded = true;
+         }
+      }
+      return anyLoaded;
+   }
+
+   public int manageNearbyCauldrons() {
+      int gx = MathHelper.floor_double(super.posX);
+      int gy = MathHelper.floor_double(super.posY);
+      int gz = MathHelper.floor_double(super.posZ);
+      int cauldronsServiced = 0;
+      java.util.List<IInventory> chests = this.getNearbyChests(14);
+
+      for (int dy = -3; dy <= 3; dy++) {
+         for (int dz = -12; dz <= 12; dz++) {
+            for (int dx = -12; dx <= 12; dx++) {
+               int bx = gx + dx;
+               int by = gy + dy;
+               int bz = gz + dz;
+               Block block = super.worldObj.getBlock(bx, by, bz);
+               if (block == Witchery.Blocks.CAULDRON) {
+                  TileEntity te = super.worldObj.getTileEntity(bx, by, bz);
+                  if (te instanceof com.emoniph.witchery.brewing.TileEntityCauldron) {
+                     com.emoniph.witchery.brewing.TileEntityCauldron cauldron = (com.emoniph.witchery.brewing.TileEntityCauldron)te;
+                     boolean touched = false;
+
+                     // 1. Si no tiene agua, buscar cubos de agua en cofres y llenar
+                     if (!cauldron.isFilled()) {
+                        ItemStack waterBucket = this.pullItemFromChests(chests, Items.water_bucket, 0, 1);
+                        if (waterBucket != null) {
+                           Witchery.Blocks.CAULDRON.tryFillWith(super.worldObj, bx, by, bz, new net.minecraftforge.fluids.FluidStack(net.minecraftforge.fluids.FluidRegistry.WATER, 3000));
+                           this.depositStackToChests(new ItemStack(Items.bucket), chests);
+                           touched = true;
+                        }
+                     }
+
+                     // 2. Si tiene agua pero abajo no hay fuego, encender fuego si hay mechero en cofres
+                     if (cauldron.isFilled() && super.worldObj.getBlock(bx, by - 1, bz) != Blocks.fire) {
+                        if (super.worldObj.isAirBlock(bx, by - 1, bz) || super.worldObj.getBlock(bx, by - 1, bz) == Blocks.netherrack) {
+                           ItemStack flint = this.pullItemFromChests(chests, Items.flint_and_steel, -1, 1);
+                           if (flint != null) {
+                              super.worldObj.setBlock(bx, by - 1, bz, Blocks.fire);
+                              this.depositStackToChests(flint, chests);
+                              touched = true;
+                           }
+                        }
+                     }
+
+                     // 3. Si está hirviendo pero NO tiene efectos aún: echar ingredientes en orden desde el cofre
+                     net.minecraftforge.fluids.FluidStack fluid = cauldron.getTankInfo(net.minecraftforge.common.util.ForgeDirection.UNKNOWN)[0].fluid;
+                     boolean hasEffects = fluid != null && fluid.tag != null && fluid.tag.hasKey("EffectCount") && fluid.tag.getInteger("EffectCount") > 0;
+
+                     if (cauldron.isFilled() && cauldron.isBoiling() && !hasEffects) {
+                        EntityPlayerMP owner = this.getSuccessorOwner();
+                        int itemsAdded = 0;
+
+                        // Prioridad 1: Leer ingredientes directamente en orden de slots desde el cofre más cercano
+                        IInventory recipeChest = this.getClosestChest(bx, by, bz, 6);
+                        if (recipeChest != null) {
+                           for (int s = 0; s < recipeChest.getSizeInventory(); s++) {
+                              ItemStack stackInSlot = recipeChest.getStackInSlot(s);
+                              if (stackInSlot != null && stackInSlot.stackSize > 0) {
+                                 Item itm = stackInSlot.getItem();
+                                 if (itm == Items.water_bucket || itm == Items.bucket || itm == Items.flint_and_steel || itm == Items.glass_bottle) {
+                                    continue;
+                                 }
+
+                                 ItemStack single = recipeChest.decrStackSize(s, 1);
+                                 recipeChest.markDirty();
+
+                                 EntityItem dropEntity = new EntityItem(super.worldObj, (double)bx + 0.5D, (double)by + 0.6D, (double)bz + 0.5D, single);
+                                 super.worldObj.spawnEntityInWorld(dropEntity);
+                                 Witchery.Blocks.CAULDRON.onEntityCollidedWithBlock(super.worldObj, bx, by, bz, dropEntity);
+
+                                 if (dropEntity.isDead) {
+                                    touched = true;
+                                    itemsAdded++;
+                                 } else {
+                                    // Si no fue aceptado, regresarlo al cofre intacto
+                                    if (recipeChest.getStackInSlot(s) == null) {
+                                       recipeChest.setInventorySlotContents(s, single);
+                                    } else {
+                                       recipeChest.getStackInSlot(s).stackSize += single.stackSize;
+                                    }
+                                    dropEntity.setDead();
+                                    recipeChest.markDirty();
+                                    break;
+                                 }
+                              }
+                           }
+                           if (itemsAdded > 0 && owner != null) {
+                              this.sendWhisper(owner, "§b[Caldero] §7He arrojado " + itemsAdded + " ingredientes en orden desde el cofre.");
+                           }
+                        }
+
+                        // Prioridad 2: Si no hubo ingredientes en el cofre directo, intentar por libro de recetas
+                        if (itemsAdded == 0) {
+                           java.util.List<String> ingredientNames = this.readCauldronRecipeBook(chests);
+                           if (!ingredientNames.isEmpty()) {
+                              for (String ingName : ingredientNames) {
+                                 ItemStack pulled = this.pullItemFromChestsByName(chests, ingName.toLowerCase().trim(), 1);
+                                 if (pulled != null) {
+                                    EntityItem dropEntity = new EntityItem(super.worldObj, (double)bx + 0.5D, (double)by + 0.6D, (double)bz + 0.5D, pulled);
+                                    super.worldObj.spawnEntityInWorld(dropEntity);
+                                    Witchery.Blocks.CAULDRON.onEntityCollidedWithBlock(super.worldObj, bx, by, bz, dropEntity);
+                                    if (dropEntity.isDead) {
+                                       touched = true;
+                                       itemsAdded++;
+                                    } else {
+                                       dropEntity.setDead();
+                                       this.depositStackToChests(pulled, chests);
+                                       break;
+                                    }
+                                 } else if (owner != null) {
+                                    this.sendWhisper(owner, "§c[Caldero] §7No encuentro §e" + ingName + "§7 en los cofres.");
+                                 }
+                              }
+                              if (itemsAdded > 0 && owner != null) {
+                                 this.sendWhisper(owner, "§b[Caldero] §7Ingredientes del libro arrojados. Esperando brebaje...");
+                              }
+                           }
+                        }
+                     }
+
+                     // 4. Si está hirviendo y tiene un brebaje listo con efectos: embotellar
+                     // Refrescar fluid tras posibles cambios
+                     fluid = cauldron.getTankInfo(net.minecraftforge.common.util.ForgeDirection.UNKNOWN)[0].fluid;
+                     if (fluid != null && fluid.tag != null && fluid.tag.hasKey("EffectCount") && fluid.tag.getInteger("EffectCount") > 0 && cauldron.isBoiling() && cauldron.isPowered()) {
+                        ItemStack bottles = this.pullItemFromChests(chests, Items.glass_bottle, 0, 3);
+                        if (bottles != null) {
+                           int count = bottles.stackSize;
+                           for (int b = 0; b < count; b++) {
+                              if (cauldron.getLiquidQuantity() >= 1000) {
+                                 cauldron.drain(net.minecraftforge.common.util.ForgeDirection.UNKNOWN, 1000, true);
+                                 ItemStack brew = new ItemStack(Witchery.Items.BREW);
+                                 brew.setTagCompound((NBTTagCompound)fluid.tag.copy());
+                                 this.depositStackToChests(brew, chests);
+                                 touched = true;
+                              }
+                           }
+                           cauldron.markBlockForUpdate(true);
+                        }
+                     }
+
+                     // 5. Recoger productos transmutados o caídos alrededor del caldero
+                     AxisAlignedBB floorBB = AxisAlignedBB.getBoundingBox((double)bx - 1.5D, (double)by, (double)bz - 1.5D, (double)bx + 2.5D, (double)by + 2.0D, (double)bz + 2.5D);
+                     java.util.List floorItems = super.worldObj.getEntitiesWithinAABB(EntityItem.class, floorBB);
+                     for (Object obj : floorItems) {
+                        EntityItem item = (EntityItem)obj;
+                        if (item != null && !item.isDead) {
+                           ItemStack stack = item.getEntityItem();
+                           if (stack != null) {
+                              this.depositStackToChests(stack, chests);
+                              if (stack.stackSize <= 0) {
+                                 item.setDead();
+                                 touched = true;
+                              }
+                           }
+                        }
+                     }
+
+                     if (touched) {
+                        cauldron.markBlockForUpdate(true);
+                        cauldronsServiced++;
+                     }
+                  }
+               }
+            }
+         }
+      }
+      if (cauldronsServiced > 0) {
+         this.swingItem();
+         super.worldObj.playSoundAtEntity(this, "random.pop", 0.5F, 1.1F);
+      }
+      return cauldronsServiced;
+   }
+
+   /**
+    * Lee el primer libro escrito (ItemWrittenBook) en los cofres que tenga el display name "caldero"
+    * o "receta caldero". Cada línea de la primera página es el nombre de un ingrediente.
+    * Formato del libro: título = "caldero" o "receta caldero", cada página = 1 ingrediente por línea.
+    */
+   private java.util.List<String> readCauldronRecipeBook(java.util.List<IInventory> chests) {
+      java.util.List<String> ingredients = new java.util.ArrayList<String>();
+      for (IInventory chest : chests) {
+         for (int s = 0; s < chest.getSizeInventory(); s++) {
+            ItemStack stack = chest.getStackInSlot(s);
+            if (stack != null && (stack.getItem() == Items.written_book || stack.getItem() == Items.writable_book)) {
+               String title = stack.hasDisplayName() ? stack.getDisplayName().toLowerCase().trim() : "";
+               // El libro puede llamarse "caldero", "receta caldero", "brew", "brebaje", etc.
+               if (title.contains("caldero") || title.contains("brew") || title.contains("brebaje") || title.contains("pocion") || title.contains("poción")) {
+                  NBTTagCompound tag = stack.getTagCompound();
+                  if (tag != null && tag.hasKey("pages")) {
+                     net.minecraft.nbt.NBTTagList pages = tag.getTagList("pages", 8); // 8 = TAG_String
+                     for (int p = 0; p < pages.tagCount(); p++) {
+                        String page = pages.getStringTagAt(p);
+                        // Cada línea es un ingrediente
+                        String[] lines = page.split("[\\n\\r]+");
+                        for (String line : lines) {
+                           line = line.trim();
+                           if (!line.isEmpty() && !line.startsWith("#") && !line.startsWith("//")) {
+                              ingredients.add(line);
+                           }
+                        }
+                     }
+                  }
+                  if (!ingredients.isEmpty()) return ingredients;
+               }
+            }
+         }
+      }
+      return ingredients;
+   }
+
+   /**
+    * Busca un item por nombre (display name) en los cofres y lo extrae.
+    * Búsqueda parcial, case-insensitive.
+    */
+   private ItemStack pullItemFromChestsByName(java.util.List<IInventory> chests, String nameLower, int quantity) {
+      for (IInventory chest : chests) {
+         for (int s = 0; s < chest.getSizeInventory(); s++) {
+            ItemStack stack = chest.getStackInSlot(s);
+            if (stack != null) {
+               String itemName = stack.getDisplayName().toLowerCase().trim();
+               // Nombre del item registrado también
+               String regName = stack.getItem().getUnlocalizedName(stack).toLowerCase().replace("item.", "").replace("tile.", "").replace("witchery:", "");
+               if (itemName.contains(nameLower) || nameLower.contains(itemName) || regName.contains(nameLower) || nameLower.contains(regName)) {
+                  int take = Math.min(quantity, stack.stackSize);
+                  ItemStack result = chest.decrStackSize(s, take);
+                  chest.markDirty();
+                  if (result != null && result.stackSize > 0) return result;
+               }
+            }
+         }
+      }
+      return null;
+   }
+
+   public boolean transmuteInCauldron(EntityPlayer player) {
+      int gx = MathHelper.floor_double(super.posX);
+      int gy = MathHelper.floor_double(super.posY);
+      int gz = MathHelper.floor_double(super.posZ);
+      java.util.List<IInventory> chests = this.getNearbyChests(14);
+
+      for (int dy = -3; dy <= 3; dy++) {
+         for (int dz = -10; dz <= 10; dz++) {
+            for (int dx = -10; dx <= 10; dx++) {
+               int bx = gx + dx;
+               int by = gy + dy;
+               int bz = gz + dz;
+               Block block = super.worldObj.getBlock(bx, by, bz);
+               if (block == Witchery.Blocks.CAULDRON) {
+                  TileEntity te = super.worldObj.getTileEntity(bx, by, bz);
+                  if (te instanceof com.emoniph.witchery.brewing.TileEntityCauldron) {
+                     com.emoniph.witchery.brewing.TileEntityCauldron cauldron = (com.emoniph.witchery.brewing.TileEntityCauldron)te;
+                     if (cauldron.isBoiling() && cauldron.isPowered()) {
+                        // Buscar cobblestone, carne podrida o saplings en cofres
+                        ItemStack transmutable = null;
+                        for (IInventory ch : chests) {
+                           for (int s = 0; s < ch.getSizeInventory(); s++) {
+                              ItemStack inSlot = ch.getStackInSlot(s);
+                              if (inSlot != null) {
+                                 Item it = inSlot.getItem();
+                                 if (it == Item.getItemFromBlock(Blocks.cobblestone) || it == Items.rotten_flesh || it == Item.getItemFromBlock(Blocks.sapling)) {
+                                    transmutable = ch.decrStackSize(s, 1);
+                                    ch.markDirty();
+                                    break;
+                                 }
+                              }
+                           }
+                           if (transmutable != null) break;
+                        }
+
+                        if (transmutable != null) {
+                           this.dropItemInCircle((double)bx + 0.5D, (double)by + 0.8D, (double)bz + 0.5D, transmutable);
+                           this.sendWhisper(player, "§a¡He arrojado " + transmutable.getDisplayName() + " al caldero hirviendo para transmutarlo en minerales y esencias!");
+                           return true;
+                        } else {
+                           this.sendWhisper(player, "§eEl caldero está listo e hirviendo, pero no encontré adoquín, carne ni brotes en los cofres para transmutar.");
+                           return true;
+                        }
+                     } else {
+                        this.sendWhisper(player, "§eEl caldero en (" + bx + ", " + by + ", " + bz + ") no está hirviendo o no tiene poder del altar.");
+                        return true;
+                     }
+                  }
+               }
+            }
+         }
+      }
+      this.sendWhisper(player, "§cNo he detectado ningún caldero cerca, Maestro.");
+      return false;
+   }
+
+   public int storeAllToChests() {
+      int gx = MathHelper.floor_double(super.posX);
+      int gy = MathHelper.floor_double(super.posY);
+      int gz = MathHelper.floor_double(super.posZ);
+      int storedCount = 0;
+
+      for (int dy = -2; dy <= 2; dy++) {
+         for (int dz = -8; dz <= 8; dz++) {
+            for (int dx = -8; dx <= 8; dx++) {
+               TileEntity te = super.worldObj.getTileEntity(gx + dx, gy + dy, gz + dz);
+               if (te instanceof IInventory && !(te instanceof BlockWitchesOven.TileEntityWitchesOven) 
+                   && !(te instanceof BlockDistillery.TileEntityDistillery)
+                   && !(te instanceof BlockKettle.TileEntityKettle)
+                   && !(te instanceof com.emoniph.witchery.blocks.BlockBrazier.TileEntityBrazier)) {
+                  IInventory chest = (IInventory)te;
+                  for (int slot = 0; slot < this.goblinInventory.getSizeInventory(); slot++) {
+                     ItemStack inSlot = this.goblinInventory.getStackInSlot(slot);
+                     if (inSlot != null && !(inSlot.getItem() instanceof net.minecraft.item.ItemTool)) {
+                        for (int cSlot = 0; cSlot < chest.getSizeInventory(); cSlot++) {
+                           ItemStack cItem = chest.getStackInSlot(cSlot);
+                           if (cItem == null) {
+                              chest.setInventorySlotContents(cSlot, inSlot.copy());
+                              storedCount += inSlot.stackSize;
+                              this.goblinInventory.setInventorySlotContents(slot, null);
+                              break;
+                           } else if (cItem.isItemEqual(inSlot) && cItem.stackSize < cItem.getMaxStackSize()) {
+                              int add = Math.min(inSlot.stackSize, cItem.getMaxStackSize() - cItem.stackSize);
+                              cItem.stackSize += add;
+                              inSlot.stackSize -= add;
+                              storedCount += add;
+                              if (inSlot.stackSize <= 0) {
+                                 this.goblinInventory.setInventorySlotContents(slot, null);
+                                 break;
+                              }
+                           }
+                        }
+                     }
+                  }
+                  chest.markDirty();
+               }
+            }
+         }
+      }
+      if (storedCount > 0) {
+         this.swingItem();
+         super.worldObj.playSoundAtEntity(this, "random.chestclosed", 0.6F, 1.0F);
+      }
+      return storedCount;
+   }
+
+   private static final String[] COMPANION_QUOTES = new String[]{
+      "Estoy vigilando las sombras, Maestro. Nadie se acercará sin ser detectado.",
+      "El poder del Koboldite resuena con tu magia. Juntos somos invencibles.",
+      "Me siento honrado de caminar a tu lado, Maestro.",
+      "Si algún enemigo se atreve a atacarte, mi barrera arcana se alzará al instante.",
+      "Los espíritus susurran tu nombre con respeto y misterio...",
+      "¿Necesitas que active un ritual o revise los hornos y destilerías? Solo ordénamelo.",
+      "Siempre estaré aquí, Maestro. La soledad no volverá a tocarte jamás."
+   };
+
+   /** Retorna el dueño del Sucesor como EntityPlayerMP, o null si no está en línea o no existe. */
+   public EntityPlayerMP getSuccessorOwner() {
+      if (this.tamedOwnerName == null || this.tamedOwnerName.isEmpty()) return null;
+      return net.minecraft.server.MinecraftServer.getServer().getConfigurationManager().func_152612_a(this.tamedOwnerName);
+   }
+
+   private void performSuccessorTick(EntityPlayerMP owner) {
+      if (super.ticksExisted % 20 == 0) {
+         int currentEnergy = com.emoniph.witchery.infusion.Infusion.getCurrentEnergy(owner);
+         int maxEnergy = com.emoniph.witchery.infusion.Infusion.getMaxEnergy(owner);
+         if (currentEnergy < maxEnergy) {
+            com.emoniph.witchery.infusion.Infusion.setCurrentEnergy(owner, Math.min(currentEnergy + 60, maxEnergy));
+            com.emoniph.witchery.util.ParticleEffect.INSTANT_SPELL.send(com.emoniph.witchery.util.SoundEffect.NOTE_PLING, owner, 1.0D, 2.0D, 6);
+         }
+      }
+
+      if (super.ticksExisted % 60 == 0 && owner.getHealth() < owner.getMaxHealth() * 0.35F) {
+         owner.heal(5.0F);
+         owner.addPotionEffect(new PotionEffect(Potion.regeneration.id, 120, 1));
+         this.sendWhisper(owner, "§c¡Resiste Maestro! §aHe canalizado energía vital de emergencia hacia ti.");
+         com.emoniph.witchery.util.ParticleEffect.HEART.send(com.emoniph.witchery.util.SoundEffect.RANDOM_ORB, owner, 1.0D, 1.5D, 8);
+      }
+
+      if (this.successorRole.equals("alquimia") || this.successorRole.equals("lab") || this.isWorking) {
+         if (super.ticksExisted % 100 == 0) {
+            this.manageNearbyOvens();
+            this.manageNearbyDistilleries();
+            this.manageNearbyKettles();
+            this.manageNearbyCauldrons();
+         }
+      }
+
+      if (super.ticksExisted - this.lastChatterTime > 3600) {
+         this.lastChatterTime = super.ticksExisted;
+         if (this.getDistanceToEntity(owner) < 14.0D) {
+            String quote = COMPANION_QUOTES[super.rand.nextInt(COMPANION_QUOTES.length)];
+            this.sendWhisper(owner, "§f\"" + quote + "\"");
+         }
+      }
+   }
+
+   public void reportStatusToOwner(EntityPlayer player) {
+      int infCurrent = com.emoniph.witchery.infusion.Infusion.getCurrentEnergy(player);
+      int infMax = com.emoniph.witchery.infusion.Infusion.getMaxEnergy(player);
+      int healthInt = (int)this.getHealth();
+      int maxHealthInt = (int)this.getMaxHealth();
+
+      this.sendWhisper(player, "§a[Estado de tu Sucesor] §eSalud: §c" + healthInt + "§7/§c" + maxHealthInt + " HP §7| §eRol: §b" + this.successorRole + " §7| §eTu Maná: §d" + infCurrent + "§7/§d" + infMax);
+
+      int gx = MathHelper.floor_double(super.posX);
+      int gy = MathHelper.floor_double(super.posY);
+      int gz = MathHelper.floor_double(super.posZ);
+      for (int dy = -3; dy <= 3; dy++) {
+         for (int dz = -16; dz <= 16; dz++) {
+            for (int dx = -16; dx <= 16; dx++) {
+               TileEntity te = super.worldObj.getTileEntity(gx + dx, gy + dy, gz + dz);
+               if (te instanceof com.emoniph.witchery.blocks.BlockAltar.TileEntityAltar) {
+                  com.emoniph.witchery.blocks.BlockAltar.TileEntityAltar altar = (com.emoniph.witchery.blocks.BlockAltar.TileEntityAltar)te;
+                  this.sendWhisper(player, "§5Altar místico cercano detectado: Poder " + (int)altar.getCorePower() + "/" + (int)altar.getCoreMaxPower());
+                  return;
+               }
+            }
+         }
+      }
+   }
+
    protected void updateLeashedState() {
       try {
          this.testingLeashRange = true;
@@ -543,6 +1772,26 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
             return true;
          }
 
+         if (this.isTamed && !this.isSuccessor() && stack != null && Witchery.Items.GENERIC.itemKobolditePentacle.isMatch(stack)) {
+            if (!super.worldObj.isRemote) {
+               if (!player.capabilities.isCreativeMode) {
+                  --stack.stackSize;
+                  if (stack.stackSize <= 0) {
+                     player.inventory.setInventorySlotContents(player.inventory.currentItem, (ItemStack)null);
+                  }
+               }
+               this.awakenAsSuccessor(player);
+            }
+            return true;
+         }
+
+         if (this.isSuccessor() && player.getCommandSenderName().equalsIgnoreCase(this.tamedOwnerName) && stack == null) {
+            if (!super.worldObj.isRemote) {
+               this.reportStatusToOwner(player);
+            }
+            return true;
+         }
+
          if(this.getLeashed()) {
             if(this.getHeldItem() == null) {
                if(stack != null && stack.getItem() instanceof ItemPickaxe) {
@@ -595,6 +1844,8 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
       nbtRoot.setBoolean("IsSitting", this.isSitting);
       nbtRoot.setBoolean("IsFollowing", this.isFollowing);
       nbtRoot.setBoolean("IsWorking", this.isWorking);
+      nbtRoot.setBoolean("IsSuccessor", this.isSuccessor());
+      nbtRoot.setString("SuccessorRole", this.successorRole != null ? this.successorRole : "follow");
       NBTTagList invList = new NBTTagList();
       for (int i = 0; i < this.goblinInventory.getSizeInventory(); ++i) {
          ItemStack stack = this.goblinInventory.getStackInSlot(i);
@@ -627,6 +1878,10 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
       this.isSitting = nbtRoot.getBoolean("IsSitting");
       this.isFollowing = nbtRoot.getBoolean("IsFollowing");
       this.isWorking = nbtRoot.getBoolean("IsWorking");
+      this.setSuccessor(nbtRoot.getBoolean("IsSuccessor"));
+      if (nbtRoot.hasKey("SuccessorRole")) {
+         this.successorRole = nbtRoot.getString("SuccessorRole");
+      }
       if (nbtRoot.hasKey("GoblinInv", 9)) {
          NBTTagList invList = nbtRoot.getTagList("GoblinInv", 10);
          for (int i = 0; i < invList.tagCount(); ++i) {

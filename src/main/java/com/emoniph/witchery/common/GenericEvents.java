@@ -1255,6 +1255,12 @@ public class GenericEvents {
             return;
          }
 
+         if (event.entityLiving instanceof EntityPlayer) {
+            EntityGoblin.checkAndTriggerDefensiveBarrier((EntityPlayer)event.entityLiving, event);
+         } else if (event.entityLiving instanceof EntityGoblin) {
+            ((EntityGoblin)event.entityLiving).triggerSelfBarrier(event);
+         }
+
          // Mirror Armor Deflection & Retaliation
          if (com.emoniph.witchery.item.ItemMirrorArmor.isMirrorArmorWorn(event.entityLiving)) {
             if (event.source.isProjectile() && event.entityLiving.worldObj.rand.nextFloat() < 0.50F) {

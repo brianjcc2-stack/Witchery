@@ -38,6 +38,10 @@ public class RenderGoblin extends RenderLiving {
    private static final ResourceLocation TEXTURE1_URL = new ResourceLocation("witchery", "textures/entities/goblin2.png");
    private static final ResourceLocation TEXTURE2_URL = new ResourceLocation("witchery", "textures/entities/goblin3.png");
    private static final ResourceLocation TEXTURE3_URL = new ResourceLocation("witchery", "textures/entities/goblin4.png");
+   private static final ResourceLocation TEXTURE0_PALE_URL = new ResourceLocation("witchery", "textures/entities/goblin_pale.png");
+   private static final ResourceLocation TEXTURE1_PALE_URL = new ResourceLocation("witchery", "textures/entities/goblin2_pale.png");
+   private static final ResourceLocation TEXTURE2_PALE_URL = new ResourceLocation("witchery", "textures/entities/goblin3_pale.png");
+   private static final ResourceLocation TEXTURE3_PALE_URL = new ResourceLocation("witchery", "textures/entities/goblin4_pale.png");
 
 
    public RenderGoblin(ModelGoblin par1ModelBiped, float par2) {
@@ -129,15 +133,20 @@ public class RenderGoblin extends RenderLiving {
 
    protected ResourceLocation getEntityTexture(EntityLiving entity) {
       if(entity instanceof EntityGoblin) {
-         switch(((EntityGoblin)entity).getProfession()) {
+         EntityGoblin goblin = (EntityGoblin)entity;
+         boolean pale = goblin.isSuccessor();
+         switch(goblin.getProfession()) {
          case 0:
-            return TEXTURE1_URL;
+            return pale ? TEXTURE1_PALE_URL : TEXTURE1_URL;
          case 1:
-            return TEXTURE0_URL;
+            return pale ? TEXTURE0_PALE_URL : TEXTURE0_URL;
          case 2:
-            return TEXTURE3_URL;
+            return pale ? TEXTURE3_PALE_URL : TEXTURE3_URL;
          case 3:
-            return TEXTURE2_URL;
+            return pale ? TEXTURE2_PALE_URL : TEXTURE2_URL;
+         }
+         if (pale) {
+            return TEXTURE0_PALE_URL;
          }
       }
 
