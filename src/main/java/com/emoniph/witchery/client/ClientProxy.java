@@ -5,6 +5,26 @@ import com.emoniph.witchery.blocks.BlockAlluringSkull;
 import com.emoniph.witchery.blocks.BlockAltar;
 import com.emoniph.witchery.blocks.BlockAltarGUI;
 import com.emoniph.witchery.blocks.BlockApothecaryJar;
+import com.emoniph.witchery.blocks.BlockBroomStand;
+import com.emoniph.witchery.blocks.BlockRitualCandle;
+import com.emoniph.witchery.blocks.BlockSkullCandle;
+import com.emoniph.witchery.blocks.BlockPotionShelf;
+import com.emoniph.witchery.blocks.BlockGrimoireLectern;
+import com.emoniph.witchery.blocks.BlockWitchRack;
+import com.emoniph.witchery.blocks.BlockHerbalistDesk;
+import com.emoniph.witchery.blocks.BlockSpiritChimes;
+import com.emoniph.witchery.blocks.BlockRockingChair;
+import com.emoniph.witchery.client.renderer.RenderBroomStand;
+import com.emoniph.witchery.client.renderer.RenderRitualCandle;
+import com.emoniph.witchery.client.renderer.RenderSkullCandle;
+import com.emoniph.witchery.client.renderer.RenderPotionShelf;
+import com.emoniph.witchery.client.renderer.RenderGrimoireLectern;
+import com.emoniph.witchery.client.renderer.RenderWitchRack;
+import com.emoniph.witchery.client.renderer.RenderHerbalistDesk;
+import com.emoniph.witchery.client.renderer.RenderSpiritChimes;
+import com.emoniph.witchery.client.renderer.RenderRockingChair;
+import com.emoniph.witchery.client.renderer.RenderSeat;
+import com.emoniph.witchery.entity.EntitySeat;
 import com.emoniph.witchery.blocks.BlockAreaMarker;
 import com.emoniph.witchery.blocks.BlockBeartrap;
 import com.emoniph.witchery.blocks.BlockBloodCrucible;
@@ -51,6 +71,7 @@ import com.emoniph.witchery.client.ClientEvents;
 import com.emoniph.witchery.client.gui.GuiScreenBiomeBook;
 import com.emoniph.witchery.client.gui.GuiScreenMarkupBook;
 import com.emoniph.witchery.client.gui.GuiScreenWitchcraftBook;
+import com.emoniph.witchery.client.gui.GuiHerbalistDesk;
 import com.emoniph.witchery.client.model.ModelDemon;
 import com.emoniph.witchery.client.model.ModelEnt;
 import com.emoniph.witchery.client.model.ModelFamiliarPig;
@@ -312,6 +333,7 @@ public class ClientProxy extends CommonProxy {
       RenderingRegistry.registerEntityRenderingHandler(com.emoniph.witchery.entity.EntityFlyingMortar.class, new com.emoniph.witchery.client.renderer.RenderFlyingMortar());
       RenderingRegistry.registerEntityRenderingHandler(com.emoniph.witchery.entity.EntityRivalWitch.class, new com.emoniph.witchery.client.renderer.RenderRivalWitch());
       RenderingRegistry.registerEntityRenderingHandler(com.emoniph.witchery.entity.EntityRivalFamiliar.class, new com.emoniph.witchery.client.renderer.RenderRivalFamiliar());
+      RenderingRegistry.registerEntityRenderingHandler(EntitySeat.class, new RenderSeat());
       this.bindRenderer(BlockPoppetShelf.TileEntityPoppetShelf.class, new RenderPoppetChest(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.POPPET_SHELF)});
       this.bindRenderer(BlockGrassper.TileEntityGrassper.class, new RenderGrassper(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.GRASSPER)});
       this.bindRenderer(BlockDistillery.TileEntityDistillery.class, new RenderDistillery(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.DISTILLERY_IDLE)});
@@ -322,6 +344,15 @@ public class ClientProxy extends CommonProxy {
 //      this.bindRenderer(com.emoniph.witchery.brewing.TileEntityPortkey.class, new RenderChalice(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.PORTKEY)});
       this.bindRenderer(BlockCandelabra.TileEntityCandelabra.class, new RenderCandelabra(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.CANDELABRA)});
       this.bindRenderer(BlockApothecaryJar.TileEntityApothecaryJar.class, new RenderApothecaryJar(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.APOTHECARY_JAR)});
+      this.bindRenderer(BlockBroomStand.TileEntityBroomStand.class, new RenderBroomStand(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.BROOM_STAND)});
+      this.bindRenderer(BlockRitualCandle.TileEntityRitualCandle.class, new RenderRitualCandle(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.RITUAL_CANDLE)});
+      this.bindRenderer(BlockSkullCandle.TileEntitySkullCandle.class, new RenderSkullCandle(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.SKULL_CANDLE)});
+      this.bindRenderer(BlockPotionShelf.TileEntityPotionShelf.class, new RenderPotionShelf(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.POTION_SHELF)});
+      this.bindRenderer(BlockGrimoireLectern.TileEntityGrimoireLectern.class, new RenderGrimoireLectern(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.GRIMOIRE_LECTERN)});
+      this.bindRenderer(BlockWitchRack.TileEntityWitchRack.class, new RenderWitchRack(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.WITCH_RACK)});
+      this.bindRenderer(BlockHerbalistDesk.TileEntityHerbalistDesk.class, new RenderHerbalistDesk(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.HERBALIST_DESK)});
+      this.bindRenderer(BlockSpiritChimes.TileEntitySpiritChimes.class, new RenderSpiritChimes(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.SPIRIT_CHIMES)});
+      this.bindRenderer(BlockRockingChair.TileEntityRockingChair.class, new RenderRockingChair(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.ROCKING_CHAIR)});
       this.bindRenderer(BlockCrystalBall.TileEntityCrystalBall.class, new RenderCrystalBall(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.CRYSTAL_BALL)});
       this.bindRenderer(BlockKettle.TileEntityKettle.class, new RenderKettle(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.KETTLE)});
       this.bindRenderer(BlockLeechChest.TileEntityLeechChest.class, new RenderLeechChest(), new Item[]{Item.getItemFromBlock(Witchery.Blocks.LEECH_CHEST)});
@@ -437,6 +468,8 @@ public class ClientProxy extends CommonProxy {
          return new GuiChest(player.inventory, new ItemApothecaryPouch.InventoryApothecary(player.getHeldItem(), player));
       case 10:
          return new GuiChest(player.inventory, new ItemBottomlessSatchel.InventorySatchel(player.getHeldItem(), player));
+      case 11:
+         return new GuiHerbalistDesk(player.inventory, world, x, y, z);
       default:
          return null;
       }

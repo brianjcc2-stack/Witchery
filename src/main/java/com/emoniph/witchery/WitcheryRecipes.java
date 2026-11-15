@@ -44,6 +44,7 @@ import com.emoniph.witchery.crafting.DistilleryRecipes;
 import com.emoniph.witchery.crafting.KettleRecipes;
 import com.emoniph.witchery.crafting.RecipeAttachTaglock;
 import com.emoniph.witchery.crafting.RecipeModifyWood;
+import com.emoniph.witchery.crafting.RecipeModifyArthana;
 import com.emoniph.witchery.crafting.RecipeShapelessAddColor;
 import com.emoniph.witchery.crafting.RecipeShapelessAddKeys;
 import com.emoniph.witchery.crafting.RecipeShapelessAddPotion;
@@ -222,6 +223,7 @@ public class WitcheryRecipes {
         RecipeSorter.register((String)"witchery:addkeys", RecipeShapelessAddKeys.class, (RecipeSorter.Category)RecipeSorter.Category.SHAPELESS, (String)"after:minecraft:shapeless");
         RecipeSorter.register((String)"witchery:attachtaglock", RecipeAttachTaglock.class, (RecipeSorter.Category)RecipeSorter.Category.SHAPELESS, (String)"after:minecraft:shapeless");
         RecipeSorter.register((String)"witchery:modifywood", RecipeModifyWood.class, (RecipeSorter.Category)RecipeSorter.Category.SHAPELESS, (String)"after:minecraft:shapeless");
+        RecipeSorter.register((String)"witchery:modifyarthana", RecipeModifyArthana.class, (RecipeSorter.Category)RecipeSorter.Category.SHAPELESS, (String)"after:minecraft:shapeless");
         RecipeSorter.register((String)"witchery:biomecopy", RecipeShapelessBiomeCopy.class, (RecipeSorter.Category)RecipeSorter.Category.SHAPELESS, (String)"after:minecraft:shapeless");
         if (Config.instance().allowStatueGoddessRecipe) {
             GameRegistry.addRecipe((ItemStack)new ItemStack(Witchery.Blocks.STATUE_GODDESS), (Object[])new Object[]{"s#s", "shs", "###", Character.valueOf('h'), Witchery.Items.GENERIC.itemDemonHeart.createStack(), Character.valueOf('#'), new ItemStack(Blocks.stone), Character.valueOf('s'), new ItemStack(Items.nether_star)});
@@ -290,6 +292,15 @@ public class WitcheryRecipes {
         GameRegistry.addRecipe((ItemStack)new ItemStack(Witchery.Blocks.OVEN_IDLE), (Object[])new Object[]{" z ", "xxx", "xzx", Character.valueOf('x'), new ItemStack(Items.iron_ingot), Character.valueOf('z'), new ItemStack(Blocks.iron_bars)});
         GameRegistry.addRecipe((ItemStack)Witchery.Items.GENERIC.itemSoftClayJar.createStack(4), (Object[])new Object[]{" # ", "###", Character.valueOf('#'), new ItemStack(Items.clay_ball)});
         GameRegistry.addRecipe((ItemStack)new ItemStack(Witchery.Blocks.APOTHECARY_JAR, 2), (Object[])new Object[]{" W ", "G G", "GGG", Character.valueOf('W'), new ItemStack(Blocks.wooden_slab, 1, OreDictionary.WILDCARD_VALUE), Character.valueOf('G'), new ItemStack(Blocks.glass)});
+        GameRegistry.addRecipe((ItemStack)new ItemStack(Witchery.Blocks.BROOM_STAND), (Object[])new Object[]{" S ", "S S", "WWW", Character.valueOf('S'), new ItemStack(Items.stick), Character.valueOf('W'), new ItemStack(Blocks.wooden_slab, 1, OreDictionary.WILDCARD_VALUE)});
+        GameRegistry.addRecipe((ItemStack)new ItemStack(Witchery.Blocks.RITUAL_CANDLE, 2), (Object[])new Object[]{" S ", " C ", " I ", Character.valueOf('S'), new ItemStack(Items.string), Character.valueOf('C'), new ItemStack(Items.clay_ball), Character.valueOf('I'), new ItemStack(Items.iron_ingot)});
+        GameRegistry.addShapelessRecipe((ItemStack)new ItemStack(Witchery.Blocks.SKULL_CANDLE), (Object[])new Object[]{new ItemStack(Items.skull, 1, OreDictionary.WILDCARD_VALUE), new ItemStack(Witchery.Blocks.RITUAL_CANDLE)});
+        GameRegistry.addRecipe((ItemStack)new ItemStack(Witchery.Blocks.POTION_SHELF), (Object[])new Object[]{"WWW", "B B", "WWW", Character.valueOf('W'), new ItemStack(Blocks.wooden_slab, 1, OreDictionary.WILDCARD_VALUE), Character.valueOf('B'), new ItemStack(Items.glass_bottle)});
+        GameRegistry.addRecipe((ItemStack)new ItemStack(Witchery.Blocks.GRIMOIRE_LECTERN), (Object[])new Object[]{" B ", " W ", "WWW", Character.valueOf('B'), new ItemStack(Items.book), Character.valueOf('W'), new ItemStack(Blocks.wooden_slab, 1, OreDictionary.WILDCARD_VALUE)});
+        GameRegistry.addRecipe((ItemStack)new ItemStack(Witchery.Blocks.WITCH_RACK), (Object[])new Object[]{"S S", " P ", " P ", Character.valueOf('S'), new ItemStack(Items.stick), Character.valueOf('P'), new ItemStack(Blocks.planks, 1, OreDictionary.WILDCARD_VALUE)});
+        GameRegistry.addRecipe((ItemStack)new ItemStack(Witchery.Blocks.HERBALIST_DESK), (Object[])new Object[]{"WWW", "S S", "S S", Character.valueOf('W'), new ItemStack(Blocks.wooden_slab, 1, OreDictionary.WILDCARD_VALUE), Character.valueOf('S'), new ItemStack(Items.stick)});
+        GameRegistry.addRecipe((ItemStack)new ItemStack(Witchery.Blocks.SPIRIT_CHIMES), (Object[])new Object[]{" W ", "SIS", " S ", Character.valueOf('W'), new ItemStack(Blocks.wooden_slab, 1, OreDictionary.WILDCARD_VALUE), Character.valueOf('S'), new ItemStack(Items.string), Character.valueOf('I'), new ItemStack(Items.iron_ingot)});
+        GameRegistry.addRecipe((ItemStack)new ItemStack(Witchery.Blocks.ROCKING_CHAIR), (Object[])new Object[]{"S  ", "SWS", "WWW", Character.valueOf('S'), new ItemStack(Items.stick), Character.valueOf('W'), new ItemStack(Blocks.wooden_slab, 1, OreDictionary.WILDCARD_VALUE)});
         GameRegistry.addRecipe((ItemStack)new ItemStack(Witchery.Blocks.PLANKS, 4, 0), (Object[])new Object[]{"#", Character.valueOf('#'), new ItemStack(Witchery.Blocks.LOG, 1, 0)});
         GameRegistry.addRecipe((ItemStack)new ItemStack(Witchery.Blocks.PLANKS, 4, 1), (Object[])new Object[]{"#", Character.valueOf('#'), new ItemStack(Witchery.Blocks.LOG, 1, 1)});
         GameRegistry.addRecipe((ItemStack)new ItemStack(Witchery.Blocks.PLANKS, 4, 2), (Object[])new Object[]{"#", Character.valueOf('#'), new ItemStack(Witchery.Blocks.LOG, 1, 2)});
@@ -336,6 +347,7 @@ public class WitcheryRecipes {
         GameRegistry.addRecipe((ItemStack)broomHawthorn, (Object[])new Object[]{" x ", " x ", "yyy", Character.valueOf('x'), new ItemStack(Items.stick), Character.valueOf('y'), new ItemStack(Witchery.Blocks.SAPLING, 1, 2)});
 
         GameRegistry.addRecipe(new RecipeModifyWood());
+        GameRegistry.addRecipe(new RecipeModifyArthana());
         GameRegistry.addShapelessRecipe((ItemStack)Witchery.Items.GENERIC.itemOddPorkRaw.createStack(), (Object[])new Object[]{Witchery.Items.GENERIC.itemMutandis.createStack(), new ItemStack(Items.rotten_flesh)});
         GameRegistry.addShapelessRecipe((ItemStack)new ItemStack(Items.porkchop), (Object[])new Object[]{Witchery.Items.GENERIC.itemMutandis.createStack(), Witchery.Items.GENERIC.itemOddPorkRaw.createStack()});
         GameRegistry.addShapelessRecipe((ItemStack)new ItemStack(Items.porkchop), (Object[])new Object[]{Witchery.Items.GENERIC.itemMutandis.createStack(), new ItemStack(Items.chicken)});

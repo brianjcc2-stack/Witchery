@@ -102,7 +102,7 @@ public class EntityAIFlyerFollowOwner extends EntityAIBase {
             for(int dx = 0; dx <= 4; ++dx) {
                for(int d2 = 0; d2 <= 4; ++d2) {
                   for(int dy = 0; dy <= 4; ++dy) {
-                     int d3 = d0 + d2;
+                     int d3 = d0 + dx;
                      int newY = d1 + dy;
                      int newX = z + d2;
                      if(this.theOwner.worldObj.getBlock(d3, newY - 1, newX).isSideSolid(this.theOwner.worldObj, d3, newY - 1, newX, ForgeDirection.UP) && !this.theOwner.worldObj.getBlock(d3, newY, newX).isNormalCube() && !this.theOwner.worldObj.getBlock(d3, newY + 1, newX).isNormalCube()) {

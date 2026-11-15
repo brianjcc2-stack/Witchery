@@ -120,6 +120,80 @@ public class FlooNetwork extends WorldSavedData {
       return sb.toString();
    }
 
+   public static boolean isFireplaceWall(World world, int x, int y, int z) {
+      if (world == null) {
+         return false;
+      }
+      net.minecraft.block.Block b = world.getBlock(x, y, z);
+      if (b == null || b == net.minecraft.init.Blocks.air) {
+         return false;
+      }
+      if (b.getMaterial().getCanBurn()) {
+         return false;
+      }
+      return b.isOpaqueCube() || b.renderAsNormalBlock() 
+            || b instanceof net.minecraft.block.BlockStairs 
+            || b instanceof net.minecraft.block.BlockSlab 
+            || b instanceof net.minecraft.block.BlockWall
+            || b instanceof net.minecraft.block.BlockPane 
+            || b == net.minecraft.init.Blocks.iron_bars 
+            || b == net.minecraft.init.Blocks.hopper
+            || World.doesBlockHaveSolidTopSurface(world, x, y, z);
+   }
+
+   public static boolean isValidFireplace(World world, int x, int y, int z) {
+      if (world == null) {
+         return false;
+      }
+
+      // 1. Base must be solid non-combustible block
+      net.minecraft.block.Block floor = world.getBlock(x, y - 1, z);
+      if (floor == null || floor == net.minecraft.init.Blocks.air || floor.getMaterial().getCanBurn()) {
+         return false;
+      }
+
+      // 2. Wall enclosure: at least 2 or 3 sides around fire (y) must be solid non-combustible walls
+      int solidSidesAtY = 0;
+      if (isFireplaceWall(world, x + 1, y, z)) solidSidesAtY++;
+      if (isFireplaceWall(world, x - 1, y, z)) solidSidesAtY++;
+      if (isFireplaceWall(world, x, y, z + 1)) solidSidesAtY++;
+      if (isFireplaceWall(world, x, y, z - 1)) solidSidesAtY++;
+
+      if (solidSidesAtY < 2) {
+         return false;
+      }
+
+      // Also check y+1 (head height of the fireplace opening)
+      int solidSidesAtY1 = 0;
+      if (isFireplaceWall(world, x + 1, y + 1, z)) solidSidesAtY1++;
+      if (isFireplaceWall(world, x - 1, y + 1, z)) solidSidesAtY1++;
+      if (isFireplaceWall(world, x, y + 1, z + 1)) solidSidesAtY1++;
+      if (isFireplaceWall(world, x, y + 1, z - 1)) solidSidesAtY1++;
+
+      if (solidSidesAtY + solidSidesAtY1 < 4) {
+         return false;
+      }
+
+      // 3. Overhead mantle / ceiling / chimney flue
+      // A fireplace cannot be under open sky without overhead mantle or chimney flue
+      boolean hasOverhead = isFireplaceWall(world, x, y + 2, z) || 
+                            isFireplaceWall(world, x, y + 3, z) ||
+                            !world.canBlockSeeTheSky(x, y + 1, z);
+
+      if (!hasOverhead) {
+         int chimneyShaftWalls = 0;
+         if (isFireplaceWall(world, x + 1, y + 2, z)) chimneyShaftWalls++;
+         if (isFireplaceWall(world, x - 1, y + 2, z)) chimneyShaftWalls++;
+         if (isFireplaceWall(world, x, y + 2, z + 1)) chimneyShaftWalls++;
+         if (isFireplaceWall(world, x, y + 2, z - 1)) chimneyShaftWalls++;
+         if (chimneyShaftWalls < 2) {
+            return false;
+         }
+      }
+
+      return true;
+   }
+
    public static String findNearbySignName(World world, int x, int y, int z) {
       for (int dx = -2; dx <= 2; ++dx) {
          for (int dy = -1; dy <= 3; ++dy) {

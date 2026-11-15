@@ -66,12 +66,13 @@ public class BlockFlooFire extends BlockFire {
    }
 
    public boolean canPlaceBlockAt(World world, int x, int y, int z) {
-      return World.doesBlockHaveSolidTopSurface(world, x, y - 1, z) || world.getBlock(x, y - 1, z) == Blocks.netherrack;
+      return FlooNetwork.isValidFireplace(world, x, y, z);
    }
 
    public void onNeighborBlockChange(World world, int x, int y, int z, Block block) {
-      if(!World.doesBlockHaveSolidTopSurface(world, x, y - 1, z) && world.getBlock(x, y - 1, z) != Blocks.netherrack) {
+      if(!world.isRemote && !FlooNetwork.isValidFireplace(world, x, y, z)) {
          world.setBlockToAir(x, y, z);
+         ParticleEffect.SMOKE.send(SoundEffect.RANDOM_FIZZ, world, (double)x + 0.5D, (double)y + 0.5D, (double)z + 0.5D, 0.5D, 0.5D, 12);
       }
    }
 

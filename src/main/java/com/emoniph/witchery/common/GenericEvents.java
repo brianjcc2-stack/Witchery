@@ -1281,6 +1281,16 @@ public class GenericEvents {
             }
          }
 
+         // Rowan Arthana: 15% reduction to magic damage
+         if (event.entityLiving instanceof EntityPlayer && event.source.isMagicDamage()) {
+            EntityPlayer player = (EntityPlayer) event.entityLiving;
+            ItemStack held = player.getHeldItem();
+            if (held != null && held.getItem() == Witchery.Items.ARTHANA && com.emoniph.witchery.item.ItemArthana.getHiltType(held) == 1) {
+               event.ammount *= 0.85F;
+               ParticleEffect.SPELL_COLORED.send(SoundEffect.RANDOM_ORB, player.worldObj, player.posX, player.posY + 1.0D, player.posZ, 0.3D, 0.3D, 4, 0x00FF88);
+            }
+         }
+
          // Inquisitor Bolt Hit: Silence + Holy Damage
          if (event.source.getSourceOfDamage() != null && event.source.getSourceOfDamage().getEntityData().getBoolean("InquisitorBolt")) {
             event.entityLiving.getEntityData().setLong("witchery_silenced_until", event.entityLiving.worldObj.getTotalWorldTime() + 120L);
@@ -1974,7 +1984,7 @@ public class GenericEvents {
                } else if(event.entityLiving instanceof EntityCreeper) {
                   if(hasArthana1 && event.entityLiving.worldObj.rand.nextDouble() <= Math.min(0.01D * lootingFactor, 1.0D)) {
                      itemstack = new ItemStack(Items.skull, 1, 4);
-                  } else if(event.entityLiving.worldObj.rand.nextDouble() <= Math.min((hasArthana1?0.08D:0.02D) * lootingFactor, 1.0D)) {
+                  } else if(event.entityLiving.worldObj.rand.nextDouble() <= Math.min((hasArthana1?0.35D:0.10D) * lootingFactor, 1.0D)) {
                      itemstack = Witchery.Items.GENERIC.itemCreeperHeart.createStack();
                   }
                } else if(event.entityLiving instanceof EntityDemon) {

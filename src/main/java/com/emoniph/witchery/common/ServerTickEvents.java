@@ -89,14 +89,6 @@ public class ServerTickEvents {
                         Infusion.setCurrentEnergy(event.player, Math.min(maxEnergy, curEnergy + 15));
                      }
                   }
-               } else {
-                  if (event.player.ticksExisted % 40 == 0) {
-                     int curEnergy = Infusion.getCurrentEnergy(event.player);
-                     int maxEnergy = Infusion.getMaxEnergy(event.player);
-                     if (curEnergy < maxEnergy) {
-                        Infusion.setCurrentEnergy(event.player, Math.min(maxEnergy, curEnergy + 1));
-                     }
-                  }
                }
             }
 

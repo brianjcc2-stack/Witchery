@@ -70,6 +70,11 @@ public class ModelMirrorArmor extends ModelBiped {
       this.slotType = slotType;
 
       if (slotType == 0) {
+         // Clear the default solid head & headwear boxes added by ModelBiped constructor!
+         // Otherwise, an opaque 8x8x8 box is rendered around the entity's head, covering their entire face!
+         super.bipedHead.cubeList.clear();
+         super.bipedHeadwear.cubeList.clear();
+
          // =========================================================================
          // --- HOLLOW SYMMETRICAL DIADEM BAND ---
          // Head size is 8x8x8 (-4 to +4 in X and Z, -8 to 0 in Y).
@@ -291,7 +296,7 @@ public class ModelMirrorArmor extends ModelBiped {
       }
 
       this.bipedHead.showModel = isVisible && (armorSlot == 0);
-      this.bipedHeadwear.showModel = isVisible && (armorSlot == 0);
+      this.bipedHeadwear.showModel = false;
       this.bipedBody.showModel = isVisible && (armorSlot == 1);
       this.bipedRightArm.showModel = isVisible && (armorSlot == 1);
       this.bipedLeftArm.showModel = isVisible && (armorSlot == 1);

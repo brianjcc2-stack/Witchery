@@ -53,6 +53,9 @@ public class EntityAIFlyerFlyToWaypoint extends EntityAIBase {
       this.flyer.waypoint = null;
       this.flyer.setSitting(true);
       if(this.flyer.riddenByEntity != null) {
+         if(this.flyer.riddenByEntity instanceof EntityLivingBase) {
+            ((EntityLivingBase)this.flyer.riddenByEntity).fallDistance = 0.0F;
+         }
          this.flyer.riddenByEntity.mountEntity((Entity)null);
       }
 

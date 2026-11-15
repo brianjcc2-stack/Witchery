@@ -38,10 +38,10 @@ public class RenderGoblin extends RenderLiving {
    private static final ResourceLocation TEXTURE1_URL = new ResourceLocation("witchery", "textures/entities/goblin2.png");
    private static final ResourceLocation TEXTURE2_URL = new ResourceLocation("witchery", "textures/entities/goblin3.png");
    private static final ResourceLocation TEXTURE3_URL = new ResourceLocation("witchery", "textures/entities/goblin4.png");
-   private static final ResourceLocation TEXTURE0_PALE_URL = new ResourceLocation("witchery", "textures/entities/goblin_pale.png");
-   private static final ResourceLocation TEXTURE1_PALE_URL = new ResourceLocation("witchery", "textures/entities/goblin2_pale.png");
-   private static final ResourceLocation TEXTURE2_PALE_URL = new ResourceLocation("witchery", "textures/entities/goblin3_pale.png");
-   private static final ResourceLocation TEXTURE3_PALE_URL = new ResourceLocation("witchery", "textures/entities/goblin4_pale.png");
+   private static final ResourceLocation TEXTURE0_BROWN_URL = new ResourceLocation("witchery", "textures/entities/goblin_brown.png");
+   private static final ResourceLocation TEXTURE1_BROWN_URL = new ResourceLocation("witchery", "textures/entities/goblin2_brown.png");
+   private static final ResourceLocation TEXTURE2_BROWN_URL = new ResourceLocation("witchery", "textures/entities/goblin3_brown.png");
+   private static final ResourceLocation TEXTURE3_BROWN_URL = new ResourceLocation("witchery", "textures/entities/goblin4_brown.png");
 
 
    public RenderGoblin(ModelGoblin par1ModelBiped, float par2) {
@@ -134,19 +134,19 @@ public class RenderGoblin extends RenderLiving {
    protected ResourceLocation getEntityTexture(EntityLiving entity) {
       if(entity instanceof EntityGoblin) {
          EntityGoblin goblin = (EntityGoblin)entity;
-         boolean pale = goblin.isSuccessor();
+         boolean brown = goblin.isSuccessor();
          switch(goblin.getProfession()) {
          case 0:
-            return pale ? TEXTURE1_PALE_URL : TEXTURE1_URL;
+            return brown ? TEXTURE1_BROWN_URL : TEXTURE1_URL;
          case 1:
-            return pale ? TEXTURE0_PALE_URL : TEXTURE0_URL;
+            return brown ? TEXTURE0_BROWN_URL : TEXTURE0_URL;
          case 2:
-            return pale ? TEXTURE3_PALE_URL : TEXTURE3_URL;
+            return brown ? TEXTURE3_BROWN_URL : TEXTURE3_URL;
          case 3:
-            return pale ? TEXTURE2_PALE_URL : TEXTURE2_URL;
+            return brown ? TEXTURE2_BROWN_URL : TEXTURE2_URL;
          }
-         if (pale) {
-            return TEXTURE0_PALE_URL;
+         if (brown) {
+            return TEXTURE0_BROWN_URL;
          }
       }
 

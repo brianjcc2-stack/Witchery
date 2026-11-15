@@ -79,6 +79,9 @@ public class EntitySpirit extends EntityFlyingTameable {
 
       try {
          if(target.equals("Village")) {
+            if(super.dimension != 0 && !(super.worldObj.provider instanceof net.minecraft.world.WorldProviderSurface)) {
+               return;
+            }
             IChunkProvider ex;
             for(ex = super.worldObj.getChunkProvider(); ex != null && ex instanceof ChunkProviderServer; ex = ((ChunkProviderServer)ex).currentChunkProvider) {
                ;
@@ -90,11 +93,13 @@ public class EntitySpirit extends EntityFlyingTameable {
                      fieldStructureGenerators = ReflectionHelper.findField(ChunkProviderFlat.class, new String[]{"structureGenerators", "field_82696_f", "f"});
                   }
 
-                  Iterator iterator = ((List)fieldStructureGenerators.get((ChunkProviderFlat)ex)).iterator();
+                  if(fieldStructureGenerators != null) {
+                     Iterator iterator = ((List)fieldStructureGenerators.get((ChunkProviderFlat)ex)).iterator();
 
-                  while(iterator.hasNext()) {
-                     if(this.setWaypointTo(iterator.next(), MapGenVillage.class)) {
-                        return;
+                     while(iterator.hasNext()) {
+                        if(this.setWaypointTo(iterator.next(), MapGenVillage.class)) {
+                           return;
+                        }
                      }
                   }
                } else if(ex instanceof ChunkProviderGenerate) {
@@ -110,7 +115,7 @@ public class EntitySpirit extends EntityFlyingTameable {
                }
             }
          }
-      } catch (IllegalAccessException var5) {
+      } catch (Throwable var5) {
          ;
       }
 
@@ -195,6 +200,9 @@ public class EntitySpirit extends EntityFlyingTameable {
    }
 
    protected void dropFewItems(boolean par1, int par2) {
+      if(this.getEntityData().hasKey("WITCLifetime")) {
+         return;
+      }
       if(this.spiritType != 2) {
          ItemStack stack;
          if(this.spiritType == 1) {
@@ -213,6 +221,16 @@ public class EntitySpirit extends EntityFlyingTameable {
 
    public void onUpdate() {
       super.onUpdate();
+      if(!super.worldObj.isRemote && this.getEntityData().hasKey("WITCLifetime")) {
+         int life = this.getEntityData().getInteger("WITCLifetime") - 1;
+         if(life <= 0) {
+            ParticleEffect.PORTAL.send(SoundEffect.NONE, this, 0.5D, 0.5D, 8);
+            this.setDead();
+            return;
+         } else {
+            this.getEntityData().setInteger("WITCLifetime", life);
+         }
+      }
       if(super.worldObj.isRemote) {
          int color = this.getFeatherColor();
          float red = 0.33F;

@@ -1,6 +1,7 @@
 package com.emoniph.witchery.common;
 
 import com.emoniph.witchery.blocks.BlockAreaMarker;
+import com.emoniph.witchery.blocks.ContainerHerbalistDesk;
 import com.emoniph.witchery.blocks.BlockDistillery;
 import com.emoniph.witchery.blocks.BlockSpinningWheel;
 import com.emoniph.witchery.blocks.BlockWitchesOven;
@@ -90,6 +91,8 @@ public class CommonProxy implements IGuiHandler {
          return new ItemApothecaryPouch.ContainerApothecary(player.inventory, new ItemApothecaryPouch.InventoryApothecary(player.getHeldItem(), player), player.getHeldItem());
       case 10:
          return new ItemBottomlessSatchel.ContainerSatchel(player.inventory, new ItemBottomlessSatchel.InventorySatchel(player.getHeldItem(), player), player.getHeldItem());
+      case 11:
+         return new ContainerHerbalistDesk(player.inventory, world, x, y, z);
       }
    }
 

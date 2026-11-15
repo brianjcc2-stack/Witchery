@@ -1357,6 +1357,13 @@ public class ItemGeneral extends ItemBase {
 
          if(canIgnite) {
             if(!world.isRemote) {
+               if(!FlooNetwork.isValidFireplace(world, fireX, fireY, fireZ)) {
+                  SoundEffect.NOTE_SNARE.playAtPlayer(world, player);
+                  com.emoniph.witchery.util.ParticleEffect.SMOKE.send(SoundEffect.RANDOM_FIZZ, world, (double)fireX + 0.5D, (double)fireY + 0.5D, (double)fireZ + 0.5D, 0.5D, 0.5D, 16);
+                  ChatUtil.sendTranslated(EnumChatFormatting.RED, player, "witchery.floo.notchimney", new Object[0]);
+                  return;
+               }
+
                world.setBlock(fireX, fireY, fireZ, Witchery.Blocks.FLOO_FIRE);
                world.playSoundEffect((double)fireX + 0.5D, (double)fireY + 0.5D, (double)fireZ + 0.5D, "fire.ignite", 1.0F, 0.7F);
                com.emoniph.witchery.util.ParticleEffect.SPELL_COLORED.send(SoundEffect.RANDOM_ORB, world, (double)fireX + 0.5D, (double)fireY + 0.5D, (double)fireZ + 0.5D, 0.5D, 1.0D, 24, 0x00FF88);

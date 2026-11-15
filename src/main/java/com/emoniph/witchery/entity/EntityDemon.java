@@ -6,6 +6,8 @@ import com.emoniph.witchery.entity.ai.EntityAIAttackCloseTargetOnCollide;
 import com.emoniph.witchery.entity.ai.EntityAIDemonicBarginPlayer;
 import com.emoniph.witchery.entity.ai.EntityAILookAtDemonicBarginPlayer;
 import com.emoniph.witchery.util.Config;
+import com.emoniph.witchery.util.ParticleEffect;
+import com.emoniph.witchery.util.SoundEffect;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import java.util.Collections;
@@ -231,7 +233,24 @@ public class EntityDemon extends EntityGolem implements IRangedAttackMob, IMerch
       this.playSound("mob.irongolem.walk", 1.0F, 1.0F);
    }
 
+   public void onUpdate() {
+      super.onUpdate();
+      if(!super.worldObj.isRemote && this.getEntityData().hasKey("WITCLifetime")) {
+         int life = this.getEntityData().getInteger("WITCLifetime") - 1;
+         if(life <= 0) {
+            ParticleEffect.FLAME.send(SoundEffect.MOB_BLAZE_DEATH, this, 1.0D, 2.0D, 24);
+            this.setDead();
+            return;
+         } else {
+            this.getEntityData().setInteger("WITCLifetime", life);
+         }
+      }
+   }
+
    protected void dropFewItems(boolean par1, int par2) {
+      if(this.getEntityData().hasKey("WITCLifetime")) {
+         return;
+      }
       if(par1) {
          int j = super.rand.nextInt(2 + par2);
 
@@ -270,6 +289,10 @@ public class EntityDemon extends EntityGolem implements IRangedAttackMob, IMerch
    }
 
    public void attackEntityWithRangedAttack(EntityLivingBase targetEntity, float par2) {
+      if (this.getDistanceSqToEntity(targetEntity) < 16.0D) {
+         this.attackEntityAsMob(targetEntity);
+         return;
+      }
       if(targetEntity.getHeldItem() == null || targetEntity.getHeldItem().getItem() != Witchery.Items.DEVILS_TONGUE_CHARM || super.worldObj.rand.nextDouble() < 0.05D) {
          double d0 = targetEntity.posX - super.posX;
          double d1 = targetEntity.boundingBox.minY + (double)(targetEntity.height / 2.0F) - (super.posY + (double)(super.height / 2.0F));

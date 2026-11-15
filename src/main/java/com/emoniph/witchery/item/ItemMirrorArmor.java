@@ -16,18 +16,22 @@ import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
+import net.minecraftforge.common.ISpecialArmor;
 
 import java.util.List;
 
-public class ItemMirrorArmor extends ItemArmor {
+public class ItemMirrorArmor extends ItemArmor implements ISpecialArmor {
 
    public static final int STYLE_CROWN_IMPERIAL = 0;
    public static final int STYLE_CROWN_TIARA = 1;
    public static final int STYLE_CROWN_SOLAR = 2;
    public static final int NUM_STYLES = 3;
+
+   private int realDamageReduction;
 
    @SideOnly(Side.CLIENT)
    private ModelMirrorArmor modelHelm;
@@ -35,14 +39,89 @@ public class ItemMirrorArmor extends ItemArmor {
    private ModelMirrorArmor modelChest;
 
    public ItemMirrorArmor(int armorSlot) {
-      super(ArmorMaterial.DIAMOND, 1, armorSlot);
+      super(ArmorMaterial.CLOTH, 1, armorSlot);
       this.setMaxDamage(ArmorMaterial.DIAMOND.getDurability(armorSlot));
+      this.realDamageReduction = ArmorMaterial.DIAMOND.getDamageReductionAmount(armorSlot);
       this.setCreativeTab(WitcheryCreativeTab.INSTANCE);
    }
 
    public Item setUnlocalizedName(String itemName) {
       ItemUtil.registerItem(this, itemName);
       return super.setUnlocalizedName(itemName);
+   }
+
+   @Override
+   public int getItemEnchantability() {
+      return ArmorMaterial.DIAMOND.getEnchantability();
+   }
+
+   @Override
+   public ArmorProperties getProperties(EntityLivingBase player, ItemStack armor, DamageSource source, double damage, int slot) {
+      return new ArmorProperties(0, (double)this.realDamageReduction / 25.0D, armor.getMaxDamage() + 1 - armor.getItemDamage());
+   }
+
+   @Override
+   public int getArmorDisplay(EntityPlayer player, ItemStack armor, int slot) {
+      return this.realDamageReduction;
+   }
+
+   @Override
+   public void damageArmor(EntityLivingBase entity, ItemStack stack, DamageSource source, int damage, int slot) {
+      stack.damageItem(damage, entity);
+   }
+
+   @Override
+   public boolean hasColor(ItemStack stack) {
+      if (stack == null || !stack.hasTagCompound()) {
+         return false;
+      }
+      NBTTagCompound display = stack.getTagCompound().getCompoundTag("display");
+      return display != null && display.hasKey("color", 3);
+   }
+
+   @Override
+   public int getColor(ItemStack stack) {
+      if (!this.hasColor(stack)) {
+         return -1;
+      }
+      return stack.getTagCompound().getCompoundTag("display").getInteger("color");
+   }
+
+   @Override
+   public void removeColor(ItemStack stack) {
+      if (stack != null && stack.hasTagCompound()) {
+         NBTTagCompound display = stack.getTagCompound().getCompoundTag("display");
+         if (display != null && display.hasKey("color")) {
+            display.removeTag("color");
+         }
+      }
+   }
+
+   @Override
+   public void func_82813_b(ItemStack stack, int color) {
+      this.setColor(stack, color);
+   }
+
+   public void setColor(ItemStack stack, int color) {
+      if (stack != null) {
+         if (!stack.hasTagCompound()) {
+            stack.setTagCompound(new NBTTagCompound());
+         }
+         NBTTagCompound display = stack.getTagCompound().getCompoundTag("display");
+         if (!stack.getTagCompound().hasKey("display", 10)) {
+            stack.getTagCompound().setTag("display", display);
+         }
+         display.setInteger("color", color);
+      }
+   }
+
+   @SideOnly(Side.CLIENT)
+   @Override
+   public int getColorFromItemStack(ItemStack stack, int par2) {
+      if (this.hasColor(stack)) {
+         return this.getColor(stack);
+      }
+      return 16777215;
    }
 
    public static int getStyle(ItemStack stack) {
@@ -123,6 +202,9 @@ public class ItemMirrorArmor extends ItemArmor {
          String styleName = StatCollector.translateToLocal("witchery.mirrorarmor.style." + style);
          list.add(EnumChatFormatting.GRAY + StatCollector.translateToLocal("witchery.style.label") + ": " + EnumChatFormatting.AQUA + styleName);
          list.add(EnumChatFormatting.DARK_GRAY + "(" + StatCollector.translateToLocal("witchery.style.sneak_click_tip") + ")");
+      }
+      if (this.hasColor(stack)) {
+         list.add(EnumChatFormatting.ITALIC + StatCollector.translateToLocal("item.dyed"));
       }
       list.add(EnumChatFormatting.LIGHT_PURPLE + StatCollector.translateToLocal("witchery.mirrorarmor.tip1"));
       list.add(EnumChatFormatting.AQUA + StatCollector.translateToLocal("witchery.mirrorarmor.tip2"));

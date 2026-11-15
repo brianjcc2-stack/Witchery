@@ -16,6 +16,7 @@ import com.emoniph.witchery.entity.EntityReflection;
 import com.emoniph.witchery.entity.EntitySpirit;
 import com.emoniph.witchery.entity.EntityTreefyd;
 import com.emoniph.witchery.entity.EntityVampire;
+import com.emoniph.witchery.item.ItemArthana;
 import com.emoniph.witchery.entity.EntityVillagerWere;
 import com.emoniph.witchery.entity.EntityWolfman;
 import com.emoniph.witchery.infusion.InfusedBrewEffect;
@@ -171,6 +172,9 @@ public class CreatureUtil {
          if(!source.isProjectile() && source.getEntity() != null && source.getEntity() instanceof EntityLivingBase) {
             EntityLivingBase entity = (EntityLivingBase)source.getEntity();
             ItemStack stack = entity.getHeldItem();
+            if(stack != null && stack.getItem() == Witchery.Items.ARTHANA && ItemArthana.getHiltType(stack) == 5) {
+               return true;
+            }
             if(stack != null && stack.getItem() instanceof ItemSword) {
                ItemSword sword = (ItemSword)stack.getItem();
                String materialName = sword.getToolMaterialName();

@@ -10,9 +10,11 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -30,7 +32,7 @@ public class CommandHobgoblin extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/hobgoblin <follow|stay|work|dismiss|summon|whisper|rito|chest|altar|lab|horno|destilar|caldero|receta|ascender|inventory|guia>";
+        return "/hobgoblin <name|follow|stay|work|ir|adelante|atras|attack|dismiss|summon|whisper|rito|chest|altar|lab|horno|destilar|caldero|receta|ascender|inventory|guia>";
     }
 
     @Override
@@ -46,13 +48,15 @@ public class CommandHobgoblin extends CommandBase {
     @Override
     public List addTabCompletionOptions(ICommandSender sender, String[] args) {
         if (args.length == 1) {
-            return getListOfStringsMatchingLastWord(args, "follow", "stay", "work", "attack", "release", "inventory", "guia", "help", "ayuda",
+            return getListOfStringsMatchingLastWord(args, "name", "nombre", "renombrar", "follow", "stay", "work", "attack", "ir", "goto", "coord", "mover", "adelante", "forward", "atras", "backward", "release", "inventory", "guia", "help", "ayuda",
                     "seguir", "quieto", "trabajar", "atacar", "liberar", "mochila", "dismiss", "summon", "despedir", "llamar", "invocar",
                     "whisper", "hablar", "decir", "rito", "ritual", "chest", "cofre", "altar", "lab", "alquimia", "horno", "hornos",
                     "destilar", "destileria", "caldero", "cauldron", "ascender", "awaken", "receta", "recipe", "libro");
         } else if (args.length == 2 && (args[0].equalsIgnoreCase("stay") || args[0].equalsIgnoreCase("follow") || args[0].equalsIgnoreCase("work")
-                || args[0].equalsIgnoreCase("quieto") || args[0].equalsIgnoreCase("seguir") || args[0].equalsIgnoreCase("trabajar"))) {
-            return getListOfStringsMatchingLastWord(args, "all");
+                || args[0].equalsIgnoreCase("quieto") || args[0].equalsIgnoreCase("seguir") || args[0].equalsIgnoreCase("trabajar")
+                || args[0].equalsIgnoreCase("ir") || args[0].equalsIgnoreCase("goto") || args[0].equalsIgnoreCase("coord")
+                || args[0].equalsIgnoreCase("adelante") || args[0].equalsIgnoreCase("forward") || args[0].equalsIgnoreCase("atras") || args[0].equalsIgnoreCase("backward"))) {
+            return getListOfStringsMatchingLastWord(args, "all", "aqui");
         } else if (args.length == 2 && (args[0].equalsIgnoreCase("rito") || args[0].equalsIgnoreCase("ritual"))) {
             return getListOfStringsMatchingLastWord(args, "tormenta", "dia", "noche", "bendicion", "proteccion");
         } else if (args.length == 2 && (args[0].equalsIgnoreCase("receta") || args[0].equalsIgnoreCase("recipe") || args[0].equalsIgnoreCase("libro"))) {
@@ -61,6 +65,13 @@ public class CommandHobgoblin extends CommandBase {
             return getListOfStringsMatchingLastWord(args, "estado", "altar", "cofre", "rito", "horno", "destilar", "caldero", "lab", "protegeme", "hola");
         }
         return null;
+    }
+
+    private MovingObjectPosition getTargetBlock(EntityPlayer player, double reach) {
+        Vec3 eyePos = Vec3.createVectorHelper(player.posX, player.posY + player.getEyeHeight(), player.posZ);
+        Vec3 lookVec = player.getLook(1.0F);
+        Vec3 reachVec = eyePos.addVector(lookVec.xCoord * reach, lookVec.yCoord * reach, lookVec.zCoord * reach);
+        return player.worldObj.rayTraceBlocks(eyePos, reachVec);
     }
 
     private EntityLivingBase getLookedAtEntity(EntityPlayer player, double range) {
@@ -102,12 +113,11 @@ public class CommandHobgoblin extends CommandBase {
         EntityPlayer player = (EntityPlayer) sender;
 
         if (args.length == 0) {
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "╔════════════════════════════════════════════╗"));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "  ★ SUCESOR ARCANO Y HOBGOBLINS ★"));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "╚════════════════════════════════════════════╝"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "=== Hobgoblins y Sucesor ==="));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/hobgoblin name <nombre>" + EnumChatFormatting.GRAY + " (o nombre) - Asigna un nombre a tu hobgoblin."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/hobgoblin summon" + EnumChatFormatting.GRAY + " (o llamar) - Invoca a tu Sucesor a tu lado."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/hobgoblin dismiss" + EnumChatFormatting.GRAY + " (o despedir) - Resguarda a tu Sucesor en el plano astral."));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/hobgoblin lab" + EnumChatFormatting.GRAY + " (o alquimia) - Control total de laboratorio (hornos, destilerías, calderos)."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/hobgoblin lab" + EnumChatFormatting.GRAY + " (o alquimia) - Control de laboratorio (hornos, destilerías, calderos)."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/hobgoblin rito [nombre]" + EnumChatFormatting.GRAY + " - Carga los ingredientes de cofres y activa el rito."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/hobgoblin horno" + EnumChatFormatting.GRAY + " - Recolecta humos y carbón; abastece leña y frascos de arcilla."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/hobgoblin destilar" + EnumChatFormatting.GRAY + " - Recoge destilados y produce recetas desde cofres."));
@@ -115,10 +125,12 @@ public class CommandHobgoblin extends CommandBase {
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/hobgoblin chest" + EnumChatFormatting.GRAY + " (o cofre) - Deposita su inventario en cofres cercanos."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/hobgoblin altar" + EnumChatFormatting.GRAY + " - Canaliza y monitorea la energía del altar."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/hobgoblin whisper <mensaje>" + EnumChatFormatting.GRAY + " (o hablar) - Comunicación telepática."));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/hobgoblin ascender" + EnumChatFormatting.GRAY + " - Eleva a un Hobgoblin a Sucesor Arcano pálido."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/hobgoblin ascender" + EnumChatFormatting.GRAY + " - Eleva a un Hobgoblin a Sucesor."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/hobgoblin follow [all]" + EnumChatFormatting.GRAY + " (o seguir) - Te sigue lealmente como guardia."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/hobgoblin stay [all]" + EnumChatFormatting.GRAY + " (o quieto) - Permanece en guardia en el lugar."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/hobgoblin work [all]" + EnumChatFormatting.GRAY + " (o trabajar) - Cosecha cultivos mágicos y mina."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/hobgoblin ir [all] [x y z]" + EnumChatFormatting.GRAY + " (o goto) - Desplaza a tu hobgoblin a donde miras o coordenadas."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/hobgoblin adelante|atras [all] [bloques]" + EnumChatFormatting.GRAY + " - Movimiento relativo en su dirección."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/hobgoblin inventory" + EnumChatFormatting.GRAY + " (o mochila) - Abre su mochila de carga."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/hobgoblin guia" + EnumChatFormatting.GRAY + " (o help) - Guía completa de todas las funciones."));
             return;
@@ -127,33 +139,87 @@ public class CommandHobgoblin extends CommandBase {
         String subCommand = args[0].toLowerCase();
 
         if (subCommand.equals("guia") || subCommand.equals("help") || subCommand.equals("ayuda")) {
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "╔═════════════════════════════════════════════════════════╗"));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "       ★ GUÍA MAESTRA: SUCESOR ARCANO Y HOBGOBLINS ★"));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "╚═════════════════════════════════════════════════════════╝"));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "1. TRANSFORMACIÓN PÁLIDA:"));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "   • Domestica con una " + EnumChatFormatting.GREEN + "Esmeralda" + EnumChatFormatting.WHITE + " y dale un " + EnumChatFormatting.AQUA + "Pentáculo de Koboldite" + EnumChatFormatting.WHITE + " (o usa " + EnumChatFormatting.LIGHT_PURPLE + "/hobgoblin ascender" + EnumChatFormatting.WHITE + ")."));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "   • Su piel se vuelve " + EnumChatFormatting.WHITE + "PÁLIDA ARCANA" + EnumChatFormatting.WHITE + ", sube a 60 HP y se vincula telepáticamente contigo."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "=== Guía: Sucesor y Hobgoblins ==="));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "1. DOMESTICACIÓN Y ASCENSIÓN:"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "   • Domestica con una " + EnumChatFormatting.GREEN + "Esmeralda" + EnumChatFormatting.WHITE + " y dale un " + EnumChatFormatting.AQUA + "Pentáculo de Koboldite" + EnumChatFormatting.WHITE + " (o usa " + EnumChatFormatting.YELLOW + "/hobgoblin ascender" + EnumChatFormatting.WHITE + ")."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "   • Su aspecto cambia a marrón cobrizo, sube a 60 HP y te asiste fielmente."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "   • Nómbralo con una etiqueta (" + EnumChatFormatting.AQUA + "Name Tag" + EnumChatFormatting.WHITE + ") o con " + EnumChatFormatting.YELLOW + "/hobgoblin name <nombre>" + EnumChatFormatting.WHITE + "."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "   • Clic derecho con mano vacía: alternar entre Seguir y Esperar (Shift + Clic para su mochila)."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "   • Movimiento táctico: " + EnumChatFormatting.YELLOW + "/hobgoblin ir [all] [x y z]" + EnumChatFormatting.WHITE + " (a donde miras o coordenadas) y " + EnumChatFormatting.YELLOW + "/hobgoblin adelante|atras [bloques]" + EnumChatFormatting.WHITE + "."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "2. BARRERA DEFENSIVA Y PROTECCIÓN:"));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "   • Si te atacan o disparan, invoca una " + EnumChatFormatting.LIGHT_PURPLE + "Barrera Arcana" + EnumChatFormatting.WHITE + " (85% reducción de daño, repulsión masiva de enemigos, Resistencia y Regeneración)."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "   • Si te atacan o disparan, activa una Barrera Arcana (85% reducción de daño, repulsión, Resistencia y Regeneración)."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "   • Si tu salud cae bajo el 35%, te envía sanación vital de emergencia."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "3. COMPAÑERO ETERNO:"));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "   • " + EnumChatFormatting.AQUA + "/hobgoblin dismiss" + EnumChatFormatting.WHITE + ": Lo resguarda en el plano astral guardando su mochila y vida."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "   • " + EnumChatFormatting.AQUA + "/hobgoblin summon" + EnumChatFormatting.WHITE + ": Lo invoca de regreso a tu lado inmediatamente."));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "4. AUTOMATIZACIÓN DE RITUALES (Carga de Cofres):"));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "   • " + EnumChatFormatting.AQUA + "/hobgoblin rito [nombre]" + EnumChatFormatting.WHITE + ": El Sucesor busca los ingredientes en cofres cercanos, camina hacia el centro del círculo, los arroja y activa el ritual."));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "   • Puedes especificar ritos directos: " + EnumChatFormatting.YELLOW + "tormenta, dia, noche, bendicion, proteccion" + EnumChatFormatting.WHITE + ", o dejar los ítems en un cofre junto al círculo."));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "5. CONTROL DE LABORATORIO Y ALQUIMIA:"));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "   • " + EnumChatFormatting.AQUA + "/hobgoblin lab" + EnumChatFormatting.WHITE + ": Modo continuo de laboratorio. Atiende hornos, destilerías y ollas automáticamente."));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "   • " + EnumChatFormatting.AQUA + "/hobgoblin horno" + EnumChatFormatting.WHITE + ": Vacía carbón y humos (*Foul Fumes*), abastece combustible y frascos de arcilla."));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "   • " + EnumChatFormatting.AQUA + "/hobgoblin destilar" + EnumChatFormatting.WHITE + ": Recolecta destilados, coloca frascos y carga recetas desde cofres."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "4. AUTOMATIZACIÓN DE RITUALES:"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "   • " + EnumChatFormatting.AQUA + "/hobgoblin rito [nombre]" + EnumChatFormatting.WHITE + ": Carga ingredientes de cofres y activa el ritual."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "5. CONTROL DE LABORATORIO:"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "   • " + EnumChatFormatting.AQUA + "/hobgoblin lab" + EnumChatFormatting.WHITE + ": Atiende hornos, destilerías y calderos automáticamente."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "   • " + EnumChatFormatting.AQUA + "/hobgoblin horno" + EnumChatFormatting.WHITE + ": Recolecta humos/carbón y abastece leña/frascos."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "   • " + EnumChatFormatting.AQUA + "/hobgoblin destilar" + EnumChatFormatting.WHITE + ": Recolecta destilados y produce recetas desde cofres."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "   • " + EnumChatFormatting.AQUA + "/hobgoblin chest" + EnumChatFormatting.WHITE + ": Almacena todos los productos en tus cofres."));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "6. LIBROS DE RECETA (Automatización inteligente):"));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "   • " + EnumChatFormatting.AQUA + "/hobgoblin receta caldero Nightshade Wheat BoneMeal" + EnumChatFormatting.WHITE + ": Libro de receta para el caldero."));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "   • " + EnumChatFormatting.AQUA + "/hobgoblin receta kettle MandrakeRoot BelladonnaFlower" + EnumChatFormatting.WHITE + ": Libro para el calderito (Floo)."));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "   • " + EnumChatFormatting.AQUA + "/hobgoblin receta destilar BelladonnaFlower" + EnumChatFormatting.WHITE + ": Libro para destilería."));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "   ★ Coloca el libro en un cofre cercano. El Sucesor lo leerá y usará los ingredientes automáticamente."));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "   ★ El caldero acepta un libro escrito con título 'caldero', con ingredientes en sus páginas (uno por línea)."));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "═════════════════════════════════════════════════════════"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "6. LIBROS DE RECETA:"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "   • Usa " + EnumChatFormatting.AQUA + "/hobgoblin receta <caldero|kettle|destilar> <ingredientes...>" + EnumChatFormatting.WHITE + "."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "   Coloca el libro en un cofre cercano y el Sucesor lo leerá automáticamente."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "==================================="));
+            return;
+        }
+
+        // --- NAME / NOMBRE ---
+        if (subCommand.equals("name") || subCommand.equals("nombre") || subCommand.equals("renombrar")) {
+            if (args.length < 2) {
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Uso: /hobgoblin name <nombre> (o /hobgoblin name reset)"));
+                return;
+            }
+
+            StringBuilder nameBuilder = new StringBuilder();
+            for (int i = 1; i < args.length; i++) {
+                if (i > 1) nameBuilder.append(" ");
+                nameBuilder.append(args[i]);
+            }
+            String newName = nameBuilder.toString().trim();
+
+            AxisAlignedBB searchBB = AxisAlignedBB.getBoundingBox(player.posX - 16.0D, player.posY - 8.0D, player.posZ - 16.0D, player.posX + 16.0D, player.posY + 8.0D, player.posZ + 16.0D);
+            List<EntityGoblin> nearbyGoblins = player.worldObj.getEntitiesWithinAABB(EntityGoblin.class, searchBB);
+            EntityGoblin targetGoblin = null;
+
+            EntityLivingBase looked = getLookedAtEntity(player, 16.0D);
+            if (looked instanceof EntityGoblin) {
+                EntityGoblin g = (EntityGoblin) looked;
+                if (g.isTamed && player.getCommandSenderName().equalsIgnoreCase(g.tamedOwnerName)) {
+                    targetGoblin = g;
+                }
+            }
+
+            if (targetGoblin == null) {
+                double closestDistSq = Double.MAX_VALUE;
+                for (EntityGoblin g : nearbyGoblins) {
+                    if (g.isTamed && player.getCommandSenderName().equalsIgnoreCase(g.tamedOwnerName)) {
+                        double dSq = g.getDistanceSqToEntity(player);
+                        if (dSq < closestDistSq) {
+                            closestDistSq = dSq;
+                            targetGoblin = g;
+                        }
+                    }
+                }
+            }
+
+            if (targetGoblin == null) {
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "No hay ningún hobgoblin tuyo cerca para nombrar."));
+                return;
+            }
+
+            if (newName.equalsIgnoreCase("reset") || newName.equalsIgnoreCase("clear")) {
+                targetGoblin.setCustomNameTag("");
+                targetGoblin.setAlwaysRenderNameTag(false);
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "Nombre del hobgoblin restablecido."));
+            } else {
+                targetGoblin.setCustomNameTag(newName);
+                targetGoblin.setAlwaysRenderNameTag(true);
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "Has nombrado a tu hobgoblin: " + newName));
+                targetGoblin.sendWhisper(player, "Mi nombre ahora es " + newName + ".");
+            }
             return;
         }
 
@@ -170,7 +236,7 @@ public class CommandHobgoblin extends CommandBase {
 
                 com.emoniph.witchery.util.ParticleEffect.PORTAL.send(com.emoniph.witchery.util.SoundEffect.RANDOM_LEVELUP, goblin, 1.5D, 2.0D, 35);
                 com.emoniph.witchery.util.ParticleEffect.INSTANT_SPELL.send(com.emoniph.witchery.util.SoundEffect.WITCHERY_RANDOM_HYPNOSIS, goblin, 1.0D, 1.5D, 25);
-                goblin.sendWhisper(player, "¡He regresado a tu lado, Maestro! Siempre contigo.");
+                goblin.sendWhisper(player, "He regresado a tu lado.");
                 return;
             }
 
@@ -182,12 +248,12 @@ public class CommandHobgoblin extends CommandBase {
                     g.isSitting = false;
                     g.isFollowing = true;
                     com.emoniph.witchery.util.ParticleEffect.PORTAL.send(com.emoniph.witchery.util.SoundEffect.MOB_ENDERMEN_PORTAL, g, 1.0D, 1.5D, 20);
-                    g.sendWhisper(player, "¡He acudido a tu llamado de inmediato, Maestro!");
+                    g.sendWhisper(player, "He acudido a tu llamado.");
                     return;
                 }
             }
 
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "No tienes ningún Sucesor Arcano guardado ni cerca en este mundo."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "No tienes ningún Sucesor guardado ni cerca en este mundo."));
             return;
         }
 
@@ -206,11 +272,11 @@ public class CommandHobgoblin extends CommandBase {
                 }
             }
             if (successor == null) {
-                player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "No tienes ningún Sucesor Arcano cerca para despedir."));
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "No tienes ningún Sucesor cerca para despedir."));
                 return;
             }
 
-            successor.sendWhisper(player, "Me resguardo en el plano etéreo, Maestro. Llámame con §b/hobgoblin llamar §ecuando me necesites.");
+            successor.sendWhisper(player, "Me resguardo. Llámame con /hobgoblin llamar cuando me necesites.");
             com.emoniph.witchery.util.ParticleEffect.SMOKE.send(com.emoniph.witchery.util.SoundEffect.WITCHERY_RANDOM_POOF, successor, 1.0D, 1.5D, 30);
             com.emoniph.witchery.util.ParticleEffect.PORTAL.send(com.emoniph.witchery.util.SoundEffect.RANDOM_ORB, successor, 1.0D, 1.5D, 20);
 
@@ -218,7 +284,7 @@ public class CommandHobgoblin extends CommandBase {
             successor.writeToNBT(nbt);
             playerEx.setStoredSuccessorNBT(nbt);
             successor.setDead();
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "Tu Sucesor Arcano se ha resguardado en el plano astral."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Tu Sucesor se ha resguardado en el plano astral."));
             return;
         }
 
@@ -234,11 +300,11 @@ public class CommandHobgoblin extends CommandBase {
                     int dists = g.manageNearbyDistilleries();
                     int kettles = g.manageNearbyKettles();
                     g.storeAllToChests();
-                    g.sendWhisper(player, "§a¡Modo Laboratorio Mágico activado! Atendiendo " + ovens + " hornos, " + dists + " destilerías y " + kettles + " calderos/ollas. Reabasteceré frascos, leña y guardaré todo en tus cofres continuamente.");
+                    g.sendWhisper(player, "Modo Laboratorio activado (" + ovens + " hornos, " + dists + " destilerías, " + kettles + " calderos). Guardando en cofres.");
                     return;
                 }
             }
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "No hay ningún Sucesor Arcano cerca para asignar al laboratorio."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "No hay ningún Sucesor cerca para asignar al laboratorio."));
             return;
         }
 
@@ -250,11 +316,11 @@ public class CommandHobgoblin extends CommandBase {
                 if (g.isTamed && g.isSuccessor() && player.getCommandSenderName().equalsIgnoreCase(g.tamedOwnerName)) {
                     int ovens = g.manageNearbyOvens();
                     g.storeAllToChests();
-                    g.sendWhisper(player, "He atendido " + ovens + " hornos de bruja. Productos y humos recolectados; frascos de arcilla y leña abastecidos.");
+                    g.sendWhisper(player, "Hornos atendidos (" + ovens + "). Humos y carbón recolectados.");
                     return;
                 }
             }
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "No hay ningún Sucesor Arcano cerca para atender hornos."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "No hay ningún Sucesor cerca para atender hornos."));
             return;
         }
 
@@ -366,22 +432,22 @@ public class CommandHobgoblin extends CommandBase {
                 successor.loadAndActivateCircle(player, "");
             } else if (message.contains("cofre") || message.contains("guardar") || message.contains("ordenar")) {
                 int count = successor.storeAllToChests();
-                successor.sendWhisper(player, "He guardado " + count + " objetos en los cofres cercanos, Maestro.");
+                successor.sendWhisper(player, "Objetos guardados en cofres cercanos (" + count + ").");
             } else if (message.contains("caldero") || message.contains("pocion") || message.contains("transmuta")) {
                 int c = successor.manageNearbyCauldrons();
                 successor.transmuteInCauldron(player);
                 successor.storeAllToChests();
             } else if (message.contains("altar")) {
                 successor.successorRole = "altar";
-                successor.sendWhisper(player, "Entendido Maestro, vigilaré y canalizaré la energía del altar.");
+                successor.sendWhisper(player, "Entendido, vigilaré y canalizaré la energía del altar.");
             } else if (message.contains("protege") || message.contains("escudo") || message.contains("defensa")) {
-                successor.sendWhisper(player, "¡Mi barrera arcana está vigilante! Si recibes daño o hay enemigos, actuaré al instante.");
+                successor.sendWhisper(player, "Barrera arcana lista ante cualquier agresión.");
             } else if (message.contains("hola") || message.contains("saludos") || message.contains("buenos")) {
-                successor.sendWhisper(player, "Saludos, Maestro. Es un honor estar a tu servicio.");
+                successor.sendWhisper(player, "Saludos. A tu servicio.");
             } else if (message.contains("gracias")) {
-                successor.sendWhisper(player, "Por ti daría mi existencia arcana, Maestro.");
+                successor.sendWhisper(player, "A tu servicio.");
             } else {
-                successor.sendWhisper(player, "Entendido, Maestro: \"" + sb.toString() + "\". Tus deseos son órdenes.");
+                successor.sendWhisper(player, "Entendido: \"" + sb.toString() + "\".");
             }
             return;
         }
@@ -393,11 +459,11 @@ public class CommandHobgoblin extends CommandBase {
             for (EntityGoblin g : nearby) {
                 if (g.isTamed && g.isSuccessor() && player.getCommandSenderName().equalsIgnoreCase(g.tamedOwnerName)) {
                     int count = g.storeAllToChests();
-                    g.sendWhisper(player, "He organizado y depositado " + count + " objetos en los cofres cercanos, Maestro.");
+                    g.sendWhisper(player, "Objetos guardados en cofres cercanos (" + count + ").");
                     return;
                 }
             }
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "No hay ningún Sucesor Arcano cerca para guardar en cofres."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "No hay ningún Sucesor cerca para guardar en cofres."));
             return;
         }
 
@@ -408,11 +474,11 @@ public class CommandHobgoblin extends CommandBase {
             for (EntityGoblin g : nearby) {
                 if (g.isTamed && g.isSuccessor() && player.getCommandSenderName().equalsIgnoreCase(g.tamedOwnerName)) {
                     g.successorRole = "altar";
-                    g.sendWhisper(player, "Vigilando el altar y canalizando energía mística, Maestro.");
+                    g.sendWhisper(player, "Vigilando el altar y canalizando energía.");
                     return;
                 }
             }
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "No hay ningún Sucesor Arcano cerca para vincular al altar."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "No hay ningún Sucesor cerca para vincular al altar."));
             return;
         }
 
@@ -516,6 +582,163 @@ public class CommandHobgoblin extends CommandBase {
             return;
         }
 
+        // --- GOTO / IR / COORD ---
+        if (subCommand.equals("ir") || subCommand.equals("goto") || subCommand.equals("coord") || subCommand.equals("mover")) {
+            boolean all = false;
+            int coordStartIndex = 1;
+            if (args.length > 1 && (args[1].equalsIgnoreCase("all") || args[1].equalsIgnoreCase("todos"))) {
+                all = true;
+                coordStartIndex = 2;
+            }
+
+            double targetX = 0, targetY = 0, targetZ = 0;
+            boolean hasCoords = false;
+
+            if (args.length >= coordStartIndex + 3) {
+                try {
+                    targetX = Double.parseDouble(args[coordStartIndex]);
+                    targetY = Double.parseDouble(args[coordStartIndex + 1]);
+                    targetZ = Double.parseDouble(args[coordStartIndex + 2]);
+                    hasCoords = true;
+                } catch (NumberFormatException ignored) {}
+            }
+
+            if (!hasCoords) {
+                MovingObjectPosition mop = getTargetBlock(player, 48.0D);
+                if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+                    targetX = (double) mop.blockX + 0.5D;
+                    targetY = (double) (mop.sideHit == 1 ? mop.blockY + 1 : mop.blockY);
+                    targetZ = (double) mop.blockZ + 0.5D;
+                    hasCoords = true;
+                } else {
+                    player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Mira hacia un bloque en el suelo o escribe: /hobgoblin ir [all] <x> <y> <z>"));
+                    return;
+                }
+            }
+
+            AxisAlignedBB bb = AxisAlignedBB.getBoundingBox(player.posX - 32.0D, player.posY - 16.0D, player.posZ - 32.0D, player.posX + 32.0D, player.posY + 16.0D, player.posZ + 32.0D);
+            List<EntityGoblin> goblins = player.worldObj.getEntitiesWithinAABB(EntityGoblin.class, bb);
+            List<EntityGoblin> targets = new ArrayList<EntityGoblin>();
+
+            if (all) {
+                for (EntityGoblin g : goblins) {
+                    if (g.isTamed && player.getCommandSenderName().equalsIgnoreCase(g.tamedOwnerName)) {
+                        targets.add(g);
+                    }
+                }
+            } else {
+                EntityGoblin target = null;
+                if (lookedAtEntity instanceof EntityGoblin) {
+                    EntityGoblin g = (EntityGoblin) lookedAtEntity;
+                    if (g.isTamed && player.getCommandSenderName().equalsIgnoreCase(g.tamedOwnerName)) {
+                        target = g;
+                    }
+                }
+                if (target == null) {
+                    double closestDist = Double.MAX_VALUE;
+                    for (EntityGoblin g : goblins) {
+                        if (g.isTamed && player.getCommandSenderName().equalsIgnoreCase(g.tamedOwnerName)) {
+                            double d = g.getDistanceSqToEntity(player);
+                            if (d < closestDist) {
+                                closestDist = d;
+                                target = g;
+                            }
+                        }
+                    }
+                }
+                if (target != null) {
+                    targets.add(target);
+                }
+            }
+
+            if (targets.isEmpty()) {
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "No hay hobgoblins tuyos cerca para desplazarse."));
+                return;
+            }
+
+            for (EntityGoblin g : targets) {
+                g.isFollowing = false;
+                g.isSitting = false;
+                g.isWorking = false;
+                g.setAttackTarget(null);
+                g.getNavigator().tryMoveToXYZ(targetX, targetY, targetZ, 1.25D);
+                g.sendWhisper(player, "Yendo a (" + (int)targetX + ", " + (int)targetY + ", " + (int)targetZ + ").");
+            }
+
+            com.emoniph.witchery.util.ParticleEffect.INSTANT_SPELL.send(com.emoniph.witchery.util.SoundEffect.NOTE_PLING, player.worldObj, targetX, targetY + 0.5D, targetZ, 0.5D, 0.5D, 12);
+            return;
+        }
+
+        // --- ADELANTE / ATRAS ---
+        if (subCommand.equals("adelante") || subCommand.equals("forward") || subCommand.equals("atras") || subCommand.equals("backward")) {
+            boolean all = false;
+            double dist = 5.0D;
+            int distIdx = 1;
+            if (args.length > 1 && (args[1].equalsIgnoreCase("all") || args[1].equalsIgnoreCase("todos"))) {
+                all = true;
+                distIdx = 2;
+            }
+            if (args.length > distIdx) {
+                try {
+                    dist = Double.parseDouble(args[distIdx]);
+                } catch (NumberFormatException ignored) {}
+            }
+
+            AxisAlignedBB bb = AxisAlignedBB.getBoundingBox(player.posX - 32.0D, player.posY - 16.0D, player.posZ - 32.0D, player.posX + 32.0D, player.posY + 16.0D, player.posZ + 32.0D);
+            List<EntityGoblin> goblins = player.worldObj.getEntitiesWithinAABB(EntityGoblin.class, bb);
+            List<EntityGoblin> targets = new ArrayList<EntityGoblin>();
+
+            if (all) {
+                for (EntityGoblin g : goblins) {
+                    if (g.isTamed && player.getCommandSenderName().equalsIgnoreCase(g.tamedOwnerName)) {
+                        targets.add(g);
+                    }
+                }
+            } else {
+                EntityGoblin target = null;
+                if (lookedAtEntity instanceof EntityGoblin) {
+                    EntityGoblin g = (EntityGoblin) lookedAtEntity;
+                    if (g.isTamed && player.getCommandSenderName().equalsIgnoreCase(g.tamedOwnerName)) {
+                        target = g;
+                    }
+                }
+                if (target == null) {
+                    double closestDist = Double.MAX_VALUE;
+                    for (EntityGoblin g : goblins) {
+                        if (g.isTamed && player.getCommandSenderName().equalsIgnoreCase(g.tamedOwnerName)) {
+                            double d = g.getDistanceSqToEntity(player);
+                            if (d < closestDist) {
+                                closestDist = d;
+                                target = g;
+                            }
+                        }
+                    }
+                }
+                if (target != null) {
+                    targets.add(target);
+                }
+            }
+
+            if (targets.isEmpty()) {
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "No hay hobgoblins tuyos cerca."));
+                return;
+            }
+
+            boolean forward = subCommand.equals("adelante") || subCommand.equals("forward");
+            for (EntityGoblin g : targets) {
+                float yaw = g.rotationYawHead;
+                double dx = (forward ? -MathHelper.sin(yaw * (float) Math.PI / 180.0F) : MathHelper.sin(yaw * (float) Math.PI / 180.0F)) * dist;
+                double dz = (forward ? MathHelper.cos(yaw * (float) Math.PI / 180.0F) : -MathHelper.cos(yaw * (float) Math.PI / 180.0F)) * dist;
+                g.isFollowing = false;
+                g.isSitting = false;
+                g.isWorking = false;
+                g.setAttackTarget(null);
+                g.getNavigator().tryMoveToXYZ(g.posX + dx, g.posY, g.posZ + dz, 1.25D);
+                g.sendWhisper(player, (forward ? "Avanzando " : "Retrocediendo ") + (int)dist + " bloques.");
+            }
+            return;
+        }
+
         boolean allStay = (subCommand.equals("stay") || subCommand.equals("quieto") || subCommand.equals("esperar")) && (args.length > 1 && args[1].equalsIgnoreCase("all"));
         boolean allFollow = (subCommand.equals("follow") || subCommand.equals("seguir")) && (args.length > 1 && args[1].equalsIgnoreCase("all"));
         boolean allWork = (subCommand.equals("work") || subCommand.equals("trabajar") || subCommand.equals("curro")) && (args.length > 1 && args[1].equalsIgnoreCase("all"));
@@ -592,30 +815,18 @@ public class CommandHobgoblin extends CommandBase {
             goblin.isWorking = false;
             goblin.setAttackTarget(null);
             goblin.getNavigator().clearPathEntity();
-            if (goblin.isSuccessor()) {
-                goblin.sendWhisper(player, "Permaneceré aquí en guardia, Maestro.");
-            } else {
-                player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "El hobgoblin esperará aquí."));
-            }
+            goblin.sendWhisper(player, "Esperando aquí.");
         } else if (subCommand.equals("follow") || subCommand.equals("seguir")) {
             goblin.isSitting = false;
             goblin.isFollowing = true;
             goblin.isWorking = false;
-            if (goblin.isSuccessor()) {
-                goblin.sendWhisper(player, "Siguiéndote de cerca, Maestro.");
-            } else {
-                player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "El hobgoblin te seguirá y protegerá."));
-            }
+            goblin.sendWhisper(player, "Siguiéndote.");
         } else if (subCommand.equals("work") || subCommand.equals("trabajar") || subCommand.equals("curro")) {
             goblin.isSitting = false;
             goblin.isFollowing = false;
             goblin.isWorking = true;
             goblin.setAttackTarget(null);
-            if (goblin.isSuccessor()) {
-                goblin.sendWhisper(player, "Trabajando en el área y recolectando ingredientes para ti, Maestro.");
-            } else {
-                player.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "El hobgoblin ahora está trabajando en la zona (cosecha y minería)."));
-            }
+            goblin.sendWhisper(player, "Trabajando en el área.");
         } else if (subCommand.equals("release") || subCommand.equals("liberar")) {
             goblin.isTamed = false;
             goblin.tamedOwnerName = "";

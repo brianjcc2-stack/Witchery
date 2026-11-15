@@ -490,6 +490,15 @@ public class EntityTreefyd extends EntityMob implements IEntitySelector {
 
    public void onUpdate() {
       super.onUpdate();
+      if(!super.worldObj.isRemote && this.getEntityData().hasKey("WITCLifetime")) {
+         int life = this.getEntityData().getInteger("WITCLifetime") - 1;
+         if(life <= 0) {
+            ParticleEffect.EXPLODE.send(SoundEffect.MOB_SILVERFISH_KILL, this, 0.5D, 1.0D, 8);
+            this.setDead();
+         } else {
+            this.getEntityData().setInteger("WITCLifetime", life);
+         }
+      }
    }
 
    protected String getHurtSound() {
@@ -509,7 +518,9 @@ public class EntityTreefyd extends EntityMob implements IEntitySelector {
    }
 
    protected void dropRareDrop(int par1) {
-      this.entityDropItem(Witchery.Items.GENERIC.itemSeedsTreefyd.createStack(), 0.0F);
+      if(!this.getEntityData().hasKey("WITCLifetime")) {
+         this.entityDropItem(Witchery.Items.GENERIC.itemSeedsTreefyd.createStack(), 0.0F);
+      }
    }
 
    protected boolean canDespawn() {

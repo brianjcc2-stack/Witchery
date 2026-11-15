@@ -89,6 +89,16 @@ public class EntityWingedMonkey extends EntityFlyingTameable {
 
    public void onUpdate() {
       super.onUpdate();
+      if(!super.worldObj.isRemote && this.getEntityData().hasKey("WITCLifetime")) {
+         int life = this.getEntityData().getInteger("WITCLifetime") - 1;
+         if(life <= 0) {
+            ParticleEffect.EXPLODE.send(SoundEffect.NONE, this, 1.0D, 1.0D, 16);
+            this.setDead();
+            return;
+         } else {
+            this.getEntityData().setInteger("WITCLifetime", life);
+         }
+      }
    }
 
    protected void entityInit() {
@@ -132,7 +142,28 @@ public class EntityWingedMonkey extends EntityFlyingTameable {
       if(this.attackTimer > 0) {
          --this.attackTimer;
       }
-
+      if(super.riddenByEntity != null && super.riddenByEntity instanceof net.minecraft.entity.EntityLivingBase) {
+         ((net.minecraft.entity.EntityLivingBase)super.riddenByEntity).fallDistance = 0.0F;
+      }
+      if(!super.worldObj.isRemote && this.isTamed() && !this.isSitting()) {
+         net.minecraft.entity.EntityLivingBase owner = this.getOwner();
+         if(owner != null && owner.isEntityAlive() && owner.dimension == super.dimension && this.getDistanceSqToEntity(owner) >= 256.0D) {
+            int ox = MathHelper.floor_double(owner.posX) - 2;
+            int oz = MathHelper.floor_double(owner.posZ) - 2;
+            int oy = MathHelper.floor_double(owner.boundingBox.minY);
+            boolean teleported = false;
+            for(int x = 0; x <= 4 && !teleported; ++x) {
+               for(int z = 0; z <= 4 && !teleported; ++z) {
+                  if((x < 1 || z < 1 || x > 3 || z > 3) && World.doesBlockHaveSolidTopSurface(super.worldObj, ox + x, oy - 1, oz + z) && !super.worldObj.getBlock(ox + x, oy, oz + z).isNormalCube() && !super.worldObj.getBlock(ox + x, oy + 1, oz + z).isNormalCube()) {
+                     this.setLocationAndAngles((double)((float)(ox + x) + 0.5F), (double)oy, (double)((float)(oz + z) + 0.5F), this.rotationYaw, this.rotationPitch);
+                     this.getNavigator().clearPathEntity();
+                     ParticleEffect.PORTAL.send(SoundEffect.MOB_ENDERMEN_PORTAL, this, 0.5D, 1.0D, 16);
+                     teleported = true;
+                  }
+               }
+            }
+         }
+      }
    }
 
    @SideOnly(Side.CLIENT)
@@ -151,7 +182,7 @@ public class EntityWingedMonkey extends EntityFlyingTameable {
    }
 
    protected void dropFewItems(boolean par1, int par2) {
-      if(!this.isTemp()) {
+      if(!this.isTemp() && !this.getEntityData().hasKey("WITCLifetime")) {
          int var3 = super.rand.nextInt(3) + super.rand.nextInt(1 + par2);
 
          for(int var4 = 0; var4 < var3; ++var4) {

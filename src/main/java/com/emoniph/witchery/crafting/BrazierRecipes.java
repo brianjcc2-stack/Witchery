@@ -213,29 +213,6 @@ public class BrazierRecipes {
          return false;
       }
    };
-   public static final BrazierRecipes.BrazierRecipe INFUSION = new BrazierRecipes.BrazierRecipe("witchery.brazier.infusion", true, -1, new ItemStack[]{Witchery.Items.GENERIC.itemAttunedStoneCharged.createStack(), new ItemStack(Items.ghast_tear), Witchery.Items.GENERIC.itemGraveyardDust.createStack()}, null) {
-      public int onBurning(World world, int x, int y, int z, long ticks, BlockBrazier.TileEntityBrazier tile) {
-         if(ticks % 10L == 0L) {
-            AxisAlignedBB bb = AxisAlignedBB.getBoundingBox((double)(x - 4), (double)(y - 4), (double)(z - 4), (double)(x + 4), (double)(y + 4), (double)(z + 4));
-            List entities = world.getEntitiesWithinAABB(EntityPlayer.class, bb);
-            Iterator i$ = entities.iterator();
-
-            while(i$.hasNext()) {
-               Object obj = i$.next();
-               EntityPlayer player = (EntityPlayer)obj;
-               if(Infusion.getInfusionID(player) > 0) {
-                  int currentEnergy = Infusion.getCurrentEnergy(player);
-                  int maxEnergy = Infusion.getMaxEnergy(player);
-                  if(currentEnergy < maxEnergy) {
-                     Infusion.setCurrentEnergy(player, Math.min(currentEnergy + 15, maxEnergy));
-                     ParticleEffect.SPELL.send(SoundEffect.NONE, player, 0.5D, 1.0D, 8);
-                  }
-               }
-            }
-         }
-         return 0;
-      }
-   };
    public static final BrazierRecipes.BrazierRecipe GROWTH = new BrazierRecipes.BrazierRecipe("witchery.brazier.growth", true, -1, new ItemStack[]{Witchery.Items.GENERIC.itemWormwood.createStack(), new ItemStack(Items.dye, 1, 15), new ItemStack(Items.apple)}, null) {
       public int onBurning(World world, int x, int y, int z, long ticks, BlockBrazier.TileEntityBrazier tile) {
          if(ticks % 10L == 0L) {

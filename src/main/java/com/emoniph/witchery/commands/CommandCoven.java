@@ -4,6 +4,7 @@ import com.emoniph.witchery.entity.EntityCovenWitch;
 import com.emoniph.witchery.util.ParticleEffect;
 import com.emoniph.witchery.util.SoundEffect;
 import com.emoniph.witchery.util.TameableUtil;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import net.minecraft.command.CommandBase;
@@ -14,6 +15,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 
@@ -31,7 +33,7 @@ public class CommandCoven extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/coven <summon|follow|stay|attack|dismiss|task [claim|abandon|status]|whisper|weekly|raid|guia> [all]";
+        return "/coven <summon|follow|stay|attack|ir|adelante|atras|dismiss|task [claim|abandon|status]|whisper|weekly|raid|guia> [all]";
     }
 
     @Override
@@ -47,15 +49,24 @@ public class CommandCoven extends CommandBase {
     @Override
     public List addTabCompletionOptions(ICommandSender sender, String[] args) {
         if (args.length == 1) {
-            return getListOfStringsMatchingLastWord(args, "summon", "follow", "stay", "attack", "dismiss",
+            return getListOfStringsMatchingLastWord(args, "summon", "follow", "stay", "attack", "ir", "goto", "coord", "mover", "adelante", "forward", "atras", "backward", "dismiss",
                     "task", "whisper", "weekly", "raid", "guia", "help", "ayuda", "invocar", "seguir", "quieto", "atacar", "despedir",
                     "tarea", "consejo", "susurro", "semanal", "desafiar", "duelo");
-        } else if (args.length == 2 && (args[0].equalsIgnoreCase("summon") || args[0].equalsIgnoreCase("invocar"))) {
-            return getListOfStringsMatchingLastWord(args, "all");
+        } else if (args.length == 2 && (args[0].equalsIgnoreCase("summon") || args[0].equalsIgnoreCase("invocar")
+                || args[0].equalsIgnoreCase("ir") || args[0].equalsIgnoreCase("goto") || args[0].equalsIgnoreCase("coord")
+                || args[0].equalsIgnoreCase("adelante") || args[0].equalsIgnoreCase("forward") || args[0].equalsIgnoreCase("atras") || args[0].equalsIgnoreCase("backward"))) {
+            return getListOfStringsMatchingLastWord(args, "all", "aqui");
         } else if (args.length == 2 && (args[0].equalsIgnoreCase("task") || args[0].equalsIgnoreCase("tarea") || args[0].equalsIgnoreCase("mision"))) {
             return getListOfStringsMatchingLastWord(args, "claim", "abandon", "status", "entregar", "abandonar", "ver");
         }
         return null;
+    }
+
+    private MovingObjectPosition getTargetBlock(EntityPlayer player, double reach) {
+        Vec3 eyePos = Vec3.createVectorHelper(player.posX, player.posY + player.getEyeHeight(), player.posZ);
+        Vec3 lookVec = player.getLook(1.0F);
+        Vec3 reachVec = eyePos.addVector(lookVec.xCoord * reach, lookVec.yCoord * reach, lookVec.zCoord * reach);
+        return player.worldObj.rayTraceBlocks(eyePos, reachVec);
     }
 
     private EntityLivingBase getLookedAtEntity(EntityPlayer player, double range) {
@@ -105,6 +116,8 @@ public class CommandCoven extends CommandBase {
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "/coven follow" + EnumChatFormatting.GRAY + " - Tus brujas te escoltan y te curan."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "/coven stay" + EnumChatFormatting.GRAY + " - Tus brujas montan guardia fija."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "/coven attack" + EnumChatFormatting.GRAY + " - Ordena atacar al objetivo que miras."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "/coven ir [x y z]" + EnumChatFormatting.GRAY + " (o goto) - Marchan a donde miras o a coordenadas."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "/coven adelante|atras [bloques]" + EnumChatFormatting.GRAY + " - Desplazamiento en formación."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "/coven dismiss" + EnumChatFormatting.GRAY + " - Devuelve las brujas al plano espiritual."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "/coven raid / desafiar" + EnumChatFormatting.GRAY + " - Desafía o provoca el asalto de un Aquelarre Rival."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "/coven guia / help" + EnumChatFormatting.GRAY + " - Guía completa sobre el sistema de Aquelarre."));
@@ -114,13 +127,11 @@ public class CommandCoven extends CommandBase {
         String sub = args[0].toLowerCase();
 
         if (sub.equals("help") || sub.equals("ayuda") || sub.equals("guia")) {
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "╔════════════════════════════════════════════╗"));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "  ★ GUÍA DEL AQUELARRE (COVEN) ★"));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "╚════════════════════════════════════════════╝"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "=== Guía del Aquelarre (Coven) ==="));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "1. Reclutar: " + EnumChatFormatting.WHITE + "Encuentra Brujas de Aquelarre en el mundo (requiere tener Familiar activo) y completa su favor para unirlas (máx. 6)."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "2. Poder Ritual y Varita: " + EnumChatFormatting.WHITE + "Cada bruja reclutada amplifica tus rituales de círculo/caldero y reduce los fallos de la Rama Mística hasta 0% (con 6 brujas)."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "3. Misiones y Decretos: " + EnumChatFormatting.WHITE + "Usa /coven task para misiones rápidas (+Maestría y Alijos) y /coven weekly para el Gran Decreto Semanal."));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "4. Combate e Incursiones: " + EnumChatFormatting.WHITE + "Usa /coven summon [all], /coven attack o /coven raid para desafiar Aquelarres Rivales."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "4. Combate y Maniobras: " + EnumChatFormatting.WHITE + "Usa /coven summon [all], /coven attack, /coven ir (apuntando o con coordenadas) y /coven raid."));
             return;
         }
 
@@ -267,6 +278,83 @@ public class CommandCoven extends CommandBase {
                 }
             }
             player.addChatMessage(new ChatComponentText("\u00a7d\u00a7l[Aquelarre]\u00a7r \u00a7a" + count + " bruja(s) montar\u00e1n guardia aqu\u00ed.\u00a7r"));
+            return;
+        }
+
+        // --- SUBCOMMAND: GOTO / IR / COORD ---
+        if (sub.equals("ir") || sub.equals("goto") || sub.equals("coord") || sub.equals("mover")) {
+            double targetX = 0, targetY = 0, targetZ = 0;
+            boolean hasCoords = false;
+
+            if (args.length >= 4) {
+                try {
+                    targetX = Double.parseDouble(args[1]);
+                    targetY = Double.parseDouble(args[2]);
+                    targetZ = Double.parseDouble(args[3]);
+                    hasCoords = true;
+                } catch (NumberFormatException ignored) {}
+            }
+
+            if (!hasCoords) {
+                MovingObjectPosition mop = getTargetBlock(player, 48.0D);
+                if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+                    targetX = (double) mop.blockX + 0.5D;
+                    targetY = (double) (mop.sideHit == 1 ? mop.blockY + 1 : mop.blockY);
+                    targetZ = (double) mop.blockZ + 0.5D;
+                    hasCoords = true;
+                } else {
+                    player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Mira hacia un bloque en el suelo o escribe: /coven ir <x> <y> <z>"));
+                    return;
+                }
+            }
+
+            int count = 0;
+            for (EntityCovenWitch w : witches) {
+                if (w.isTamed() && (w.getOwner() == player || TameableUtil.isOwner(w, player))) {
+                    w.setSitting(false);
+                    w.setAttackTarget(null);
+                    w.getNavigator().tryMoveToXYZ(targetX, targetY, targetZ, 1.25D);
+                    count++;
+                }
+            }
+
+            if (count > 0) {
+                ParticleEffect.INSTANT_SPELL.send(SoundEffect.NOTE_PLING, player.worldObj, targetX, targetY + 0.5D, targetZ, 0.5D, 0.5D, 14);
+                player.addChatMessage(new ChatComponentText("\u00a7d\u00a7l[Aquelarre]\u00a7r \u00a7a" + count + " bruja(s) marchando hacia (" + (int)targetX + ", " + (int)targetY + ", " + (int)targetZ + ").\u00a7r"));
+            } else {
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "No hay brujas de tu aquelarre cerca para desplazarse."));
+            }
+            return;
+        }
+
+        // --- SUBCOMMAND: ADELANTE / ATRAS ---
+        if (sub.equals("adelante") || sub.equals("forward") || sub.equals("atras") || sub.equals("backward")) {
+            double dist = 5.0D;
+            if (args.length > 1) {
+                try {
+                    dist = Double.parseDouble(args[1]);
+                } catch (NumberFormatException ignored) {}
+            }
+
+            boolean forward = sub.equals("adelante") || sub.equals("forward");
+            int count = 0;
+            for (EntityCovenWitch w : witches) {
+                if (w.isTamed() && (w.getOwner() == player || TameableUtil.isOwner(w, player))) {
+                    float yaw = w.rotationYawHead;
+                    double dx = (forward ? -MathHelper.sin(yaw * (float) Math.PI / 180.0F) : MathHelper.sin(yaw * (float) Math.PI / 180.0F)) * dist;
+                    double dz = (forward ? MathHelper.cos(yaw * (float) Math.PI / 180.0F) : -MathHelper.cos(yaw * (float) Math.PI / 180.0F)) * dist;
+                    w.setSitting(false);
+                    w.setAttackTarget(null);
+                    w.getNavigator().tryMoveToXYZ(w.posX + dx, w.posY, w.posZ + dz, 1.25D);
+                    count++;
+                }
+            }
+
+            if (count > 0) {
+                player.addChatMessage(new ChatComponentText("\u00a7d\u00a7l[Aquelarre]\u00a7r \u00a7a" + count + " bruja(s) " + (forward ? "avanzando " : "retrocediendo ") + (int)dist + " bloques.\u00a7r"));
+            } else {
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "No hay brujas de tu aquelarre cerca."));
+            }
             return;
         }
 

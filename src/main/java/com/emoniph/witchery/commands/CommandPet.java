@@ -4,6 +4,7 @@ import com.emoniph.witchery.common.ExtendedPlayer;
 import com.emoniph.witchery.util.ParticleEffect;
 import com.emoniph.witchery.util.SoundEffect;
 import com.emoniph.witchery.util.TameableUtil;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import net.minecraft.command.CommandBase;
@@ -15,6 +16,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 
@@ -32,7 +34,7 @@ public class CommandPet extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/pet <follow [all]|stay [all]|attack|summon [all]|bind|familiar|list|rename <name>|release|inventory|guia>";
+        return "/pet <follow [all]|stay [all]|attack|ir [all] [x y z]|adelante|atras|summon [all]|bind|familiar|list|rename <name>|release|inventory|guia>";
     }
 
     @Override
@@ -48,13 +50,22 @@ public class CommandPet extends CommandBase {
     @Override
     public List addTabCompletionOptions(ICommandSender sender, String[] args) {
         if (args.length == 1) {
-            return getListOfStringsMatchingLastWord(args, "follow", "stay", "attack", "summon", "bind", "familiar", "list", "rename", "release", "inventory", "guia", "help", "ayuda",
+            return getListOfStringsMatchingLastWord(args, "follow", "stay", "attack", "ir", "goto", "coord", "mover", "adelante", "forward", "atras", "backward", "summon", "bind", "familiar", "list", "rename", "release", "inventory", "guia", "help", "ayuda",
                     "seguir", "quieto", "atacar", "invocar", "vincular", "guardar", "lista", "renombrar", "liberar", "inventario");
         } else if (args.length == 2 && (args[0].equalsIgnoreCase("stay") || args[0].equalsIgnoreCase("follow") || args[0].equalsIgnoreCase("summon")
-                || args[0].equalsIgnoreCase("quieto") || args[0].equalsIgnoreCase("seguir") || args[0].equalsIgnoreCase("invocar"))) {
-            return getListOfStringsMatchingLastWord(args, "all");
+                || args[0].equalsIgnoreCase("quieto") || args[0].equalsIgnoreCase("seguir") || args[0].equalsIgnoreCase("invocar")
+                || args[0].equalsIgnoreCase("ir") || args[0].equalsIgnoreCase("goto") || args[0].equalsIgnoreCase("coord")
+                || args[0].equalsIgnoreCase("adelante") || args[0].equalsIgnoreCase("forward") || args[0].equalsIgnoreCase("atras") || args[0].equalsIgnoreCase("backward"))) {
+            return getListOfStringsMatchingLastWord(args, "all", "aqui");
         }
         return null;
+    }
+
+    private MovingObjectPosition getTargetBlock(EntityPlayer player, double reach) {
+        Vec3 eyePos = Vec3.createVectorHelper(player.posX, player.posY + player.getEyeHeight(), player.posZ);
+        Vec3 lookVec = player.getLook(1.0F);
+        Vec3 reachVec = eyePos.addVector(lookVec.xCoord * reach, lookVec.yCoord * reach, lookVec.zCoord * reach);
+        return player.worldObj.rayTraceBlocks(eyePos, reachVec);
     }
 
     private EntityLivingBase getLookedAtEntity(EntityPlayer player, double range) {
@@ -102,6 +113,8 @@ public class CommandPet extends CommandBase {
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/pet follow [all]" + EnumChatFormatting.GRAY + " (o seguir) - Te sigue y defiende."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/pet stay [all]" + EnumChatFormatting.GRAY + " (o quieto) - Se sienta y espera."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/pet attack" + EnumChatFormatting.GRAY + " (o atacar) - Ataca al objetivo que estás mirando."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/pet ir [all] [x y z]" + EnumChatFormatting.GRAY + " (o goto) - Desplaza a tu mascota al bloque mirado o coordenadas."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/pet adelante|atras [all] [bloques]" + EnumChatFormatting.GRAY + " - Movimiento relativo en su dirección."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/pet summon [all]" + EnumChatFormatting.GRAY + " (o invocar) - Teletransporta tus mascotas a tu lado."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/pet list" + EnumChatFormatting.GRAY + " (o lista) - Muestra tus mascotas cercanas y tu Familiar."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "/pet inventory" + EnumChatFormatting.GRAY + " (o inv) - Abre su equipamiento."));
@@ -114,15 +127,13 @@ public class CommandPet extends CommandBase {
         String subCommand = args[0].toLowerCase();
 
         if (subCommand.equals("guia") || subCommand.equals("help") || subCommand.equals("ayuda")) {
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "╔════════════════════════════════════════════╗"));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "  ★ GUÍA DE MASCOTAS Y FAMILIARES ★"));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "╚════════════════════════════════════════════╝"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "=== Guía de Mascotas y Familiares ==="));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "• Vínculo de Familiar (/pet bind): " + EnumChatFormatting.WHITE + "Mira a un Gato/Ocelote, Sapo o Búho domesticado para consagrarlo como tu Familiar (50 HP y absorbe 10% de tu daño)."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "• Bolsillo Espiritual (/pet familiar): " + EnumChatFormatting.WHITE + "Invoca o guarda a tu Familiar en cualquier momento para protegerlo."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "  ↳ Gato Familiar: " + EnumChatFormatting.GRAY + "Debilita agresores, Nueve Vidas (te salva de morir) y -25% coste en Maldiciones."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "  ↳ Sapo Familiar: " + EnumChatFormatting.GRAY + "Envenena agresores, bono de pociones y 25% prob. de hechizo gratis con la Rama Mística."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "  ↳ Búho Familiar: " + EnumChatFormatting.GRAY + "Ciega agresores, reduce 50% daño de caída y -25% cooldown en hechizos."));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "• Órdenes Tácticas: " + EnumChatFormatting.WHITE + "Usa /pet attack mirando a un enemigo, o /pet follow all y /pet stay all."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "• Órdenes Tácticas: " + EnumChatFormatting.WHITE + "Usa /pet attack mirando a un enemigo, /pet ir a donde miras o coordenadas, /pet follow all y /pet stay all."));
             return;
         }
         EntityLivingBase lookedAtEntity = getLookedAtEntity(player, 30.0D);
@@ -233,6 +244,159 @@ public class CommandPet extends CommandBase {
             } else {
                 player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "No hay mascotas activas y siguiéndote cerca que puedan atacar."));
             }
+            return;
+        }
+
+        // --- SUBCOMMAND: GOTO / IR / COORD ---
+        if (subCommand.equals("ir") || subCommand.equals("goto") || subCommand.equals("coord") || subCommand.equals("mover")) {
+            boolean all = false;
+            int coordStartIndex = 1;
+            if (args.length > 1 && (args[1].equalsIgnoreCase("all") || args[1].equalsIgnoreCase("todos"))) {
+                all = true;
+                coordStartIndex = 2;
+            }
+
+            double targetX = 0, targetY = 0, targetZ = 0;
+            boolean hasCoords = false;
+
+            if (args.length >= coordStartIndex + 3) {
+                try {
+                    targetX = Double.parseDouble(args[coordStartIndex]);
+                    targetY = Double.parseDouble(args[coordStartIndex + 1]);
+                    targetZ = Double.parseDouble(args[coordStartIndex + 2]);
+                    hasCoords = true;
+                } catch (NumberFormatException ignored) {}
+            }
+
+            if (!hasCoords) {
+                MovingObjectPosition mop = getTargetBlock(player, 48.0D);
+                if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+                    targetX = (double) mop.blockX + 0.5D;
+                    targetY = (double) (mop.sideHit == 1 ? mop.blockY + 1 : mop.blockY);
+                    targetZ = (double) mop.blockZ + 0.5D;
+                    hasCoords = true;
+                } else {
+                    player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Mira hacia un bloque en el suelo o escribe: /pet ir [all] <x> <y> <z>"));
+                    return;
+                }
+            }
+
+            AxisAlignedBB bb = AxisAlignedBB.getBoundingBox(player.posX - 32.0D, player.posY - 16.0D, player.posZ - 32.0D, player.posX + 32.0D, player.posY + 16.0D, player.posZ + 32.0D);
+            List<EntityTameable> pets = player.worldObj.getEntitiesWithinAABB(EntityTameable.class, bb);
+            List<EntityTameable> targets = new ArrayList<EntityTameable>();
+
+            if (all) {
+                for (EntityTameable p : pets) {
+                    if (p.isTamed() && TameableUtil.isOwner(p, player)) {
+                        targets.add(p);
+                    }
+                }
+            } else {
+                EntityTameable target = null;
+                if (lookedAtEntity instanceof EntityTameable) {
+                    EntityTameable p = (EntityTameable) lookedAtEntity;
+                    if (p.isTamed() && TameableUtil.isOwner(p, player)) {
+                        target = p;
+                    }
+                }
+                if (target == null) {
+                    double closestDist = Double.MAX_VALUE;
+                    for (EntityTameable p : pets) {
+                        if (p.isTamed() && TameableUtil.isOwner(p, player)) {
+                            double d = p.getDistanceSqToEntity(player);
+                            if (d < closestDist) {
+                                closestDist = d;
+                                target = p;
+                            }
+                        }
+                    }
+                }
+                if (target != null) {
+                    targets.add(target);
+                }
+            }
+
+            if (targets.isEmpty()) {
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "No hay mascotas tuyas cerca para desplazarse."));
+                return;
+            }
+
+            for (EntityTameable p : targets) {
+                p.setSitting(false);
+                p.setAttackTarget(null);
+                p.getNavigator().tryMoveToXYZ(targetX, targetY, targetZ, 1.3D);
+            }
+
+            ParticleEffect.INSTANT_SPELL.send(SoundEffect.NOTE_PLING, player.worldObj, targetX, targetY + 0.5D, targetZ, 0.5D, 0.5D, 12);
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "" + targets.size() + " mascota(s) marchando hacia (" + (int)targetX + ", " + (int)targetY + ", " + (int)targetZ + ")."));
+            return;
+        }
+
+        // --- SUBCOMMAND: ADELANTE / ATRAS ---
+        if (subCommand.equals("adelante") || subCommand.equals("forward") || subCommand.equals("atras") || subCommand.equals("backward")) {
+            boolean all = false;
+            double dist = 5.0D;
+            int distIdx = 1;
+            if (args.length > 1 && (args[1].equalsIgnoreCase("all") || args[1].equalsIgnoreCase("todos"))) {
+                all = true;
+                distIdx = 2;
+            }
+            if (args.length > distIdx) {
+                try {
+                    dist = Double.parseDouble(args[distIdx]);
+                } catch (NumberFormatException ignored) {}
+            }
+
+            AxisAlignedBB bb = AxisAlignedBB.getBoundingBox(player.posX - 32.0D, player.posY - 16.0D, player.posZ - 32.0D, player.posX + 32.0D, player.posY + 16.0D, player.posZ + 32.0D);
+            List<EntityTameable> pets = player.worldObj.getEntitiesWithinAABB(EntityTameable.class, bb);
+            List<EntityTameable> targets = new ArrayList<EntityTameable>();
+
+            if (all) {
+                for (EntityTameable p : pets) {
+                    if (p.isTamed() && TameableUtil.isOwner(p, player)) {
+                        targets.add(p);
+                    }
+                }
+            } else {
+                EntityTameable target = null;
+                if (lookedAtEntity instanceof EntityTameable) {
+                    EntityTameable p = (EntityTameable) lookedAtEntity;
+                    if (p.isTamed() && TameableUtil.isOwner(p, player)) {
+                        target = p;
+                    }
+                }
+                if (target == null) {
+                    double closestDist = Double.MAX_VALUE;
+                    for (EntityTameable p : pets) {
+                        if (p.isTamed() && TameableUtil.isOwner(p, player)) {
+                            double d = p.getDistanceSqToEntity(player);
+                            if (d < closestDist) {
+                                closestDist = d;
+                                target = p;
+                            }
+                        }
+                    }
+                }
+                if (target != null) {
+                    targets.add(target);
+                }
+            }
+
+            if (targets.isEmpty()) {
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "No hay mascotas tuyas cerca."));
+                return;
+            }
+
+            boolean forward = subCommand.equals("adelante") || subCommand.equals("forward");
+            for (EntityTameable p : targets) {
+                float yaw = p.rotationYawHead;
+                double dx = (forward ? -MathHelper.sin(yaw * (float) Math.PI / 180.0F) : MathHelper.sin(yaw * (float) Math.PI / 180.0F)) * dist;
+                double dz = (forward ? MathHelper.cos(yaw * (float) Math.PI / 180.0F) : -MathHelper.cos(yaw * (float) Math.PI / 180.0F)) * dist;
+                p.setSitting(false);
+                p.setAttackTarget(null);
+                p.getNavigator().tryMoveToXYZ(p.posX + dx, p.posY, p.posZ + dz, 1.3D);
+            }
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "" + targets.size() + " mascota(s) " + (forward ? "avanzando " : "retrocediendo ") + (int)dist + " bloques."));
             return;
         }
 

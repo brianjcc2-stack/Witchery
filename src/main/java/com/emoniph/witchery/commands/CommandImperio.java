@@ -33,7 +33,7 @@ public class CommandImperio extends CommandBase {
     @Override
     public List addTabCompletionOptions(ICommandSender sender, String[] args) {
         if (args.length == 1) {
-            return getListOfStringsMatchingLastWord(args, "control", "follow", "stay", "attack", "inventory", "forward", "backward", "coord", "release", "guia", "help", "ayuda",
+            return getListOfStringsMatchingLastWord(args, "control", "follow", "stay", "attack", "ir", "goto", "coord", "mover", "forward", "backward", "inventory", "release", "guia", "help", "ayuda",
                     "seguir", "quieto", "atacar", "liberar", "adelante", "atras");
         }
         return null;
@@ -124,6 +124,13 @@ public class CommandImperio extends CommandBase {
         return pointedEntity;
     }
 
+    private MovingObjectPosition getTargetBlock(EntityPlayer player, double reach) {
+        Vec3 eyePos = Vec3.createVectorHelper(player.posX, player.posY + player.getEyeHeight(), player.posZ);
+        Vec3 lookVec = player.getLook(1.0F);
+        Vec3 reachVec = eyePos.addVector(lookVec.xCoord * reach, lookVec.yCoord * reach, lookVec.zCoord * reach);
+        return player.worldObj.rayTraceBlocks(eyePos, reachVec);
+    }
+
     @Override
     public void processCommand(ICommandSender sender, String[] args) {
         if (!(sender instanceof EntityPlayer)) {
@@ -138,6 +145,7 @@ public class CommandImperio extends CommandBase {
             ChatUtil.sendPlain(player, EnumChatFormatting.LIGHT_PURPLE + "/imperio follow" + EnumChatFormatting.GRAY + " - La criatura te sigue fielmente.");
             ChatUtil.sendPlain(player, EnumChatFormatting.LIGHT_PURPLE + "/imperio stay" + EnumChatFormatting.GRAY + " - La criatura se queda quieta en su sitio.");
             ChatUtil.sendPlain(player, EnumChatFormatting.LIGHT_PURPLE + "/imperio attack" + EnumChatFormatting.GRAY + " - Ordena atacar al objetivo que estás mirando.");
+            ChatUtil.sendPlain(player, EnumChatFormatting.LIGHT_PURPLE + "/imperio ir [x y z]" + EnumChatFormatting.GRAY + " (o coord) - Marcha a donde miras o a coordenadas.");
             ChatUtil.sendPlain(player, EnumChatFormatting.LIGHT_PURPLE + "/imperio inventory" + EnumChatFormatting.GRAY + " - Abre el inventario de equipamiento de la criatura.");
             ChatUtil.sendPlain(player, EnumChatFormatting.LIGHT_PURPLE + "/imperio forward <bloques>" + EnumChatFormatting.GRAY + " - La mueve hacia adelante.");
             ChatUtil.sendPlain(player, EnumChatFormatting.LIGHT_PURPLE + "/imperio coord <x> <y> <z>" + EnumChatFormatting.GRAY + " - Ordena marchar a coordenadas.");
@@ -264,21 +272,38 @@ public class CommandImperio extends CommandBase {
             return;
         }
 
-        if (sub.equals("coord") || sub.equals("ir")) {
+        if (sub.equals("coord") || sub.equals("ir") || sub.equals("goto") || sub.equals("mover")) {
             SymbolEffectImperio.IMPERIO_STAYING_TARGETS.remove(creature);
+            double x = 0, y = 0, z = 0;
+            boolean hasCoords = false;
+
             if (args.length >= 4) {
                 try {
-                    double x = Double.parseDouble(args[1]);
-                    double y = Double.parseDouble(args[2]);
-                    double z = Double.parseDouble(args[3]);
-                    if (creature.getNavigator() != null) {
-                        creature.getNavigator().tryMoveToXYZ(x, y, z, 1.2D);
-                    }
-                    ChatUtil.sendPlain(player, EnumChatFormatting.GREEN + creature.getCommandSenderName() + " marchando hacia (" + (int)x + ", " + (int)y + ", " + (int)z + ").");
-                    return;
+                    x = Double.parseDouble(args[1]);
+                    y = Double.parseDouble(args[2]);
+                    z = Double.parseDouble(args[3]);
+                    hasCoords = true;
                 } catch (NumberFormatException ignored) {}
             }
-            ChatUtil.sendPlain(player, EnumChatFormatting.RED + "Uso: /imperio coord <x> <y> <z>");
+
+            if (!hasCoords) {
+                MovingObjectPosition mop = getTargetBlock(player, 48.0D);
+                if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+                    x = (double) mop.blockX + 0.5D;
+                    y = (double) (mop.sideHit == 1 ? mop.blockY + 1 : mop.blockY);
+                    z = (double) mop.blockZ + 0.5D;
+                    hasCoords = true;
+                } else {
+                    ChatUtil.sendPlain(player, EnumChatFormatting.RED + "Mira hacia un bloque en el suelo o escribe: /imperio ir <x> <y> <z>");
+                    return;
+                }
+            }
+
+            if (creature.getNavigator() != null) {
+                creature.getNavigator().tryMoveToXYZ(x, y, z, 1.25D);
+            }
+            com.emoniph.witchery.util.ParticleEffect.INSTANT_SPELL.send(com.emoniph.witchery.util.SoundEffect.NOTE_PLING, player.worldObj, x, y + 0.5D, z, 0.5D, 0.5D, 12);
+            ChatUtil.sendPlain(player, EnumChatFormatting.GREEN + creature.getCommandSenderName() + " marchando hacia (" + (int)x + ", " + (int)y + ", " + (int)z + ").");
             return;
         }
 

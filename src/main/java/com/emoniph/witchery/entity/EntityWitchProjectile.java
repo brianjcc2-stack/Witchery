@@ -109,6 +109,12 @@ public class EntityWitchProjectile extends EntityThrowable {
 
    protected void onImpact(MovingObjectPosition mop) {
       if(!super.worldObj.isRemote && mop != null) {
+         if(mop.typeOfHit == MovingObjectType.BLOCK) {
+            Block blockHit = super.worldObj.getBlock(mop.blockX, mop.blockY, mop.blockZ);
+            if(blockHit == Blocks.tallgrass || blockHit == Blocks.double_plant || blockHit == Blocks.yellow_flower || blockHit == Blocks.red_flower || blockHit == Blocks.deadbush) {
+               return;
+            }
+         }
          boolean enhanced = false;
          EntityLivingBase thrower = this.getThrower();
          if(thrower != null && thrower instanceof EntityPlayer) {

@@ -140,7 +140,7 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
             EntityGoblin.this.getNavigator().clearPathEntity();
          }
       });
-      super.tasks.addTask(5, new net.minecraft.entity.ai.EntityAIBase() {
+      super.tasks.addTask(2, new net.minecraft.entity.ai.EntityAIBase() {
          private EntityLivingBase owner;
          private int timeToRecalcPath;
          {
@@ -148,11 +148,13 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
          }
          public boolean shouldExecute() {
             if (!EntityGoblin.this.isFollowing || EntityGoblin.this.isSitting || EntityGoblin.this.tamedOwnerName == null || EntityGoblin.this.tamedOwnerName.isEmpty()) return false;
-            this.owner = net.minecraft.server.MinecraftServer.getServer().getConfigurationManager().func_152612_a(EntityGoblin.this.tamedOwnerName);
-            return this.owner != null && EntityGoblin.this.getDistanceSqToEntity(this.owner) > 16.0D;
+            this.owner = EntityGoblin.this.getMaster();
+            if (this.owner == null || !this.owner.isEntityAlive()) return false;
+            return EntityGoblin.this.getDistanceSqToEntity(this.owner) > 9.0D;
          }
          public boolean continueExecuting() {
-            return EntityGoblin.this.isFollowing && !EntityGoblin.this.isSitting && !EntityGoblin.this.getNavigator().noPath() && EntityGoblin.this.getDistanceSqToEntity(this.owner) > 4.0D;
+            if (!EntityGoblin.this.isFollowing || EntityGoblin.this.isSitting || this.owner == null || !this.owner.isEntityAlive()) return false;
+            return EntityGoblin.this.getDistanceSqToEntity(this.owner) > 5.0D;
          }
          public void startExecuting() {
             this.timeToRecalcPath = 0;
@@ -162,30 +164,71 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
             EntityGoblin.this.getNavigator().clearPathEntity();
          }
          public void updateTask() {
+            if (this.owner == null) return;
             EntityGoblin.this.getLookHelper().setLookPositionWithEntity(this.owner, 10.0F, (float)EntityGoblin.this.getVerticalFaceSpeed());
+            double distSq = EntityGoblin.this.getDistanceSqToEntity(this.owner);
+            if (distSq >= 144.0D) {
+               int ox = MathHelper.floor_double(this.owner.posX) - 2;
+               int oz = MathHelper.floor_double(this.owner.posZ) - 2;
+               int oy = MathHelper.floor_double(this.owner.boundingBox.minY);
+               boolean teleported = false;
+               for (int x = 0; x <= 4 && !teleported; ++x) {
+                  for (int z = 0; z <= 4 && !teleported; ++z) {
+                     if ((x < 1 || z < 1 || x > 3 || z > 3) && World.doesBlockHaveSolidTopSurface(EntityGoblin.this.worldObj, ox + x, oy - 1, oz + z) && !EntityGoblin.this.worldObj.getBlock(ox + x, oy, oz + z).isNormalCube() && !EntityGoblin.this.worldObj.getBlock(ox + x, oy + 1, oz + z).isNormalCube()) {
+                        EntityGoblin.this.setLocationAndAngles((double)((float)(ox + x) + 0.5F), (double)oy, (double)((float)(oz + z) + 0.5F), EntityGoblin.this.rotationYaw, EntityGoblin.this.rotationPitch);
+                        EntityGoblin.this.getNavigator().clearPathEntity();
+                        teleported = true;
+                     }
+                  }
+               }
+               return;
+            }
             if (--this.timeToRecalcPath <= 0) {
                this.timeToRecalcPath = 10;
-               EntityGoblin.this.getNavigator().tryMoveToEntityLiving(this.owner, 0.6D);
+               double speed = distSq > 64.0D ? 1.25D : 1.0D;
+               EntityGoblin.this.getNavigator().tryMoveToEntityLiving(this.owner, speed);
             }
          }
       });
       super.tasks.addTask(2, new EntityAIPickUpBlocks(this, 24.0D));
       super.tasks.addTask(2, new EntityAIDropOffBlocks(this, 24.0D));
       super.tasks.addTask(2, new EntityAIDigBlocks(this, 16.0D, 0.02D));
-      super.tasks.addTask(3, new EntityAIAvoidEntity(this, EntityPlayer.class, 8.0F, 0.6D, 0.6D));
+      super.tasks.addTask(3, new EntityAIAvoidEntity(this, EntityPlayer.class, 8.0F, 0.6D, 0.6D) {
+         @Override
+         public boolean shouldExecute() {
+            if (EntityGoblin.this.isTamed) return false;
+            return super.shouldExecute();
+         }
+      });
       super.tasks.addTask(3, new EntityAIAvoidEntityConditionally(this, EntityVillageGuard.class, 12.0F, 0.8D, 0.8D, this));
       super.tasks.addTask(4, new EntityAIAttackOnCollide(this, 1.0D, true));
       super.tasks.addTask(4, new EntityAITradePlayerGeneric(this, this));
       super.tasks.addTask(4, new EntityAILookAtTradePlayerGeneric(this, this));
-      super.tasks.addTask(5, new EntityAIMoveIndoorsLeashAware(this));
+      super.tasks.addTask(5, new EntityAIMoveIndoorsLeashAware(this) {
+         @Override
+         public boolean shouldExecute() {
+            if (EntityGoblin.this.isTamed) return false;
+            return super.shouldExecute();
+         }
+      });
       super.tasks.addTask(5, new EntityAIRestrictOpenDoor(this));
       super.tasks.addTask(6, new EntityAIOpenDoor(this, true));
-      super.tasks.addTask(7, new EntityAIMoveTowardsRestriction(this, 0.6D));
+      super.tasks.addTask(7, new EntityAIMoveTowardsRestriction(this, 0.6D) {
+         @Override
+         public boolean shouldExecute() {
+            if (EntityGoblin.this.isTamed) return false;
+            return super.shouldExecute();
+         }
+      });
       super.tasks.addTask(8, new EntityAIGoblinMate(this));
       super.tasks.addTask(9, new EntityAIWatchClosest2(this, EntityPlayer.class, 3.0F, 1.0F));
       super.tasks.addTask(9, new EntityAIWatchClosest2(this, EntityGoblin.class, 5.0F, 0.02F));
       super.tasks.addTask(9, new EntityAIWander(this, 0.6D) {
+         @Override
          public boolean shouldExecute() {
+            if (EntityGoblin.this.isTamed) {
+               return EntityGoblin.this.isWorking && !EntityGoblin.this.isSitting && !EntityGoblin.this.isFollowing && super.shouldExecute();
+            }
             return !EntityGoblin.this.isFollowing && !EntityGoblin.this.isSitting && super.shouldExecute();
          }
       });
@@ -250,7 +293,11 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
    }
 
    protected void updateAITick() {
-      if(--this.randomTickDivider <= 0) {
+      if(this.isTamed) {
+         if(this.hasHome()) {
+            this.detachHome();
+         }
+      } else if(--this.randomTickDivider <= 0) {
          super.worldObj.villageCollectionObj.addVillagerPosition(MathHelper.floor_double(super.posX), MathHelper.floor_double(super.posY), MathHelper.floor_double(super.posZ));
          this.randomTickDivider = 70 + super.rand.nextInt(50);
          this.villageObj = super.worldObj.villageCollectionObj.findNearestVillage(MathHelper.floor_double(super.posX), MathHelper.floor_double(super.posY), MathHelper.floor_double(super.posZ), 32);
@@ -299,13 +346,6 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
          if(owner != null) {
             if(this.isSuccessor()) {
                this.performSuccessorTick(owner);
-            } else if(!this.isSitting && TimeUtil.secondsElapsed(2, super.ticksExisted)) {
-               int currentEnergy = com.emoniph.witchery.infusion.Infusion.getCurrentEnergy(owner);
-               int maxEnergy = com.emoniph.witchery.infusion.Infusion.getMaxEnergy(owner);
-               if(currentEnergy < maxEnergy) {
-                  com.emoniph.witchery.infusion.Infusion.setCurrentEnergy(owner, Math.min(currentEnergy + 40, maxEnergy));
-                  com.emoniph.witchery.util.ParticleEffect.INSTANT_SPELL.send(com.emoniph.witchery.util.SoundEffect.NOTE_PLING, owner, 1.0D, 2.0D, 8);
-               }
             }
          }
       }
@@ -474,24 +514,19 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
       if (val) {
          if (this.getEntityAttribute(SharedMonsterAttributes.maxHealth) != null) {
             this.getEntityAttribute(SharedMonsterAttributes.maxHealth).setBaseValue(60.0D);
-            this.setHealth(60.0F);
+            if (this.getHealth() < 60.0F) {
+               this.setHealth(60.0F);
+            }
          }
-         this.setCustomNameTag("§d★ Sucesor Arcano");
-         this.setAlwaysRenderNameTag(true);
       }
    }
 
    public void sendWhisper(EntityPlayer player, String message) {
       if (player != null) {
+         String name = this.hasCustomNameTag() ? this.getCustomNameTag() : (this.isSuccessor() ? "Sucesor" : "Hobgoblin");
          player.addChatMessage(new ChatComponentText(
-            EnumChatFormatting.DARK_GRAY + "[" + 
-            EnumChatFormatting.LIGHT_PURPLE + "★ Sucesor" + 
-            EnumChatFormatting.DARK_GRAY + " ➔ " + 
-            EnumChatFormatting.WHITE + "Tú" + 
-            EnumChatFormatting.DARK_GRAY + "] " + 
-            EnumChatFormatting.YELLOW + message
+            EnumChatFormatting.GRAY + "[" + name + "] " + EnumChatFormatting.WHITE + message
          ));
-         com.emoniph.witchery.util.SoundEffect.NOTE_HARP.playOnlyTo(player);
       }
    }
 
@@ -503,12 +538,11 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
       this.isFollowing = true;
       this.isSitting = false;
       this.successorRole = "follow";
+      this.detachHome();
 
       com.emoniph.witchery.util.ParticleEffect.INSTANT_SPELL.send(com.emoniph.witchery.util.SoundEffect.RANDOM_LEVELUP, this, 1.5D, 2.0D, 32);
-      com.emoniph.witchery.util.ParticleEffect.PORTAL.send(com.emoniph.witchery.util.SoundEffect.WITCHERY_RANDOM_HYPNOSIS, this, 1.5D, 2.0D, 40);
-      com.emoniph.witchery.util.ParticleEffect.ENCHANTMENT_TABLE.send(com.emoniph.witchery.util.SoundEffect.NOTE_HARP, this, 2.0D, 2.0D, 40);
 
-      this.sendWhisper(player, "§6¡Maestro! §eMi mente se ha elevado. El poder puro de Koboldite ha transformado mi cuerpo en un tono §fpálido y eterno§e. No volverás a estar solo: seré tu aprendiz, tu escudo y tu sucesor. Escribe §b/hobgoblin ayuda §epara conocer todas mis habilidades.");
+      this.sendWhisper(player, "¡Maestro! He despertado con nuevo poder. Cuidaré tus laboratorios y te protegeré. Usa /hobgoblin ayuda para ver mis tareas.");
    }
 
    public static boolean checkAndTriggerDefensiveBarrier(EntityPlayer player, LivingHurtEvent event) {
@@ -558,7 +592,7 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
          }
       }
 
-      this.sendWhisper(master, "§c¡PELIGRO! §eHe levantado una §d★ Barrera Arcana §epara protegerte. ¡Repele a los agresores!");
+      this.sendWhisper(master, "¡Barrera arcana activada para protegerte!");
       return true;
    }
 
@@ -684,21 +718,21 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
                      Witchery.Blocks.CIRCLE.onBlockActivated(super.worldObj, bx, by, bz, player, 1, 0.5F, 0.5F, 0.5F);
                      com.emoniph.witchery.util.ParticleEffect.INSTANT_SPELL.send(com.emoniph.witchery.util.SoundEffect.WITCHERY_RANDOM_CHALK, super.worldObj, cx, cy + 0.2D, cz, 1.0D, 1.0D, 24);
 
-                     if (tileCircle.isRitualActive()) {
-                        this.sendWhisper(player, "§a¡Círculo cargado con " + itemsLoaded + " ingredientes! El ritual en (" + bx + ", " + by + ", " + bz + ") ha comenzado con éxito, Maestro.");
-                     } else if (itemsLoaded > 0) {
-                        this.sendWhisper(player, "§eHe cargado " + itemsLoaded + " ingredientes en el círculo (" + bx + ", " + by + ", " + bz + "). Asegúrate de que el altar tenga suficiente poder para completarlo.");
-                     } else {
-                        this.sendWhisper(player, "§eHe activado los glifos en (" + bx + ", " + by + ", " + bz + "). Coloca ingredientes en un cofre cercano o dime qué rito preparar (ej: §b/hobgoblin rito tormenta§e).");
-                     }
-                     return true;
-                  }
-               }
-            }
-         }
-      }
-      this.sendWhisper(player, "§cNo he detectado ningún círculo de glifos en un radio de 16 bloques, Maestro.");
-      return false;
+                      if (tileCircle.isRitualActive()) {
+                         this.sendWhisper(player, "Círculo cargado con " + itemsLoaded + " ingredientes. Ritual iniciado.");
+                      } else if (itemsLoaded > 0) {
+                         this.sendWhisper(player, "Ingredientes cargados (" + itemsLoaded + "). Asegúrate de que el altar tenga poder.");
+                      } else {
+                         this.sendWhisper(player, "Glifos activados. Coloca ingredientes en un cofre o usa /hobgoblin rito <nombre>.");
+                      }
+                      return true;
+                   }
+                }
+             }
+          }
+       }
+       this.sendWhisper(player, "No hay círculos de glifos cerca.");
+       return false;
    }
 
    public boolean activateNearestCircle(EntityPlayer player) {
@@ -1191,7 +1225,7 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
          this.swingItem();
          super.worldObj.playSoundAtEntity(this, "random.pop", 0.5F, 1.1F);
          EntityPlayerMP owner = this.getSuccessorOwner();
-         if (owner != null) this.sendWhisper(owner, "§b[Calderito] §7Receta cargada y botellas listas.");
+         if (owner != null) this.sendWhisper(owner, "Calderito: Receta cargada y botellas listas.");
       }
       return kettlesServiced;
    }
@@ -1342,38 +1376,38 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
                                  }
                               }
                            }
-                           if (itemsAdded > 0 && owner != null) {
-                              this.sendWhisper(owner, "§b[Caldero] §7He arrojado " + itemsAdded + " ingredientes en orden desde el cofre.");
-                           }
-                        }
+                            if (itemsAdded > 0 && owner != null) {
+                               this.sendWhisper(owner, "Caldero: He colocado " + itemsAdded + " ingredientes desde el cofre.");
+                            }
+                         }
 
-                        // Prioridad 2: Si no hubo ingredientes en el cofre directo, intentar por libro de recetas
-                        if (itemsAdded == 0) {
-                           java.util.List<String> ingredientNames = this.readCauldronRecipeBook(chests);
-                           if (!ingredientNames.isEmpty()) {
-                              for (String ingName : ingredientNames) {
-                                 ItemStack pulled = this.pullItemFromChestsByName(chests, ingName.toLowerCase().trim(), 1);
-                                 if (pulled != null) {
-                                    EntityItem dropEntity = new EntityItem(super.worldObj, (double)bx + 0.5D, (double)by + 0.6D, (double)bz + 0.5D, pulled);
-                                    super.worldObj.spawnEntityInWorld(dropEntity);
-                                    Witchery.Blocks.CAULDRON.onEntityCollidedWithBlock(super.worldObj, bx, by, bz, dropEntity);
-                                    if (dropEntity.isDead) {
-                                       touched = true;
-                                       itemsAdded++;
-                                    } else {
-                                       dropEntity.setDead();
-                                       this.depositStackToChests(pulled, chests);
-                                       break;
-                                    }
-                                 } else if (owner != null) {
-                                    this.sendWhisper(owner, "§c[Caldero] §7No encuentro §e" + ingName + "§7 en los cofres.");
-                                 }
-                              }
-                              if (itemsAdded > 0 && owner != null) {
-                                 this.sendWhisper(owner, "§b[Caldero] §7Ingredientes del libro arrojados. Esperando brebaje...");
-                              }
-                           }
-                        }
+                         // Prioridad 2: Si no hubo ingredientes en el cofre directo, intentar por libro de recetas
+                         if (itemsAdded == 0) {
+                            java.util.List<String> ingredientNames = this.readCauldronRecipeBook(chests);
+                            if (!ingredientNames.isEmpty()) {
+                               for (String ingName : ingredientNames) {
+                                  ItemStack pulled = this.pullItemFromChestsByName(chests, ingName.toLowerCase().trim(), 1);
+                                  if (pulled != null) {
+                                     EntityItem dropEntity = new EntityItem(super.worldObj, (double)bx + 0.5D, (double)by + 0.6D, (double)bz + 0.5D, pulled);
+                                     super.worldObj.spawnEntityInWorld(dropEntity);
+                                     Witchery.Blocks.CAULDRON.onEntityCollidedWithBlock(super.worldObj, bx, by, bz, dropEntity);
+                                     if (dropEntity.isDead) {
+                                        touched = true;
+                                        itemsAdded++;
+                                     } else {
+                                        dropEntity.setDead();
+                                        this.depositStackToChests(pulled, chests);
+                                        break;
+                                     }
+                                  } else if (owner != null) {
+                                     this.sendWhisper(owner, "Caldero: No encuentro " + ingName + " en los cofres.");
+                                  }
+                               }
+                               if (itemsAdded > 0 && owner != null) {
+                                  this.sendWhisper(owner, "Caldero: Ingredientes arrojados. Esperando brebaje...");
+                               }
+                            }
+                         }
                      }
 
                      // 4. Si está hirviendo y tiene un brebaje listo con efectos: embotellar
@@ -1525,25 +1559,25 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
                            if (transmutable != null) break;
                         }
 
-                        if (transmutable != null) {
-                           this.dropItemInCircle((double)bx + 0.5D, (double)by + 0.8D, (double)bz + 0.5D, transmutable);
-                           this.sendWhisper(player, "§a¡He arrojado " + transmutable.getDisplayName() + " al caldero hirviendo para transmutarlo en minerales y esencias!");
-                           return true;
-                        } else {
-                           this.sendWhisper(player, "§eEl caldero está listo e hirviendo, pero no encontré adoquín, carne ni brotes en los cofres para transmutar.");
-                           return true;
-                        }
-                     } else {
-                        this.sendWhisper(player, "§eEl caldero en (" + bx + ", " + by + ", " + bz + ") no está hirviendo o no tiene poder del altar.");
-                        return true;
-                     }
-                  }
-               }
-            }
-         }
-      }
-      this.sendWhisper(player, "§cNo he detectado ningún caldero cerca, Maestro.");
-      return false;
+                         if (transmutable != null) {
+                            this.dropItemInCircle((double)bx + 0.5D, (double)by + 0.8D, (double)bz + 0.5D, transmutable);
+                            this.sendWhisper(player, "He arrojado " + transmutable.getDisplayName() + " al caldero para transmutarlo.");
+                            return true;
+                         } else {
+                            this.sendWhisper(player, "Caldero listo, pero no encontré materiales en los cofres para transmutar.");
+                            return true;
+                         }
+                      } else {
+                         this.sendWhisper(player, "El caldero no está hirviendo o falta poder de altar.");
+                         return true;
+                      }
+                   }
+                }
+             }
+          }
+       }
+       this.sendWhisper(player, "No hay ningún caldero cerca.");
+       return false;
    }
 
    public int storeAllToChests() {
@@ -1606,26 +1640,30 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
       "Siempre estaré aquí, Maestro. La soledad no volverá a tocarte jamás."
    };
 
+   public EntityPlayer getMaster() {
+      if (this.tamedOwnerName == null || this.tamedOwnerName.isEmpty()) return null;
+      EntityPlayer p = super.worldObj.getPlayerEntityByName(this.tamedOwnerName);
+      if (p != null) return p;
+      if (net.minecraft.server.MinecraftServer.getServer() != null && net.minecraft.server.MinecraftServer.getServer().getConfigurationManager() != null) {
+         return net.minecraft.server.MinecraftServer.getServer().getConfigurationManager().func_152612_a(this.tamedOwnerName);
+      }
+      return null;
+   }
+
    /** Retorna el dueño del Sucesor como EntityPlayerMP, o null si no está en línea o no existe. */
    public EntityPlayerMP getSuccessorOwner() {
-      if (this.tamedOwnerName == null || this.tamedOwnerName.isEmpty()) return null;
-      return net.minecraft.server.MinecraftServer.getServer().getConfigurationManager().func_152612_a(this.tamedOwnerName);
+      EntityPlayer p = this.getMaster();
+      if (p instanceof EntityPlayerMP) {
+         return (EntityPlayerMP)p;
+      }
+      return null;
    }
 
    private void performSuccessorTick(EntityPlayerMP owner) {
-      if (super.ticksExisted % 20 == 0) {
-         int currentEnergy = com.emoniph.witchery.infusion.Infusion.getCurrentEnergy(owner);
-         int maxEnergy = com.emoniph.witchery.infusion.Infusion.getMaxEnergy(owner);
-         if (currentEnergy < maxEnergy) {
-            com.emoniph.witchery.infusion.Infusion.setCurrentEnergy(owner, Math.min(currentEnergy + 60, maxEnergy));
-            com.emoniph.witchery.util.ParticleEffect.INSTANT_SPELL.send(com.emoniph.witchery.util.SoundEffect.NOTE_PLING, owner, 1.0D, 2.0D, 6);
-         }
-      }
-
       if (super.ticksExisted % 60 == 0 && owner.getHealth() < owner.getMaxHealth() * 0.35F) {
          owner.heal(5.0F);
          owner.addPotionEffect(new PotionEffect(Potion.regeneration.id, 120, 1));
-         this.sendWhisper(owner, "§c¡Resiste Maestro! §aHe canalizado energía vital de emergencia hacia ti.");
+         this.sendWhisper(owner, "Energía vital de emergencia canalizada hacia ti.");
          com.emoniph.witchery.util.ParticleEffect.HEART.send(com.emoniph.witchery.util.SoundEffect.RANDOM_ORB, owner, 1.0D, 1.5D, 8);
       }
 
@@ -1642,7 +1680,7 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
          this.lastChatterTime = super.ticksExisted;
          if (this.getDistanceToEntity(owner) < 14.0D) {
             String quote = COMPANION_QUOTES[super.rand.nextInt(COMPANION_QUOTES.length)];
-            this.sendWhisper(owner, "§f\"" + quote + "\"");
+            this.sendWhisper(owner, quote);
          }
       }
    }
@@ -1653,7 +1691,7 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
       int healthInt = (int)this.getHealth();
       int maxHealthInt = (int)this.getMaxHealth();
 
-      this.sendWhisper(player, "§a[Estado de tu Sucesor] §eSalud: §c" + healthInt + "§7/§c" + maxHealthInt + " HP §7| §eRol: §b" + this.successorRole + " §7| §eTu Maná: §d" + infCurrent + "§7/§d" + infMax);
+      this.sendWhisper(player, "Salud: " + healthInt + "/" + maxHealthInt + " HP | Rol: " + this.successorRole + " | Tu Maná: " + infCurrent + "/" + infMax);
 
       int gx = MathHelper.floor_double(super.posX);
       int gy = MathHelper.floor_double(super.posY);
@@ -1664,7 +1702,7 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
                TileEntity te = super.worldObj.getTileEntity(gx + dx, gy + dy, gz + dz);
                if (te instanceof com.emoniph.witchery.blocks.BlockAltar.TileEntityAltar) {
                   com.emoniph.witchery.blocks.BlockAltar.TileEntityAltar altar = (com.emoniph.witchery.blocks.BlockAltar.TileEntityAltar)te;
-                  this.sendWhisper(player, "§5Altar místico cercano detectado: Poder " + (int)altar.getCorePower() + "/" + (int)altar.getCoreMaxPower());
+                  this.sendWhisper(player, "Altar cercano: Poder " + (int)altar.getCorePower() + "/" + (int)altar.getCoreMaxPower());
                   return;
                }
             }
@@ -1754,7 +1792,23 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
       ItemStack stack = player.inventory.getCurrentItem();
       boolean heldSpawnEgg = stack != null && stack.getItem() == Items.spawn_egg;
 
-      if (!heldSpawnEgg && this.isEntityAlive() && !this.isTrading() && !this.isChild() && !player.isSneaking()) {
+      if (!heldSpawnEgg && this.isEntityAlive() && !this.isTrading() && !this.isChild()) {
+         if (stack != null && stack.getItem() == Items.name_tag && stack.hasDisplayName()) {
+            if (!super.worldObj.isRemote) {
+               String newName = stack.getDisplayName();
+               this.setCustomNameTag(newName);
+               this.setAlwaysRenderNameTag(true);
+               if (!player.capabilities.isCreativeMode) {
+                  --stack.stackSize;
+                  if (stack.stackSize <= 0) {
+                     player.inventory.setInventorySlotContents(player.inventory.currentItem, (ItemStack)null);
+                  }
+               }
+               this.sendWhisper(player, "Mi nombre ahora es " + newName + ".");
+            }
+            return true;
+         }
+
          if (!this.isTamed && stack != null && stack.getItem() == Items.emerald) {
             if (!super.worldObj.isRemote) {
                if (!player.capabilities.isCreativeMode) {
@@ -1766,8 +1820,12 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
                this.isTamed = true;
                this.tamedOwnerName = player.getCommandSenderName();
                this.isFollowing = true;
+               this.isSitting = false;
+               this.isWorking = false;
                this.preventDespawn = true;
+               this.detachHome();
                super.worldObj.setEntityState(this, (byte)7); // Heart particles
+               this.sendWhisper(player, "A tu servicio. Te seguiré.");
             }
             return true;
          }
@@ -1785,37 +1843,59 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
             return true;
          }
 
-         if (this.isSuccessor() && player.getCommandSenderName().equalsIgnoreCase(this.tamedOwnerName) && stack == null) {
-            if (!super.worldObj.isRemote) {
-               this.reportStatusToOwner(player);
-            }
-            return true;
-         }
-
-         if(this.getLeashed()) {
-            if(this.getHeldItem() == null) {
-               if(stack != null && stack.getItem() instanceof ItemPickaxe) {
-                  this.setCurrentItemOrArmor(0, stack);
-                  player.setCurrentItemOrArmor(0, (ItemStack)null);
+         if (this.isTamed && player.getCommandSenderName().equalsIgnoreCase(this.tamedOwnerName)) {
+            if (player.isSneaking()) {
+               if (!super.worldObj.isRemote) {
+                  player.displayGUIChest(this.goblinInventory);
                }
-            } else {
-               if(!super.worldObj.isRemote) {
-                  ItemStack goblinItem = this.getHeldItem();
-                  if(!player.inventory.addItemStackToInventory(goblinItem)) {
-                     this.entityDropItem(goblinItem, 1.0F);
-                  } else if(player instanceof EntityPlayerMP) {
-                     ((EntityPlayerMP)player).sendContainerToPlayer(player.inventoryContainer);
+               return true;
+            }
+
+            if (stack == null) {
+               if (!super.worldObj.isRemote) {
+                  this.isSitting = !this.isSitting;
+                  this.isFollowing = !this.isSitting;
+                  this.isWorking = false;
+                  if (this.isSitting) {
+                     this.getNavigator().clearPathEntity();
+                     this.setAttackTarget(null);
+                     this.sendWhisper(player, "Esperando aquí.");
+                  } else {
+                     this.sendWhisper(player, "Siguiéndote.");
                   }
                }
-
-               this.setCurrentItemOrArmor(0, (ItemStack)null);
+               return true;
             }
-         } else if(!this.isWorking() && !this.isWorshipping() && this.villageObj != null && !super.worldObj.isRemote) {
-            this.setCustomer(player);
-            player.displayGUIMerchant(this, this.getCommandSenderName());
          }
 
-         return true;
+         if (!player.isSneaking()) {
+            if(this.getLeashed()) {
+               if(this.getHeldItem() == null) {
+                  if(stack != null && stack.getItem() instanceof ItemPickaxe) {
+                     this.setCurrentItemOrArmor(0, stack);
+                     player.setCurrentItemOrArmor(0, (ItemStack)null);
+                  }
+               } else {
+                  if(!super.worldObj.isRemote) {
+                     ItemStack goblinItem = this.getHeldItem();
+                     if(!player.inventory.addItemStackToInventory(goblinItem)) {
+                        this.entityDropItem(goblinItem, 1.0F);
+                     } else if(player instanceof EntityPlayerMP) {
+                        ((EntityPlayerMP)player).sendContainerToPlayer(player.inventoryContainer);
+                     }
+                  }
+
+                  this.setCurrentItemOrArmor(0, (ItemStack)null);
+               }
+            } else if(!this.isTamed && !this.isWorking() && !this.isWorshipping() && this.villageObj != null && !super.worldObj.isRemote) {
+               this.setCustomer(player);
+               player.displayGUIMerchant(this, this.getCommandSenderName());
+            }
+
+            return true;
+         } else {
+            return super.interact(player);
+         }
       } else {
          return super.interact(player);
       }
@@ -1879,6 +1959,13 @@ public class EntityGoblin extends EntityAgeable implements IMerchant, INpc, IEnt
       this.isFollowing = nbtRoot.getBoolean("IsFollowing");
       this.isWorking = nbtRoot.getBoolean("IsWorking");
       this.setSuccessor(nbtRoot.getBoolean("IsSuccessor"));
+      if (this.isTamed) {
+         this.detachHome();
+      }
+      if (this.hasCustomNameTag() && (this.getCustomNameTag().contains("Sucesor Arcano") || this.getCustomNameTag().contains("★"))) {
+         this.setCustomNameTag("");
+         this.setAlwaysRenderNameTag(false);
+      }
       if (nbtRoot.hasKey("SuccessorRole")) {
          this.successorRole = nbtRoot.getString("SuccessorRole");
       }
