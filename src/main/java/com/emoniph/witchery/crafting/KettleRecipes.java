@@ -240,7 +240,7 @@ public class KettleRecipes {
          }
 
          if(this.power > 0.0F) {
-            sb.append(String.format("\n§8%s§0 %s\n", new Object[]{Witchery.resource("witchery.book.altarpower"), Integer.valueOf(MathHelper.floor_float(this.power))}));
+            sb.append(String.format("\n§8%s:§0 %d", new Object[]{Witchery.resource("witchery.book.altarpower"), (int)this.power}));
          }
 
          return sb.toString();

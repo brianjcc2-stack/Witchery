@@ -255,10 +255,22 @@ public class BlockMirror extends BlockBaseContainer {
                            int otherWorld = (dimX >> 4 << 4) + 8;
                            boolean face = world.getBlock(var59, var64, otherWorld) == Witchery.Blocks.MIRROR_UNBREAKABLE;
                            if(!face || var58) {
+                              float powerCost = 100.0F;
                               IPowerSource targetX = PowerSources.findClosestPowerSource(world, x, y, z);
-                              if(targetX != null && targetX.consumePower(3000.0F)) {
+                              boolean hasPower = targetX != null && targetX.consumePower(powerCost);
+                              if(!hasPower) {
+                                 targetX = this.findOutsideMirrorPowerSource(world, x, y, z, entity);
+                                 if(targetX != null && targetX.consumePower(powerCost)) {
+                                    hasPower = true;
+                                 }
+                              }
+
+                              if(hasPower) {
                                  var10000 = Witchery.Items.GENERIC;
                                  ItemGeneral.teleportToLocation(world, 0.5D + (double)playerEx - (double)xShift, (double)y + 0.01D, 0.5D + (double)dimX - (double)zShift, world.provider.dimensionId, entity, true, ParticleEffect.SPLASH, SoundEffect.RANDOM_SPLASH);
+                              } else if(entity instanceof EntityPlayer) {
+                                 SoundEffect.NOTE_SNARE.playOnlyTo((EntityPlayer)entity, 1.0F, 0.5F);
+                                 ChatUtil.sendTranslated(EnumChatFormatting.RED, (EntityPlayer)entity, "witchery.rite.mirrormirror.nopower", new Object[0]);
                               }
                            }
 
@@ -488,6 +500,49 @@ public class BlockMirror extends BlockBaseContainer {
          }
       }
 
+   }
+
+   private IPowerSource findOutsideMirrorPowerSource(World world, int x, int y, int z, Entity entity) {
+      int cellX = (x >> 4 << 4) + 4;
+      int cellY = (y >> 4 << 4) + 8;
+      int cellZ = (z >> 4 << 4) + 8;
+      TileEntity cellTe = world.getTileEntity(cellX, cellY, cellZ);
+      if(cellTe instanceof BlockMirror.TileEntityMirror) {
+         BlockMirror.TileEntityMirror cellMirror = (BlockMirror.TileEntityMirror)cellTe;
+         if(cellMirror.dimCoords != null) {
+            WorldServer outsideWorld = MinecraftServer.getServer().worldServerForDimension(cellMirror.dim);
+            if(outsideWorld != null) {
+               IPowerSource power = PowerSources.findClosestPowerSource(outsideWorld, cellMirror.dimCoords.x, cellMirror.dimCoords.y, cellMirror.dimCoords.z);
+               if(power != null) {
+                  return power;
+               }
+            }
+         }
+      }
+
+      if(entity instanceof EntityPlayer) {
+         ExtendedPlayer ep = ExtendedPlayer.get((EntityPlayer)entity);
+         if(ep != null) {
+            Coord entryCoord = ep.getMirrorWorldEntryPoint();
+            if(entryCoord != null) {
+               TileEntity entryTe = world.getTileEntity(entryCoord.x, entryCoord.y, entryCoord.z);
+               if(entryTe instanceof BlockMirror.TileEntityMirror) {
+                  BlockMirror.TileEntityMirror entryMirror = (BlockMirror.TileEntityMirror)entryTe;
+                  if(entryMirror.dimCoords != null) {
+                     WorldServer outsideWorld = MinecraftServer.getServer().worldServerForDimension(entryMirror.dim);
+                     if(outsideWorld != null) {
+                        IPowerSource power = PowerSources.findClosestPowerSource(outsideWorld, entryMirror.dimCoords.x, entryMirror.dimCoords.y, entryMirror.dimCoords.z);
+                        if(power != null) {
+                           return power;
+                        }
+                     }
+                  }
+               }
+            }
+         }
+      }
+
+      return null;
    }
 
    private boolean isTransportableEntity(Entity entity) {
@@ -995,11 +1050,19 @@ public class BlockMirror extends BlockBaseContainer {
          world.spawnEntityInWorld(face);
       }
 
-      private boolean isDimLinked() {
+      public boolean isDimLinked() {
          return this.dimCoords != null;
       }
 
-      private Coord getDimCoords() {
+      public boolean isDemonKilled() {
+         return this.demonKilled;
+      }
+
+      public int getDimensionId() {
+         return this.dim;
+      }
+
+      public Coord getDimCoords() {
          if(this.dimCoords == null && super.worldObj.provider.dimensionId != Config.instance().dimensionMirrorID) {
             WorldServer mworld = MinecraftServer.getServer().worldServerForDimension(Config.instance().dimensionMirrorID);
             if(mworld != null) {

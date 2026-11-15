@@ -242,6 +242,10 @@ public class RiteRegistry {
          return this.visibleInBook;
       }
 
+      public int getBookIndex() {
+         return this.bookIndex;
+      }
+
       public boolean isConsumeAttunedStoneCharged() {
          return this.consumeAttunedStoneCharged;
       }

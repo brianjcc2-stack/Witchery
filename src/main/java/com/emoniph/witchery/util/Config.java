@@ -184,7 +184,7 @@ public class Config {
       this.mutandisExtras = this.configuration.get("general", "MutandisAdditionalBlocks", new String[]{"witchery:glintweed,0", "tallgrass,2"}).getStringList();
       this.hobgoblinGodSpawnChance = Math.max(Math.min(this.configuration.get("general", "HobgoblinGodSpawnChance", 10).getInt(), 100), 0);
       this.hellhoundSpawnRate = this.configuration.get("general", "HellhoundSpawnWeight", 25).getInt();
-      this.spawnWeightSpirit = MathHelper.clamp_int(this.configuration.get("general", "SpiritSpawnWeight", 1).getInt(), 1, 1000);
+      this.spawnWeightSpirit = Math.max(1, Math.min(1000, this.configuration.get("general", "SpiritSpawnWeight", 1).getInt()));
       this.allowExplodingCreeperHearts = this.configuration.get("general", "CreeperHeartsExplodeWithDamageWhenEaten", true).getBoolean(true);
       this.mantrapAlpha = (float)Math.min(1.0D, Math.max(0.1D, this.configuration.get("general", "MantrapOpacity", 0.3D).getDouble(0.3D)));
       this.allowVolatilityPotionBlockDamage = this.configuration.get("general", "AllowVolatilityPotionBlockDamage", true).getBoolean(true);
@@ -192,9 +192,9 @@ public class Config {
       this.vampireDeathItemKeepAliveMins = this.configuration.get("general", "VampireDeathItemKeepAliveMins", 12).getInt();
       this.hudShowVampireTargetBloodText = this.configuration.get("general", "HUDShowVampireTargetBloodText", false).getBoolean(false);
       this.vampireHunterSpawnChance = (double)((float)Math.min(1.0D, Math.max(0.0D, this.configuration.get("general", "VampireHunterSpawnChance", 0.01D).getDouble(0.01D))));
-      this.fairestSpawnChance = MathHelper.clamp_double(this.configuration.get("general", "NewFairestOfThemAllSpawnChance", 0.01D).getDouble(0.01D), 0.01D, 1.0D);
+      this.fairestSpawnChance = Math.max(0.01D, Math.min(1.0D, this.configuration.get("general", "NewFairestOfThemAllSpawnChance", 0.01D).getDouble(0.01D)));
       this.allowPlayerToPlayerWolfInfection = this.configuration.get("general", "AllowPlayerToPlayerWolfInfection", true).getBoolean(true);
-      this.riteOfEclipseCooldownInSecs = MathHelper.clamp_int(this.configuration.get("general", "RiteOfEclipseCooldownInSecs", 0).getInt(), 0, 3600);
+      this.riteOfEclipseCooldownInSecs = Math.max(0, Math.min(3600, this.configuration.get("general", "RiteOfEclipseCooldownInSecs", 0).getInt()));
       this.allowChatMasquerading = this.configuration.get("general", "AllowChatMasquerading", true).getBoolean(true);
       this.allowNameplateMasquerading = this.configuration.get("general", "AllowNameplateMasquerading", true).getBoolean(true);
       this.shrinkMirrorWorld = this.configuration.get("general", "ShrinkMirrorWorld", false).getBoolean(false);

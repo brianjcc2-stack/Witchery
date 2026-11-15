@@ -38,6 +38,8 @@ public class EntityBroom extends Entity {
    private double velocityZ;
    boolean riderHasOwlFamiliar;
    boolean riderHasSoaringBrew;
+   private String ownerUUID = "";
+   private String ownerName = "";
 
 
    public EntityBroom(World world) {
@@ -103,6 +105,36 @@ public class EntityBroom extends Entity {
 
    public boolean hasCustomNameTag() {
       return super.dataWatcher.getWatchableObjectString(10).length() > 0;
+   }
+
+   public void setOwner(EntityPlayer player) {
+      if(player != null) {
+         this.ownerUUID = player.getUniqueID() != null ? player.getUniqueID().toString() : "";
+         this.ownerName = player.getCommandSenderName() != null ? player.getCommandSenderName() : "";
+      }
+   }
+
+   public String getOwnerUUID() {
+      return this.ownerUUID;
+   }
+
+   public String getOwnerName() {
+      return this.ownerName;
+   }
+
+   public boolean isOwner(EntityPlayer player) {
+      if(player == null) {
+         return false;
+      }
+      if(this.ownerUUID != null && !this.ownerUUID.isEmpty()) {
+         if(player.getUniqueID() != null && this.ownerUUID.equals(player.getUniqueID().toString())) {
+            return true;
+         }
+      }
+      if(this.ownerName != null && !this.ownerName.isEmpty()) {
+         return this.ownerName.equalsIgnoreCase(player.getCommandSenderName());
+      }
+      return false;
    }
 
    public AxisAlignedBB getCollisionBox(Entity par1Entity) {
@@ -396,6 +428,12 @@ public class EntityBroom extends Entity {
          par1NBTTagCompound.setByte("BrushColor", Byte.valueOf((byte)brushColor).byteValue());
       }
       par1NBTTagCompound.setByte("WoodType", (byte)this.getWoodType());
+      if(this.ownerUUID != null && !this.ownerUUID.isEmpty()) {
+         par1NBTTagCompound.setString("OwnerUUID", this.ownerUUID);
+      }
+      if(this.ownerName != null && !this.ownerName.isEmpty()) {
+         par1NBTTagCompound.setString("OwnerName", this.ownerName);
+      }
    }
 
    protected void readEntityFromNBT(NBTTagCompound par1NBTTagCompound) {
@@ -409,6 +447,13 @@ public class EntityBroom extends Entity {
 
       if(par1NBTTagCompound.hasKey("WoodType")) {
          this.setWoodType(par1NBTTagCompound.getByte("WoodType"));
+      }
+
+      if(par1NBTTagCompound.hasKey("OwnerUUID")) {
+         this.ownerUUID = par1NBTTagCompound.getString("OwnerUUID");
+      }
+      if(par1NBTTagCompound.hasKey("OwnerName")) {
+         this.ownerName = par1NBTTagCompound.getString("OwnerName");
       }
    }
 
@@ -435,6 +480,9 @@ public class EntityBroom extends Entity {
          return true;
       } else {
          if(!super.worldObj.isRemote) {
+            if((this.ownerUUID == null || this.ownerUUID.isEmpty()) && (this.ownerName == null || this.ownerName.isEmpty())) {
+               this.setOwner(player);
+            }
             this.riderHasOwlFamiliar = Familiar.hasActiveBroomMasteryFamiliar(player);
             this.riderHasSoaringBrew = InfusedBrewEffect.Soaring.isActive(player);
             player.mountEntity(this);

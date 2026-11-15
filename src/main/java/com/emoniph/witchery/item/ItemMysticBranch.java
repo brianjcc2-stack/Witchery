@@ -47,6 +47,28 @@ public class ItemMysticBranch extends ItemBase {
       return 2;
    }
 
+      public static int getMaxAllowedChargeLevel(EntityPlayer player, SymbolEffect effect) {
+      if (player == null) return 1;
+      if (player.capabilities.isCreativeMode || com.emoniph.witchery.common.SupremeWitchData.isPlayerSupreme(player)) {
+         return 3;
+      }
+      int masteredCount = SymbolEffect.getMasteredSpellCount(player);
+      // Rango 1 (Iniciado: 0-5 dominados): Solo Nivel I
+      if (masteredCount < 6) {
+         return 1;
+      }
+      // Para sobrecargar, el hechizo específico debe estar dominado (3 lanzamientos exitosos)
+      if (effect != null && !SymbolEffect.isSpellMastered(player, effect)) {
+         return 1;
+      }
+      // Rango 2 (Adepto: 6-13 dominados): Hasta Nivel II
+      if (masteredCount < 14) {
+         return 2;
+      }
+      // Rango 3 y 4 (Magister / Maestro: 14+ dominados): Hasta Nivel III
+      return 3;
+   }
+
    public static void setWoodType(ItemStack stack, int woodType) {
       if(stack != null) {
          if(!stack.hasTagCompound()) {
@@ -140,6 +162,22 @@ public class ItemMysticBranch extends ItemBase {
          SoundEffect.NOTE_SNARE.playOnlyTo(player, 1.0F, 0.5F);
          return stack;
       }
+
+      if (player.getEntityData().getInteger("WITCLeviosaTicks") > 0) {
+         if (!world.isRemote) {
+            float currentDist = player.getEntityData().hasKey("WITCLeviosaDistance") ? player.getEntityData().getFloat("WITCLeviosaDistance") : 5.0f;
+            if (player.isSneaking()) {
+               currentDist = Math.min(30.0f, currentDist + 2.0f);
+            } else {
+               currentDist = Math.max(1.5f, currentDist - 2.0f);
+            }
+            player.getEntityData().setFloat("WITCLeviosaDistance", currentDist);
+            SoundEffect.NOTE_PLING.playOnlyTo(player, 1.0F, 0.6F + (currentDist / 30.0F) * 0.8F);
+            ChatUtil.sendTranslated(EnumChatFormatting.AQUA, player, "witchery.pott.wingardiumleviosa.dist", new Object[]{String.format("%.1f", currentDist)});
+         }
+         return stack;
+      }
+
       NBTTagCompound nbtTag = player.getEntityData();
       if(!player.worldObj.isRemote) {
          nbtTag.removeTag("WITCSpellEffectID");
@@ -175,20 +213,38 @@ public class ItemMysticBranch extends ItemBase {
          boolean wasSneaking = nbtTag.getBoolean("WITCUsingSneak");
          boolean isSneaking = player.isSneaking();
          if (isSneaking && !wasSneaking) {
-            int charge = nbtTag.getInteger("WITCSpellChargeLevel");
-            if (charge < 1 || charge > 3) charge = 1;
-            charge = (charge % 3) + 1;
-            nbtTag.setInteger("WITCSpellChargeLevel", charge);
-
-            float pitch = charge == 1 ? 0.8F : (charge == 2 ? 1.2F : 1.6F);
-            SoundEffect.NOTE_HARP.playAtPlayer(player.worldObj, player, pitch);
-
             byte[] currentStrokes = nbtTag.getByteArray("Strokes");
             SymbolEffect currentEffect = EffectRegistry.instance().getEffect(currentStrokes);
-            if (currentEffect != null) {
-               int drawnLevel = EffectRegistry.instance().getLevel(currentStrokes);
-               int finalLvl = Math.max(charge, drawnLevel);
-               Witchery.packetPipeline.sendToServer(new PacketSpellPrepared(currentEffect, finalLvl));
+            int maxAllowed = getMaxAllowedChargeLevel(player, currentEffect);
+
+            int charge = nbtTag.getInteger("WITCSpellChargeLevel");
+            if (charge < 1 || charge > 3) charge = 1;
+
+            if (maxAllowed <= 1) {
+               SoundEffect.NOTE_SNARE.playOnlyTo(player, 1.0F, 0.8F);
+               if (currentEffect != null && !SymbolEffect.isSpellMastered(player, currentEffect)) {
+                  player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "✦ [Canalización] Debes dominar este hechizo (3 lanzamientos) antes de poder sobrecargarlo a Nivel II."));
+               } else {
+                  player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "✦ [Canalización] Aún eres un Iniciado. Domina al menos 6 hechizos previos para desbloquear la sobrecarga a Nivel II."));
+               }
+            } else {
+               int nextCharge = charge + 1;
+               if (nextCharge > maxAllowed) {
+                  nextCharge = 1;
+               }
+               nbtTag.setInteger("WITCSpellChargeLevel", nextCharge);
+
+               float pitch = nextCharge == 1 ? 0.8F : (nextCharge == 2 ? 1.2F : 1.6F);
+               SoundEffect.NOTE_HARP.playOnlyTo(player, 1.0F, pitch);
+               String lvlRoman = nextCharge == 1 ? "I" : (nextCharge == 2 ? "II" : "III");
+               EnumChatFormatting lvlColor = nextCharge == 1 ? EnumChatFormatting.WHITE : (nextCharge == 2 ? EnumChatFormatting.AQUA : EnumChatFormatting.GOLD);
+               player.addChatMessage(new ChatComponentText(lvlColor + "✦ Carga del Hechizo: Nivel " + lvlRoman));
+
+               if (currentEffect != null) {
+                  int drawnLevel = EffectRegistry.instance().getLevel(currentStrokes);
+                  int finalLvl = Math.min(maxAllowed, Math.max(nextCharge, drawnLevel));
+                  Witchery.packetPipeline.sendToServer(new PacketSpellPrepared(currentEffect, finalLvl));
+               }
             }
          }
          nbtTag.setBoolean("WITCUsingSneak", isSneaking);
@@ -214,10 +270,12 @@ public class ItemMysticBranch extends ItemBase {
 
                SymbolEffect effect = EffectRegistry.instance().getEffect(strokes);
                if(effect != null) {
+                  int maxAllowed = getMaxAllowedChargeLevel(player, effect);
                   int charge = nbtTag.getInteger("WITCSpellChargeLevel");
                   if (charge < 1 || charge > 3) charge = 1;
+                  if (charge > maxAllowed) charge = maxAllowed;
                   int drawnLevel = EffectRegistry.instance().getLevel(strokes);
-                  int level = Math.max(charge, drawnLevel);
+                  int level = Math.min(maxAllowed, Math.max(charge, drawnLevel));
                   Witchery.packetPipeline.sendToServer(new PacketSpellPrepared(effect, level));
                }
             }
@@ -241,9 +299,11 @@ public class ItemMysticBranch extends ItemBase {
          nbtTag.removeTag("WITCSpellChargeLevel");
          if(!world.isRemote) {
             int effectID = nbtTag.getInteger("WITCSpellEffectID");
+            SymbolEffect effectPre = EffectRegistry.instance().getEffect(effectID);
+            int maxAllowed = getMaxAllowedChargeLevel(player, effectPre);
             int level = 1;
             if(nbtTag.hasKey("WITCSpellEffectEnhanced")) {
-               level = nbtTag.getInteger("WITCSpellEffectEnhanced");
+               level = Math.min(maxAllowed, Math.max(1, nbtTag.getInteger("WITCSpellEffectEnhanced")));
                nbtTag.removeTag("WITCSpellEffectEnhanced");
             }
 
@@ -300,78 +360,28 @@ public class ItemMysticBranch extends ItemBase {
                            ChatUtil.sendTranslated(EnumChatFormatting.RED, player, "witchery.infuse.branch.nocharges", new Object[0]);
                            SoundEffect.NOTE_SNARE.playAtPlayer(world, player);
                         } else {
-                           int covenSize = com.emoniph.witchery.entity.EntityCovenWitch.getCovenSize(player);
-                           int worshipLevel = 0;
-                           if (player.isPotionActive(Witchery.Potions.WORSHIP)) {
-                               worshipLevel = player.getActivePotionEffect(Witchery.Potions.WORSHIP).getAmplifier() + 1;
-                           }
-                           
-                           int skill = Math.min(6, covenSize + (worshipLevel * 2));
-                           if(wood == 2) {
-                              skill = Math.min(6, skill + 2);
-                           }
-                           double failureChance = 0.5 * (1.0 - (skill / 6.0));
-                           if (com.emoniph.witchery.familiar.Familiar.hasActiveCurseMasteryFamiliar(player)) {
-                               failureChance *= 0.5D;
-                           }
-                           
-                           if (!player.capabilities.isCreativeMode && !isSupreme && world.rand.nextDouble() < failureChance) {
-                               int mishapType = world.rand.nextInt(3);
-                               if (mishapType == 0) {
-                                   ChatUtil.sendTranslated(EnumChatFormatting.RED, player, "witchery.infuse.branch.fizzle");
-                                   Infusion.setCurrentEnergy(player, Math.max(0, nbtPerm.getInteger("witcheryInfusionCharges") - cost));
-                                   SoundEffect.RANDOM_FIZZ.playAtPlayer(world, player);
-                               } else if (mishapType == 1) {
-                                   int mishapCost = (int)Math.ceil(cost * 1.5F);
-                                   if (nbtPerm.getInteger("witcheryInfusionCharges") < mishapCost) {
-                                       ChatUtil.sendTranslated(EnumChatFormatting.RED, player, "witchery.infuse.branch.clumsy_fail");
-                                       Infusion.setCurrentEnergy(player, Math.max(0, nbtPerm.getInteger("witcheryInfusionCharges") - cost));
-                                       SoundEffect.RANDOM_FIZZ.playAtPlayer(world, player);
-                                   } else {
-                                       ChatUtil.sendTranslated(EnumChatFormatting.YELLOW, player, "witchery.infuse.branch.clumsy_success");
-                                       effect.perform(world, player, effectiveLevel);
-                                       effect.setOnCooldown(player);
-                                       effect.onSpellCastSuccess(player);
-                                       this.announceCastSpell(player, effect);
-                                       Infusion.setCurrentEnergy(player, nbtPerm.getInteger("witcheryInfusionCharges") - mishapCost);
-                                   }
-                               } else if (mishapType == 2) {
-                                   ChatUtil.sendTranslated(EnumChatFormatting.DARK_RED, player, "witchery.infuse.branch.backfire");
-                                   player.addPotionEffect(new PotionEffect(Potion.confusion.id, 200, 0));
-                                   player.addPotionEffect(new PotionEffect(Potion.weakness.id, 200, 0));
-                                   Infusion.setCurrentEnergy(player, Math.max(0, nbtPerm.getInteger("witcheryInfusionCharges") - cost));
-                                   SoundEffect.RANDOM_FIZZ.playAtPlayer(world, player);
-                               }
-                           } else {
-                               effect.perform(world, player, effectiveLevel);
-                               effect.setOnCooldown(player);
-                               effect.onSpellCastSuccess(player);
-                               this.announceCastSpell(player, effect);
-                               if(!player.capabilities.isCreativeMode && nbtPerm != null) {
-                                  if(com.emoniph.witchery.familiar.Familiar.hasActiveBrewMasteryFamiliar(player) && world.rand.nextFloat() < 0.25F) {
-                                     player.addChatMessage(new net.minecraft.util.ChatComponentText(EnumChatFormatting.GREEN + "✦ [Sapo Familiar] Tu familiar canalizó la humedad arcana y ahorró la energía del hechizo."));
-                                  } else {
-                                     Infusion.setCurrentEnergy(player, Math.max(0, nbtPerm.getInteger("witcheryInfusionCharges") - cost));
-                                  }
-                               }
+                           effect.perform(world, player, effectiveLevel);
+                           effect.setOnCooldown(player);
+                           effect.onSpellCastSuccess(player);
+                           this.announceCastSpell(player, effect);
+                           if(!player.capabilities.isCreativeMode && nbtPerm != null) {
+                              if(com.emoniph.witchery.familiar.Familiar.hasActiveBrewMasteryFamiliar(player) && world.rand.nextFloat() < 0.25F) {
+                                 player.addChatMessage(new net.minecraft.util.ChatComponentText(EnumChatFormatting.GREEN + "✦ [Sapo Familiar] Tu familiar canalizó la humedad arcana y ahorró la energía del hechizo."));
+                              } else {
+                                 Infusion.setCurrentEnergy(player, Math.max(0, nbtPerm.getInteger("witcheryInfusionCharges") - cost));
+                              }
                            }
                         }
                      }
                   } else {
-                     ChatUtil.sendTranslated(EnumChatFormatting.RED, player, "witchery.infuse.branch.unknowneffect", new Object[0]);
+                     int tier = effect.getSpellTier();
+                     int mastered = SymbolEffect.getMasteredSpellCount(player);
+                     int needed = effect.getRequiredMasteryCount();
+                     ChatUtil.sendTranslated(EnumChatFormatting.RED, player, "witchery.infuse.branch.tierlocked", new Object[]{Integer.valueOf(tier), Integer.valueOf(needed), Integer.valueOf(mastered)});
                      SoundEffect.NOTE_SNARE.playAtPlayer(world, player);
                   }
                } else {
-                  int req = effect.getRequiredInfusionID();
-                  if(req == 1) {
-                     ChatUtil.sendTranslated(EnumChatFormatting.RED, player, "witchery.infuse.branch.lightrequired", new Object[0]);
-                  } else if(req == 2) {
-                     ChatUtil.sendTranslated(EnumChatFormatting.RED, player, "witchery.infuse.branch.earthrequired", new Object[0]);
-                  } else if(req == 3) {
-                     ChatUtil.sendTranslated(EnumChatFormatting.RED, player, "witchery.infuse.branch.enderrequired", new Object[0]);
-                  } else {
-                     ChatUtil.sendTranslated(EnumChatFormatting.RED, player, "witchery.infuse.branch.infernalrequired", new Object[0]);
-                  }
+                  ChatUtil.sendTranslated(EnumChatFormatting.RED, player, "witchery.infuse.branch.infernalrequired", new Object[0]);
                   SoundEffect.NOTE_SNARE.playAtPlayer(world, player);
                }
             } else {

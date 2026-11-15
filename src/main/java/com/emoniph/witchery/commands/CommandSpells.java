@@ -101,11 +101,21 @@ public class CommandSpells extends CommandBase {
             }
         }
 
+        int curTier = 1;
+        if (masteredCount >= 24) curTier = 4;
+        else if (masteredCount >= 14) curTier = 3;
+        else if (masteredCount >= 6) curTier = 2;
+        int nextReq = curTier == 1 ? 6 : (curTier == 2 ? 14 : 24);
+
         if (args.length == 0) {
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "╔══════════════════════════════════════════════════╗"));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "  ★ LIBRO DE SIMBOLOGÍA Y RAMA MÍSTICA ★"));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "╚══════════════════════════════════════════════════╝"));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "Hechizos Dominados: " + EnumChatFormatting.GREEN + masteredCount + "/" + totalSpells + EnumChatFormatting.GRAY + " (+" + (masteredCount * 10) + " pts Maestría)"));
+            String tierTitle = curTier == 4 ? "Tier IV (Maestro)" : (curTier == 3 ? "Tier III (Magister)" : (curTier == 2 ? "Tier II (Adepto)" : "Tier I (Iniciado)"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "Rango Arcano: " + EnumChatFormatting.AQUA + tierTitle + EnumChatFormatting.GRAY + " | Dominados: " + EnumChatFormatting.GREEN + masteredCount + "/" + totalSpells + EnumChatFormatting.GRAY + " (+" + (masteredCount * 10) + " pts)"));
+            if (curTier < 4) {
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "  ✦ Siguiente rango (Tier " + (curTier + 1) + "): " + EnumChatFormatting.WHITE + (nextReq - masteredCount) + " hechizo(s) más por dominar."));
+            }
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "Escuelas de Magia (usa /spells <escuela> [página]):"));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "  1. /spells combate" + EnumChatFormatting.GRAY + " - Hechizos ofensivos y de duelo."));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "  2. /spells defensa" + EnumChatFormatting.GRAY + " - Escudos, curación y contramagia."));
@@ -266,13 +276,21 @@ public class CommandSpells extends CommandBase {
         int end = Math.min(start + pageSize, list.size());
 
         player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "=== " + EnumChatFormatting.GOLD + title + EnumChatFormatting.DARK_PURPLE + " (Pág " + page + "/" + totalPages + ") ==="));
+        int curTier = 1;
+        int masteredCount = SymbolEffect.getMasteredSpellCount(player);
+        if (masteredCount >= 24) curTier = 4;
+        else if (masteredCount >= 14) curTier = 3;
+        else if (masteredCount >= 6) curTier = 2;
+
         for (int i = start; i < end; i++) {
             SymbolEffect eff = list.get(i);
             boolean mastered = SymbolEffect.isSpellMastered(player, eff);
             String badge = mastered ? (EnumChatFormatting.GREEN + "✔ ") : (EnumChatFormatting.GRAY + "✦ ");
+            int tier = eff.getSpellTier();
+            String tierBadge = (curTier >= tier ? EnumChatFormatting.AQUA : EnumChatFormatting.RED) + "[T" + tier + "] ";
             String strokesText = EnumChatFormatting.YELLOW + SymbolEffect.formatStrokesCompact(eff.getDefaultStrokes());
             player.addChatMessage(new ChatComponentText(
-                    badge + EnumChatFormatting.GOLD + eff.getLocalizedName() +
+                    badge + tierBadge + EnumChatFormatting.GOLD + eff.getLocalizedName() +
                     EnumChatFormatting.GRAY + " [Coste: " + eff.getBaseChargeCost() + "] " +
                     EnumChatFormatting.WHITE + "-> " + strokesText
             ));

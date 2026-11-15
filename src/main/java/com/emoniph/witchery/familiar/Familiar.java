@@ -284,8 +284,12 @@ public abstract class Familiar {
                Familiar.FamiliarOwner familiar = getOwnerForFamiliar(player);
                if(familiar.player != null && familiar.isOwner()) {
                   NBTTagCompound nbtTag = Infusion.getNBT(familiar.player);
+                  if(nbtTag != null) {
+                     nbtTag.setLong("WITCLastFamiliarDeath", familiar.player.worldObj.getTotalWorldTime());
+                  }
                   familiar.player.attackEntityFrom(DamageSource.magic, familiar.player.getMaxHealth() * 2.0F);
                   dismissFamiliar(familiar.player, player);
+                  com.emoniph.witchery.common.SupremeWitchData.updateSupremeStatus(familiar.player.worldObj);
                   event.setCanceled(true);
                } else if(familiar.player == null) {
                   player.setHealth(1.0F);

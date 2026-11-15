@@ -60,6 +60,13 @@ public class GuiScreenWitchcraftBook extends GuiScreen {
    private GuiButtonJumpPage buttonJumpPage5;
    private GuiButtonJumpPage buttonJumpPage6;
    private GuiButtonJumpPage buttonJumpPage7;
+   private int jumpPage1 = -1;
+   private int jumpPage2 = -1;
+   private int jumpPage3 = -1;
+   private int jumpPage4 = -1;
+   private int jumpPage5 = -1;
+   private int jumpPage6 = -1;
+   private int jumpPage7 = -1;
    private static final String CURRENT_PAGE_KEY = "CurrentPage";
 
 
@@ -100,32 +107,26 @@ public class GuiScreenWitchcraftBook extends GuiScreen {
                while(effect.hasNext()) {
                   RiteRegistry.Ritual ritual = (RiteRegistry.Ritual)effect.next();
                   if(ritual.showInBook()) {
-                     stackCompound = new NBTTagCompound();
-                     stackCompound.setString("Summary", ritual.getDescription());
-                     byte[] circles = ritual.getCircles();
-                     stackCompound.setByteArray("Circles", circles);
-                     if(circles.length == 0) {
-                        stackCompound.setString("Summary2", var17);
-                     } else {
-                        StringBuilder sb = new StringBuilder();
-                        byte[] arr$ = circles;
-                        int len$ = circles.length;
+                     int pageBefore = this.bookPages.tagCount() + 1;
+                     if(this.jumpPage1 == -1 && ritual.getBookIndex() >= 0) this.jumpPage1 = pageBefore;
+                     if(this.jumpPage2 == -1 && ritual.getBookIndex() >= 5) this.jumpPage2 = pageBefore;
+                     if(this.jumpPage3 == -1 && ritual.getBookIndex() >= 8) this.jumpPage3 = pageBefore;
+                     if(this.jumpPage4 == -1 && ritual.getBookIndex() >= 13) this.jumpPage4 = pageBefore;
+                     if(this.jumpPage5 == -1 && ritual.getBookIndex() >= 23) this.jumpPage5 = pageBefore;
+                     if(this.jumpPage6 == -1 && ritual.getBookIndex() >= 31) this.jumpPage6 = pageBefore;
+                     if(this.jumpPage7 == -1 && ritual.getBookIndex() >= 36) this.jumpPage7 = pageBefore;
 
-                        for(int i$1 = 0; i$1 < len$; ++i$1) {
-                           byte cir = arr$[i$1];
-                           if(sb.length() > 0) {
-                              sb.append(", ");
-                           }
-
-                           sb.append(sizes[cir]);
-                        }
-
-                        stackCompound.setString("Summary2", sb.toString());
-                     }
-
-                     this.bookPages.appendTag(stackCompound);
+                     this.addRitualPage(ritual, var17);
                   }
                }
+
+               if(this.jumpPage1 == -1) this.jumpPage1 = 2;
+               if(this.jumpPage2 == -1) this.jumpPage2 = 17;
+               if(this.jumpPage3 == -1) this.jumpPage3 = 23;
+               if(this.jumpPage4 == -1) this.jumpPage4 = 29;
+               if(this.jumpPage5 == -1) this.jumpPage5 = 47;
+               if(this.jumpPage6 == -1) this.jumpPage6 = 58;
+               if(this.jumpPage7 == -1) this.jumpPage7 = 69;
             } else if(Witchery.Items.GENERIC.itemBookInfusions.isMatch(itemstack)) {
                this.addSummaryPage(Witchery.resource("witchery.book.brews1"));
                i$ = KettleRecipes.instance().recipes.iterator();
@@ -280,8 +281,10 @@ public class GuiScreenWitchcraftBook extends GuiScreen {
          int avail = maxLines;
          StringBuilder sb = new StringBuilder();
          if(pageNum > 1 && !title.isEmpty()) {
-            sb.append(title).append(" §8(cont.)§0\n\n");
-            avail -= 2;
+            String header = title + " §8(cont.)§0\n\n";
+            int headerLines = font.listFormattedStringToWidth(header, wrapWidth).size();
+            avail = Math.max(1, maxLines - headerLines);
+            sb.append(header);
          }
 
          int toTake = Math.min(avail, totalLines - currentLine);
@@ -301,6 +304,85 @@ public class GuiScreenWitchcraftBook extends GuiScreen {
 
          NBTTagCompound tag = new NBTTagCompound();
          tag.setString("Summary", sb.toString());
+         this.bookPages.appendTag(tag);
+      }
+   }
+
+   private void addRitualPage(RiteRegistry.Ritual ritual, String anyCircleText) {
+      String desc = ritual.getDescription();
+      byte[] circles = ritual.getCircles();
+      String circleSummary = "";
+      if(circles.length == 0) {
+         circleSummary = anyCircleText;
+      } else {
+         StringBuilder sb = new StringBuilder();
+         for(int i = 0; i < circles.length; ++i) {
+            byte cir = circles[i];
+            if(sb.length() > 0) {
+               sb.append(", ");
+            }
+            sb.append(sizes[cir]);
+         }
+         circleSummary = sb.toString();
+      }
+
+      FontRenderer font = Minecraft.getMinecraft() != null ? Minecraft.getMinecraft().fontRenderer : null;
+      int wrapWidth = 98;
+      int maxLines = 15;
+
+      if(font == null || desc == null || desc.isEmpty()) {
+         NBTTagCompound tag = new NBTTagCompound();
+         tag.setString("Summary", desc != null ? desc : "");
+         tag.setString("Summary2", circleSummary);
+         tag.setByteArray("Circles", circles);
+         this.bookPages.appendTag(tag);
+         return;
+      }
+
+      List lines = font.listFormattedStringToWidth(desc, wrapWidth);
+      if(lines.size() <= maxLines) {
+         NBTTagCompound tag = new NBTTagCompound();
+         tag.setString("Summary", desc);
+         tag.setString("Summary2", circleSummary);
+         tag.setByteArray("Circles", circles);
+         this.bookPages.appendTag(tag);
+         return;
+      }
+
+      String title = "§n" + ritual.getLocalizedName() + "§r";
+      int currentLine = 0;
+      int totalLines = lines.size();
+      int pageNum = 1;
+
+      while(currentLine < totalLines) {
+         int avail = maxLines;
+         StringBuilder sb = new StringBuilder();
+         if(pageNum > 1) {
+            String header = title + " §8(cont.)§0\n\n";
+            int headerLines = font.listFormattedStringToWidth(header, wrapWidth).size();
+            avail = Math.max(1, maxLines - headerLines);
+            sb.append(header);
+         }
+
+         int toTake = Math.min(avail, totalLines - currentLine);
+         while(pageNum > 1 && toTake > 0 && currentLine < totalLines && ((String)lines.get(currentLine)).trim().isEmpty()) {
+            currentLine++;
+            toTake = Math.min(avail, totalLines - currentLine);
+         }
+
+         for(int i = 0; i < toTake; ++i) {
+            if(i > 0) {
+               sb.append("\n");
+            }
+            sb.append((String)lines.get(currentLine + i));
+         }
+         currentLine += toTake;
+         pageNum++;
+
+         NBTTagCompound tag = new NBTTagCompound();
+         tag.setString("Summary", sb.toString());
+         tag.setString("Summary2", circleSummary);
+         tag.setByteArray("Circles", circles);
          this.bookPages.appendTag(tag);
       }
    }
@@ -343,13 +425,15 @@ public class GuiScreenWitchcraftBook extends GuiScreen {
       int currentLine = maxLinesUnderImage;
       int totalLines = lines.size();
       while(currentLine < totalLines) {
-         int toTake = Math.min(10, totalLines - currentLine);
          StringBuilder cont = new StringBuilder();
-         cont.append(plantName).append(" §8(cont.)§0\n\n");
-         while(toTake > 0 && currentLine < totalLines && ((String)lines.get(currentLine)).trim().isEmpty()) {
+         String header = plantName + " §8(cont.)§0\n\n";
+         int headerLines = font.listFormattedStringToWidth(header, wrapWidth).size();
+         int avail = Math.max(1, 12 - headerLines);
+         while(currentLine < totalLines && ((String)lines.get(currentLine)).trim().isEmpty()) {
             currentLine++;
-            toTake = Math.min(10, totalLines - currentLine);
          }
+         int toTake = Math.min(avail, totalLines - currentLine);
+         cont.append(header);
          for(int i = 0; i < toTake; ++i) {
             if(i > 0) cont.append("\n");
             cont.append((String)lines.get(currentLine + i));
@@ -411,13 +495,13 @@ public class GuiScreenWitchcraftBook extends GuiScreen {
       if(Witchery.Items.GENERIC.itemBookCircleMagic.isMatch(this.itemstack)) {
          super.buttonList.add(this.buttonNextPage = new GuiButtonNextPage(1, i + 180, b0 + 154, true));
          super.buttonList.add(this.buttonPreviousPage = new GuiButtonNextPage(2, i + 110, b0 + 154, false));
-         super.buttonList.add(this.buttonJumpPage7 = new GuiButtonJumpPage(9, i + 214, b0 + 138, 69, 48, 248));
-         super.buttonList.add(this.buttonJumpPage6 = new GuiButtonJumpPage(8, i + 214, b0 + 118, 58, 40, 248));
-         super.buttonList.add(this.buttonJumpPage5 = new GuiButtonJumpPage(7, i + 214, b0 + 98, 47, 32, 248));
-         super.buttonList.add(this.buttonJumpPage4 = new GuiButtonJumpPage(6, i + 214, b0 + 78, 29, 24, 248));
-         super.buttonList.add(this.buttonJumpPage3 = new GuiButtonJumpPage(5, i + 214, b0 + 58, 23, 16, 248));
-         super.buttonList.add(this.buttonJumpPage2 = new GuiButtonJumpPage(4, i + 214, b0 + 38, 17, 8, 248));
-         super.buttonList.add(this.buttonJumpPage1 = new GuiButtonJumpPage(3, i + 214, b0 + 18, 2, 0, 248));
+         super.buttonList.add(this.buttonJumpPage7 = new GuiButtonJumpPage(9, i + 214, b0 + 138, this.jumpPage7, 48, 248));
+         super.buttonList.add(this.buttonJumpPage6 = new GuiButtonJumpPage(8, i + 214, b0 + 118, this.jumpPage6, 40, 248));
+         super.buttonList.add(this.buttonJumpPage5 = new GuiButtonJumpPage(7, i + 214, b0 + 98, this.jumpPage5, 32, 248));
+         super.buttonList.add(this.buttonJumpPage4 = new GuiButtonJumpPage(6, i + 214, b0 + 78, this.jumpPage4, 24, 248));
+         super.buttonList.add(this.buttonJumpPage3 = new GuiButtonJumpPage(5, i + 214, b0 + 58, this.jumpPage3, 16, 248));
+         super.buttonList.add(this.buttonJumpPage2 = new GuiButtonJumpPage(4, i + 214, b0 + 38, this.jumpPage2, 8, 248));
+         super.buttonList.add(this.buttonJumpPage1 = new GuiButtonJumpPage(3, i + 214, b0 + 18, this.jumpPage1, 0, 248));
       } else {
          super.buttonList.add(this.buttonNextPage = new GuiButtonNextPage(1, i + 120, b0 + 154, true));
          super.buttonList.add(this.buttonPreviousPage = new GuiButtonNextPage(2, i + 38, b0 + 154, false));
@@ -514,7 +598,7 @@ public class GuiScreenWitchcraftBook extends GuiScreen {
 
          int hasImage = super.fontRendererObj.getStringWidth(s);
          super.fontRendererObj.drawString(s, k - hasImage + this.bookImageWidth - 16, b0 + 16, 0);
-         this.drawSplitStringClipped(super.fontRendererObj, s1, k + 20, b0 + 16, 98, 14, 0);
+         this.drawSplitStringClipped(super.fontRendererObj, s1, k + 20, b0 + 16, 98, 15, 0);
          if(!s2.isEmpty()) {
             int var18 = super.fontRendererObj.getStringWidth(s2);
             if(var18 < 90) {

@@ -6,9 +6,11 @@ import com.emoniph.witchery.familiar.Familiar;
 import com.emoniph.witchery.infusion.Infusion;
 import com.emoniph.witchery.infusion.infusions.symbols.SymbolEffect;
 import com.emoniph.witchery.network.PacketSyncSupremeWitch;
+import com.emoniph.witchery.util.Coord;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChatComponentText;
@@ -233,58 +235,245 @@ public class SupremeWitchData extends WorldSavedData {
         Witchery.packetPipeline.sendToAll((IMessage) new PacketSyncSupremeWitch(this.supremeUUID, this.supremeName, this.auraEnabled, this.auraColor, this.auraAmount));
     }
 
-    public static int calculateWitcheryMasteryScore(EntityPlayer player) {
-        if (player == null) return 0;
-        ExtendedPlayer playerEx = ExtendedPlayer.get(player);
-        int score = 0;
+    public static class MasteryScoreBreakdown {
+        public int spiritScore;
+        public int covenScore;
+        public int familiarBaseScore;
+        public int familiarActiveScore;
+        public int infusionBaseScore;
+        public int infusionEnergyBonus;
+        public int spellScore;
+        public int babaYagaScore;
+        public int horrocruxScore;
+        public int wondersScore;
+        public int tasksScore;
+        public int bossScore;
+        public int bossCount;
+        public int brewingScore;
+        public int altarScore;
+        public int poppetScore;
+        public int creatureScore;
 
-        // Spirit Level: 100 points per level (up to 1000)
-        if (playerEx != null) {
-            score += playerEx.getSpiritLevel() * 100;
+        // Penalizaciones por descuido y daño
+        public int energyPenalty;
+        public int curseCount;
+        public int cursePenalty;
+        public int deathPenalty;
+        public int familiarDeathPenalty;
+        public int stagnationPenalty;
+        public int covenTaskNeglectPenalty;
+
+        public int getTotalPositive() {
+            return spiritScore + covenScore + familiarBaseScore + familiarActiveScore
+                    + infusionBaseScore + infusionEnergyBonus + spellScore + babaYagaScore
+                    + horrocruxScore + wondersScore + tasksScore + bossScore + brewingScore + altarScore
+                    + poppetScore + creatureScore;
         }
 
-        // Coven witches recruited: 80 points per witch (up to 480)
-        int covenSize = EntityCovenWitch.getCovenSize(player);
-        score += covenSize * 80;
+        public int getTotalPenalties() {
+            return energyPenalty + cursePenalty + deathPenalty + familiarDeathPenalty + stagnationPenalty + covenTaskNeglectPenalty;
+        }
 
-        // Bound familiar: 70 points
+        public int getNetScore() {
+            return Math.max(0, getTotalPositive() - getTotalPenalties());
+        }
+    }
+
+    public static boolean hasActiveProtectedPoppet(EntityPlayer player) {
+        if (player == null || player.inventory == null) return false;
+        for (int i = 0; i < player.inventory.mainInventory.length; i++) {
+            ItemStack stack = player.inventory.mainInventory[i];
+            if (stack != null && stack.getItem() == Witchery.Items.POPPET) {
+                if (Witchery.Items.TAGLOCK_KIT.containsTaglockForEntity(stack, player, 1)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public static MasteryScoreBreakdown getMasteryScoreBreakdown(EntityPlayer player) {
+        MasteryScoreBreakdown b = new MasteryScoreBreakdown();
+        if (player == null) return b;
+
+        ExtendedPlayer playerEx = ExtendedPlayer.get(player);
+        NBTTagCompound nbtPlayer = Infusion.getNBT(player);
+
+        // 1. Sintonía Espiritual: hasta Nivel 3 = 300 pts (100 pts por nivel)
+        if (playerEx != null) {
+            b.spiritScore = Math.min(3, playerEx.getSpiritLevel()) * 100;
+        }
+
+        // 2. Aquelarre Vivo: 50 pts por cada bruja reclutada viva (hasta 300 pts)
+        int covenSize = EntityCovenWitch.getCovenSize(player);
+        b.covenScore = covenSize * 50;
+
+        // 3. Familiar Vivo y Vinculado: 40 pts vínculo formal, +40 pts convocado en el mundo
         String familiar = Familiar.getFamiliarName(player);
         if (familiar != null && !familiar.isEmpty()) {
-            score += 70;
+            b.familiarBaseScore = 40;
+            if (Familiar.getActiveFamiliarType(player) > 0) {
+                b.familiarActiveScore = 40;
+            }
         }
 
-        // Active infusion: 50 points
+        // 4. Infusión Arcana y Reserva de Energía
         if (Infusion.getInfusionID(player) > 0) {
-            score += 50;
+            b.infusionBaseScore = 50;
+            int curEnergy = Infusion.getCurrentEnergy(player);
+            int maxEnergy = Infusion.getMaxEnergy(player);
+            if (curEnergy == 0) {
+                b.energyPenalty = 40; // Descuido grave: infusión agotada sin recargar
+            } else if (maxEnergy > 0 && curEnergy >= (maxEnergy / 2)) {
+                b.infusionEnergyBonus = 30; // Reserva mantenida con vigor
+            }
         }
 
-        // Mystic Branch spell knowledge: 10 points per spell known
-        String knowledge = SymbolEffect.getKnowledge(player);
-        if (knowledge != null && !knowledge.isEmpty()) {
-            String[] spells = knowledge.split(",");
-            score += spells.length * 10;
-        }
+        // 5. Hechizos dominados en la Rama Mística (10 pts cada uno)
+        int masteredSpells = SymbolEffect.getMasteredSpellCount(player);
+        b.spellScore = masteredSpells * 10;
 
-        // Defeated Baba Yaga: 300 mastery points
-        NBTTagCompound nbtPlayer = Infusion.getNBT(player);
+        // 6. Derrotar a Baba Yaga (250 pts)
         if (nbtPlayer != null && nbtPlayer.getBoolean("WITCDefeatedBabaYaga")) {
-            score += 300;
+            b.babaYagaScore = 250;
         }
 
-        // Horrocrux active: 100 mastery points
+        // 7. Horrocrux consagrado (100 pts)
         if (nbtPlayer != null && nbtPlayer.getBoolean("WITCHorrocrux")) {
-            score += 100;
+            b.horrocruxScore = 100;
         }
 
-        // Seven Wonders completed: 50 points per Wonder (up to 350)
-        score += getCompletedWondersCount(player) * 50;
+        // 8. Las Siete Maravillas consumadas (50 pts cada una, hasta 350 pts)
+        b.wondersScore = getCompletedWondersCount(player) * 50;
 
-        // Coven Tasks completed: 15 points per task (up to 300)
+        // 9. Misiones de Aquelarre (crecimiento continuo: 15 pts c/u hasta 20 tareas = 300 pts, y +5 pts por tarea adicional)
+        int tasksCompleted = nbtPlayer != null ? nbtPlayer.getInteger("WITCCovenTasksCompleted") : 0;
+        if (tasksCompleted > 0) {
+            if (tasksCompleted <= 20) {
+                b.tasksScore = tasksCompleted * 15;
+            } else {
+                b.tasksScore = 300 + (tasksCompleted - 20) * 5;
+            }
+        }
+
+        // 10. Conquista y Golpe Final a Jefes (Bosses de Witchery y Minecraft)
+        if (nbtPlayer != null && nbtPlayer.hasKey("WITCBossDefeats")) {
+            NBTTagCompound nbtBosses = nbtPlayer.getCompoundTag("WITCBossDefeats");
+            int bScore = 0;
+            int bCount = 0;
+            if (nbtBosses.getInteger("ender_dragon") > 0) { bScore += 80; bCount++; }
+            if (nbtBosses.getInteger("wither") > 0) { bScore += 70; bCount++; }
+            if (nbtBosses.getInteger("death") > 0) { bScore += 100; bCount++; }
+            if (nbtBosses.getInteger("lord_of_torment") > 0) { bScore += 90; bCount++; }
+            if (nbtBosses.getInteger("lilith") > 0) { bScore += 90; bCount++; }
+            if (nbtBosses.getInteger("leonard") > 0) { bScore += 90; bCount++; }
+            if (nbtBosses.getInteger("horned_huntsman") > 0) { bScore += 80; bCount++; }
+            if (nbtBosses.getInteger("baba_yaga") > 0) { bScore += 100; bCount++; }
+            if (nbtBosses.getInteger("reflection") > 0) { bScore += 60; bCount++; }
+            if (nbtBosses.getInteger("gulg") > 0) { bScore += 50; bCount++; }
+            if (nbtBosses.getInteger("mog") > 0) { bScore += 50; bCount++; }
+            b.bossScore = bScore;
+            b.bossCount = bCount;
+        }
+
+        // 11. Alquimia y Pociones en Caldero (Embotellado y Lanzamiento, hasta 100 pts)
+        if (playerEx != null) {
+            b.brewingScore = Math.min(50, playerEx.getSkillPotionBottling() * 5) + Math.min(50, playerEx.getSkillPotionThrowing() * 5);
+        }
+
+        // 11. Sintonía con Altar y Santuario Cercano
+        if (player.worldObj != null && !player.worldObj.isRemote) {
+            IPowerSource power = PowerSources.findClosestPowerSource(player.worldObj, (int) player.posX, (int) player.posY, (int) player.posZ);
+            if (power != null && !power.isPowerInvalid()) {
+                Coord loc = power.getLocation();
+                if (loc != null) {
+                    double dx = player.posX - (loc.x + 0.5D);
+                    double dy = player.posY - (loc.y + 0.5D);
+                    double dz = player.posZ - (loc.z + 0.5D);
+                    double distSq = dx * dx + dy * dy + dz * dz;
+                    double range = (double) power.getRange();
+                    if (distSq <= range * range) {
+                        float p = power.getCurrentPower();
+                        if (p >= 5000.0F) {
+                            b.altarScore = 60;
+                        } else if (p >= 2000.0F) {
+                            b.altarScore = 30;
+                        }
+                    }
+                }
+            }
+        }
+
+        // 12. Muñeco Poppet de Protección Vinculado en Inventario (30 pts)
+        if (hasActiveProtectedPoppet(player)) {
+            b.poppetScore = 30;
+        }
+
+        // 13. Linaje Sobrenatural (Vampirismo / Licantropía viva, hasta 70 pts)
+        if (playerEx != null) {
+            int beastLevel = Math.max(playerEx.getVampireLevel(), playerEx.getWerewolfLevel());
+            b.creatureScore = Math.min(70, beastLevel * 7);
+        }
+
+        // --- PENALIZACIONES POR DESCUIDO ---
+
+        // A. Maleficios Activos Padecidos (-50 pts por cada maldición activa sin purificar)
         if (nbtPlayer != null) {
-            score += Math.min(300, nbtPlayer.getInteger("WITCCovenTasksCompleted") * 15);
+            int curses = 0;
+            if (nbtPlayer.hasKey("witcheryCursed")) curses++;
+            if (nbtPlayer.hasKey("witcheryInsanity")) curses++;
+            if (nbtPlayer.hasKey("witcherySinking")) curses++;
+            if (nbtPlayer.hasKey("witcheryOverheating")) curses++;
+            if (nbtPlayer.hasKey("witcheryWakingNightmare")) curses++;
+            b.curseCount = curses;
+            b.cursePenalty = curses * 50;
         }
 
-        return score;
+        // B. Trauma de Muerte Reciente (-80 pts si murió en las últimas 24.000 ticks / 1 día de Minecraft)
+        if (nbtPlayer != null && nbtPlayer.hasKey("WITCLastDeathTime") && player.worldObj != null) {
+            long elapsed = player.worldObj.getTotalWorldTime() - nbtPlayer.getLong("WITCLastDeathTime");
+            if (elapsed >= 0 && elapsed < 24000L) {
+                b.deathPenalty = 80;
+            }
+        }
+
+        // C. Luto de Familiar Roto (-60 pts si su familiar murió en las últimas 24.000 ticks)
+        if (nbtPlayer != null && nbtPlayer.hasKey("WITCLastFamiliarDeath") && player.worldObj != null) {
+            long elapsed = player.worldObj.getTotalWorldTime() - nbtPlayer.getLong("WITCLastFamiliarDeath");
+            if (elapsed >= 0 && elapsed < 24000L) {
+                b.familiarDeathPenalty = 60;
+            }
+        }
+
+        // D. Atrofia Mágica por Inactividad (-50 pts > 3 días MC, -100 pts > 5 días MC sin hacer magia)
+        if (nbtPlayer != null && nbtPlayer.hasKey("WITCLastArcaneActivity") && player.worldObj != null) {
+            long idle = player.worldObj.getTotalWorldTime() - nbtPlayer.getLong("WITCLastArcaneActivity");
+            if (idle > 120000L) {
+                b.stagnationPenalty = 100;
+            } else if (idle > 72000L) {
+                b.stagnationPenalty = 50;
+            }
+        }
+
+        // E. Negligencia Semanal en Tareas del Aquelarre (-60 pts > 1 semana MC [168.000 ticks] sin cumplir misión, -120 pts > 2 semanas)
+        if (nbtPlayer != null && (covenSize > 0 || tasksCompleted > 0) && player.worldObj != null) {
+            long lastTaskTime = nbtPlayer.hasKey("WITCLastCovenTaskTime") ? nbtPlayer.getLong("WITCLastCovenTaskTime") : 0L;
+            if (lastTaskTime > 0L) {
+                long idleTask = player.worldObj.getTotalWorldTime() - lastTaskTime;
+                if (idleTask > 336000L) {
+                    b.covenTaskNeglectPenalty = 120;
+                } else if (idleTask > 168000L) {
+                    b.covenTaskNeglectPenalty = 60;
+                }
+            }
+        }
+
+        return b;
+    }
+
+    public static int calculateWitcheryMasteryScore(EntityPlayer player) {
+        if (player == null) return 0;
+        return getMasteryScoreBreakdown(player).getNetScore();
     }
 
     public static final String WONDER_TELEKINESIS = "Telekinesis";
@@ -382,7 +571,7 @@ public class SupremeWitchData extends WorldSavedData {
         updateSupremeStatus(player.worldObj);
     }
 
-    public static final int SUPREME_MASTERY_THRESHOLD = 900;
+    public static final int SUPREME_MASTERY_THRESHOLD = 1000;
 
     public static void updateSupremeStatus(World world) {
         if (world == null || world.isRemote) return;
@@ -409,37 +598,55 @@ public class SupremeWitchData extends WorldSavedData {
             }
         }
 
-        // Minimum threshold: requires true end-game Witchery mastery (900+ points)
+        String currentUUID = data.getSupremeUUID();
+        EntityPlayerMP currentSupremePlayer = null;
+        int currentSupremeScore = 0;
+
+        if (data.hasSupreme()) {
+            for (Object obj : players) {
+                if (obj instanceof EntityPlayerMP) {
+                    EntityPlayerMP p = (EntityPlayerMP) obj;
+                    if (p.getUniqueID().toString().equals(currentUUID)) {
+                        currentSupremePlayer = p;
+                        currentSupremeScore = calculateWitcheryMasteryScore(p);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 1. ¿La Bruja Suprema actual descuidó su poder vivo y cayó por debajo del umbral de 1,000 pts?
+        if (data.hasSupreme() && currentSupremePlayer != null && currentSupremeScore < SUPREME_MASTERY_THRESHOLD) {
+            // Si nadie alcanza 1,000 pts tampoco, el trono queda completamente VACANTE
+            if (highestScore < SUPREME_MASTERY_THRESHOLD || bestCandidate == null) {
+                String oldName = data.getSupremeName();
+                data.clearSupreme();
+
+                currentSupremePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "" + EnumChatFormatting.BOLD + "[Bruja Suprema] " + EnumChatFormatting.YELLOW + "Has descuidado tu poder vivo (Poder actual: " + currentSupremeScore + " pts, mínimo requerido: " + SUPREME_MASTERY_THRESHOLD + "). ¡Has sido destronada y el Manto Sagrado queda VACANTE!"));
+
+                server.getConfigurationManager().sendChatMsg(new ChatComponentText(EnumChatFormatting.DARK_RED + "" + EnumChatFormatting.BOLD + "★ [Witchery] " + EnumChatFormatting.RED + "¡La Bruja Suprema " + EnumChatFormatting.GOLD + oldName + EnumChatFormatting.RED + " ha descuidado su poder arcano (Poder actual: " + currentSupremeScore + " pts) y ha caído del trono! El Aquelarre busca una nueva soberana."));
+                return;
+            }
+        }
+
+        // 2. Si ningún jugador alcanza el umbral de 1,000 pts
         if (highestScore < SUPREME_MASTERY_THRESHOLD || bestCandidate == null) {
             return;
         }
 
-        String currentUUID = data.getSupremeUUID();
         String candidateUUID = bestCandidate.getUniqueID().toString();
 
+        // 3. Si el mejor candidato supera al actual o asciende al trono
         if (!candidateUUID.equals(currentUUID)) {
-            EntityPlayerMP previousSupreme = null;
-            if (data.hasSupreme()) {
-                for (Object obj : players) {
-                    if (obj instanceof EntityPlayerMP) {
-                        EntityPlayerMP p = (EntityPlayerMP) obj;
-                        if (p.getUniqueID().toString().equals(currentUUID)) {
-                            previousSupreme = p;
-                            break;
-                        }
-                    }
-                }
-            }
-
             data.setSupreme(bestCandidate);
 
-            bestCandidate.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "" + EnumChatFormatting.BOLD + "[Bruja Suprema] " + EnumChatFormatting.LIGHT_PURPLE + "¡Tu maestría en Witchery (" + EnumChatFormatting.GOLD + highestScore + " pts" + EnumChatFormatting.LIGHT_PURPLE + ") te ha elevado como la " + EnumChatFormatting.GOLD + "Bruja Suprema" + EnumChatFormatting.LIGHT_PURPLE + "!"));
+            bestCandidate.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "" + EnumChatFormatting.BOLD + "[Bruja Suprema] " + EnumChatFormatting.LIGHT_PURPLE + "¡Tu maestría viva en Witchery (" + EnumChatFormatting.GOLD + highestScore + " pts" + EnumChatFormatting.LIGHT_PURPLE + ") te ha elevado como la " + EnumChatFormatting.GOLD + "Bruja Suprema" + EnumChatFormatting.LIGHT_PURPLE + "!"));
 
-            if (previousSupreme != null && previousSupreme != bestCandidate) {
-                previousSupreme.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "" + EnumChatFormatting.BOLD + "[Bruja Suprema] " + EnumChatFormatting.YELLOW + bestCandidate.getCommandSenderName() + " te ha superado en maestría (" + highestScore + " pts) y ha tomado el manto. ¡Sigue progresando para recuperarlo!"));
+            if (currentSupremePlayer != null && currentSupremePlayer != bestCandidate) {
+                currentSupremePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "" + EnumChatFormatting.BOLD + "[Bruja Suprema] " + EnumChatFormatting.YELLOW + bestCandidate.getCommandSenderName() + " te ha superado en poder vivo (" + highestScore + " vs " + currentSupremeScore + " pts) y ha tomado el manto. ¡Atiende tus componentes arcanos para recuperarlo!"));
             }
 
-            server.getConfigurationManager().sendChatMsg(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "" + EnumChatFormatting.BOLD + "★ [Witchery] " + EnumChatFormatting.LIGHT_PURPLE + "¡" + EnumChatFormatting.GOLD + bestCandidate.getCommandSenderName() + EnumChatFormatting.LIGHT_PURPLE + " ha sido reconocida por las fuerzas del aquelarre como la nueva " + EnumChatFormatting.GOLD + "Bruja Suprema" + EnumChatFormatting.LIGHT_PURPLE + " (Maestría: " + highestScore + " pts)!"));
+            server.getConfigurationManager().sendChatMsg(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "" + EnumChatFormatting.BOLD + "★ [Witchery] " + EnumChatFormatting.LIGHT_PURPLE + "¡" + EnumChatFormatting.GOLD + bestCandidate.getCommandSenderName() + EnumChatFormatting.LIGHT_PURPLE + " ha ascendido como la nueva " + EnumChatFormatting.GOLD + "Bruja Suprema" + EnumChatFormatting.LIGHT_PURPLE + " con un poder vivo de " + EnumChatFormatting.GOLD + highestScore + " pts" + EnumChatFormatting.LIGHT_PURPLE + "!"));
         }
     }
 

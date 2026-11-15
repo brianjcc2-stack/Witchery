@@ -27,7 +27,7 @@ import net.minecraftforge.common.BiomeDictionary.Type;
 public class WitcheryWorldGenerator implements IWorldGenerator {
 
    private LinkedList structuresList = new LinkedList();
-   private final WorldHandlerCoven covenGen = new WorldHandlerCoven(1.0D, 400);
+   private final WorldHandlerCoven covenGen = new WorldHandlerCoven(1.0D, 200);
    private final WorldHandlerWickerMan wickerManGen = new WorldHandlerWickerMan(1.0D, 400);
    private final WorldHandlerShack shackGen = new WorldHandlerShack(1.0D, 400);
    private final List generators;
@@ -73,6 +73,13 @@ public class WitcheryWorldGenerator implements IWorldGenerator {
             int l = random.nextInt(world.getHeightValue(k, i1) + 32);
             (new WorldGenFlowers(Witchery.Blocks.WISPY_COTTON)).generate(world, random, k, l, i1);
          }
+      }
+
+      if(random.nextInt(32) == 0) {
+         int sx = chunkX + random.nextInt(16) + 8;
+         int sz = chunkZ + random.nextInt(16) + 8;
+         int sy = world.getHeightValue(sx, sz);
+         (new WorldGenDreamShrine()).generate(world, random, sx, sy, sz);
       }
 
    }

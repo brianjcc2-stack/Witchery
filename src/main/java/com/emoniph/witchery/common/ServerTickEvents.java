@@ -122,12 +122,24 @@ public class ServerTickEvents {
                      double targetX = event.player.posX + look.xCoord * dist;
                      double targetY = event.player.posY + (double)event.player.getEyeHeight() + look.yCoord * dist;
                      double targetZ = event.player.posZ + look.zCoord * dist;
-                     target.motionX = (targetX - target.posX) * 0.25D;
-                     target.motionY = (targetY - target.posY) * 0.25D;
-                     target.motionZ = (targetZ - target.posZ) * 0.25D;
-                     target.fallDistance = 0.0F;
-                     if (target instanceof net.minecraft.entity.EntityLivingBase) {
-                        ((net.minecraft.entity.EntityLivingBase)target).addPotionEffect(new PotionEffect(net.minecraft.potion.Potion.resistance.id, 20, 4));
+                     if (target instanceof net.minecraft.entity.player.EntityPlayerMP) {
+                        net.minecraft.entity.player.EntityPlayerMP pTarget = (net.minecraft.entity.player.EntityPlayerMP)target;
+                        pTarget.setPositionAndUpdate(targetX, targetY, targetZ);
+                        pTarget.fallDistance = 0.0F;
+                        pTarget.motionX = (targetX - target.posX) * 0.25D;
+                        pTarget.motionY = (targetY - target.posY) * 0.25D;
+                        pTarget.motionZ = (targetZ - target.posZ) * 0.25D;
+                        pTarget.velocityChanged = true;
+                        pTarget.addPotionEffect(new PotionEffect(net.minecraft.potion.Potion.resistance.id, 20, 4));
+                     } else {
+                        target.motionX = (targetX - target.posX) * 0.25D;
+                        target.motionY = (targetY - target.posY) * 0.25D;
+                        target.motionZ = (targetZ - target.posZ) * 0.25D;
+                        target.fallDistance = 0.0F;
+                        target.velocityChanged = true;
+                        if (target instanceof net.minecraft.entity.EntityLivingBase) {
+                           ((net.minecraft.entity.EntityLivingBase)target).addPotionEffect(new PotionEffect(net.minecraft.potion.Potion.resistance.id, 20, 4));
+                        }
                      }
                   } else {
                      event.player.getEntityData().setInteger("WITCLeviosaTicks", 0);

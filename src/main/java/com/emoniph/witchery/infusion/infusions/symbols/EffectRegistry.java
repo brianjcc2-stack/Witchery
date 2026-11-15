@@ -127,6 +127,8 @@ import net.minecraft.entity.monster.EntitySpider;
 import net.minecraft.entity.monster.EntityWitch;
 import net.minecraft.entity.passive.EntityWolf;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.network.play.server.S12PacketEntityVelocity;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.IInventory;
@@ -271,13 +273,24 @@ public class EffectRegistry {
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect effectEntity) {
             if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
-                Block blockID = world.getBlock(mop.blockX, mop.blockY, mop.blockZ);
-                if (blockID != Witchery.Blocks.DOOR_ALDER && blockID != Witchery.Blocks.DOOR_ROWAN) {
-                    if (blockID instanceof BlockDoor) {
-                        ((BlockDoor)blockID).func_150014_a(world, mop.blockX, mop.blockY, mop.blockZ, !((BlockDoor)blockID).func_150015_f((IBlockAccess)world, mop.blockX, mop.blockY, mop.blockZ));
+                int level = Math.max(1, effectEntity.getEffectLevel());
+                int r = level - 1;
+                for (int x = -r; x <= r; ++x) {
+                    for (int y = -r; y <= r; ++y) {
+                        for (int z = -r; z <= r; ++z) {
+                            int bx = mop.blockX + x;
+                            int by = mop.blockY + y;
+                            int bz = mop.blockZ + z;
+                            Block blockID = world.getBlock(bx, by, bz);
+                            if (blockID != Witchery.Blocks.DOOR_ALDER && blockID != Witchery.Blocks.DOOR_ROWAN) {
+                                if (blockID instanceof BlockDoor) {
+                                    ((BlockDoor)blockID).func_150014_a(world, bx, by, bz, true);
+                                }
+                            } else {
+                                ((BlockWitchDoor)blockID).onBlockActivatedNormally(world, bx, by, bz, null, 1, bx, by, bz);
+                            }
+                        }
                     }
-                } else {
-                    ((BlockWitchDoor)blockID).onBlockActivatedNormally(world, mop.blockX, mop.blockY, mop.blockZ, null, 1, mop.blockX, mop.blockY, mop.blockZ);
                 }
             }
         }
@@ -433,24 +446,21 @@ public class EffectRegistry {
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
             if (mop != null && caster != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
-                
-                int corazones = 2; // Daño base de 2 corazones (4 puntos)
+                int level = Math.max(1, spell.getEffectLevel());
+                int corazones = 2 + (level - 1) * 2;
                 if (caster instanceof net.minecraft.entity.player.EntityPlayer && com.emoniph.witchery.commands.CommandCrucio.CRUCIO_POWER.containsKey(caster.getCommandSenderName())) {
-                    corazones = com.emoniph.witchery.commands.CommandCrucio.CRUCIO_POWER.get(caster.getCommandSenderName());
+                    corazones = com.emoniph.witchery.commands.CommandCrucio.CRUCIO_POWER.get(caster.getCommandSenderName()) + (level - 1) * 2;
                 }
-                
-                // Wither Nivel 3 (Amplificador 2) hace 1 de daño (0.5 corazones) cada 10 ticks.
-                // Para quitar X corazones, necesita 20 ticks por corazón.
                 int duracionTicks = corazones * 20;
-                
                 EntityLivingBase target = (EntityLivingBase) mop.entityHit;
-                
                 if (target instanceof net.minecraft.entity.player.EntityPlayer) {
                     if (world.isRemote || !(caster instanceof net.minecraft.entity.player.EntityPlayer) || net.minecraft.server.MinecraftServer.getServer().isPVPEnabled()) {
                         target.addPotionEffect(new net.minecraft.potion.PotionEffect(net.minecraft.potion.Potion.wither.id, duracionTicks, 2, false));
+                        target.addPotionEffect(new net.minecraft.potion.PotionEffect(net.minecraft.potion.Potion.moveSlowdown.id, duracionTicks, level - 1));
                     }
                 } else {
                     target.addPotionEffect(new net.minecraft.potion.PotionEffect(net.minecraft.potion.Potion.wither.id, duracionTicks, 2, false));
+                    target.addPotionEffect(new net.minecraft.potion.PotionEffect(net.minecraft.potion.Potion.moveSlowdown.id, duracionTicks, level - 1));
                 }
             }
         }
@@ -860,21 +870,32 @@ public class EffectRegistry {
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
             if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
+                int level = Math.max(1, spell.getEffectLevel());
                 EntityLivingBase target = (EntityLivingBase)mop.entityHit;
+                int duration = 6000 * level;
+                target.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, duration, 10));
+                target.addPotionEffect(new PotionEffect(Potion.blindness.id, 200 * level, 0));
+                target.addPotionEffect(new PotionEffect(Potion.resistance.id, duration, 4));
                 if (target instanceof EntityPlayer) {
-                    if (!world.isRemote && (!(caster instanceof EntityPlayer) || MinecraftServer.getServer().isPVPEnabled())) {
-                        EntityPlayer pTarget = (EntityPlayer)target;
-                        pTarget.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, Integer.MAX_VALUE, 10));
-                        pTarget.addPotionEffect(new PotionEffect(Potion.blindness.id, Integer.MAX_VALUE, 0));
-                        pTarget.addPotionEffect(new PotionEffect(Witchery.Potions.PARALYSED.id, Integer.MAX_VALUE, 0));
-                        pTarget.addPotionEffect(new PotionEffect(Potion.resistance.id, Integer.MAX_VALUE, 4));
-                        ParticleEffect.SPELL_COLORED.send(SoundEffect.RANDOM_FIZZ, pTarget, 1.0D, 2.0D, 16);
+                    target.addPotionEffect(new PotionEffect(Witchery.Potions.PARALYSED.id, duration, 0));
+                }
+                ParticleEffect.SPELL_COLORED.send(SoundEffect.RANDOM_FIZZ, target, 1.0D, 2.0D, 16);
+
+                if (level > 1) {
+                    double r = (level - 1) * 2.5;
+                    List list = world.getEntitiesWithinAABB(EntityLivingBase.class, target.boundingBox.expand(r, r, r));
+                    for (Object obj : list) {
+                        EntityLivingBase nearby = (EntityLivingBase)obj;
+                        if (nearby != caster && nearby != target) {
+                            nearby.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, duration, 10));
+                            nearby.addPotionEffect(new PotionEffect(Potion.blindness.id, 200 * level, 0));
+                            nearby.addPotionEffect(new PotionEffect(Potion.resistance.id, duration, 4));
+                            if (nearby instanceof EntityPlayer) {
+                                nearby.addPotionEffect(new PotionEffect(Witchery.Potions.PARALYSED.id, duration, 0));
+                            }
+                            ParticleEffect.SPELL_COLORED.send(SoundEffect.RANDOM_FIZZ, nearby, 1.0D, 2.0D, 16);
+                        }
                     }
-                } else if (target instanceof EntityLiving) {
-                    target.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, Integer.MAX_VALUE, 10));
-                    target.addPotionEffect(new PotionEffect(Potion.blindness.id, Integer.MAX_VALUE, 0));
-                    target.addPotionEffect(new PotionEffect(Potion.resistance.id, Integer.MAX_VALUE, 4));
-                    ParticleEffect.SPELL_COLORED.send(SoundEffect.RANDOM_FIZZ, target, 1.0D, 2.0D, 16);
                 }
             }
         }
@@ -883,29 +904,37 @@ public class EffectRegistry {
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
             if (!world.isRemote) {
+                int level = Math.max(1, spell.getEffectLevel());
+                int baseMelt = 160 + level * 80;
+
                 if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
                     EntityLivingBase target = (EntityLivingBase)mop.entityHit;
                     target.extinguish();
-                    target.attackEntityFrom(DamageSource.causeIndirectMagicDamage((Entity)spell, (Entity)caster), 4.0F);
-                    target.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, 400, 4));
-                    target.addPotionEffect(new PotionEffect(Potion.digSlowdown.id, 400, 3));
-                    target.addPotionEffect(new PotionEffect(Potion.weakness.id, 400, 1));
+                    float damage = 4.0F + (level - 1) * 3.0F;
+                    target.attackEntityFrom(DamageSource.causeIndirectMagicDamage((Entity)spell, (Entity)caster), damage);
+                    int debuffDur = 200 + level * 100;
+                    target.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, debuffDur, 2 + level));
+                    target.addPotionEffect(new PotionEffect(Potion.digSlowdown.id, debuffDur, 2 + level));
+                    target.addPotionEffect(new PotionEffect(Potion.weakness.id, debuffDur, level));
 
                     int tx = MathHelper.floor_double(target.posX);
                     int ty = MathHelper.floor_double(target.posY);
                     int tz = MathHelper.floor_double(target.posZ);
                     int height = Math.max(2, (int)Math.ceil((double)target.height));
 
-                    // 1. Encase directly on target's body (en su composición de persona)
+                    // 1. Encase directly on target body
                     for (int dy = 0; dy < height; ++dy) {
                         int by = ty + dy;
                         Block b = world.getBlock(tx, by, tz);
+                        int meta = world.getBlockMetadata(tx, by, tz);
                         if (world.isAirBlock(tx, by, tz) || b.getMaterial().isReplaceable() || b == Blocks.snow_layer || b == Blocks.fire) {
                             world.setBlock(tx, by, tz, Blocks.ice);
+                            int melt = baseMelt + world.rand.nextInt(40);
+                            glaciusTasks.add(new GlaciusTask(melt, tx, by, tz, world.provider.dimensionId, b == Blocks.ice ? Blocks.air : b, meta, Blocks.ice));
                         }
                     }
 
-                    // 2. Encase in ice block cage around the target (alrededor del target)
+                    // 2. Encase in ice block cage around target
                     for (int dx = -1; dx <= 1; ++dx) {
                         for (int dz = -1; dz <= 1; ++dz) {
                             for (int dy = 0; dy <= height; ++dy) {
@@ -913,21 +942,27 @@ public class EffectRegistry {
                                 int by = ty + dy;
                                 int bz = tz + dz;
                                 Block b = world.getBlock(bx, by, bz);
+                                int meta = world.getBlockMetadata(bx, by, bz);
                                 if (world.isAirBlock(bx, by, bz) || b.getMaterial().isReplaceable() || b == Blocks.snow_layer || b == Blocks.fire) {
                                     world.setBlock(bx, by, bz, Blocks.ice);
+                                    int melt = baseMelt + world.rand.nextInt(60);
+                                    glaciusTasks.add(new GlaciusTask(melt, bx, by, bz, world.provider.dimensionId, b == Blocks.ice ? Blocks.air : b, meta, Blocks.ice));
                                 }
                             }
                         }
                     }
 
-                    // 3. Ground frost / snow in a small ring around the ice cage
-                    for (int dx = -2; dx <= 2; ++dx) {
-                        for (int dz = -2; dz <= 2; ++dz) {
+                    // 3. Ground frost / snow in a small ring around ice cage
+                    int snowRadius = 1 + level;
+                    for (int dx = -snowRadius; dx <= snowRadius; ++dx) {
+                        for (int dz = -snowRadius; dz <= snowRadius; ++dz) {
                             int bx = tx + dx;
                             int bz = tz + dz;
                             int by = ty;
                             if (world.isAirBlock(bx, by, bz) && world.getBlock(bx, by - 1, bz).getMaterial().isSolid()) {
                                 world.setBlock(bx, by, bz, Blocks.snow_layer);
+                                int melt = baseMelt + 40 + world.rand.nextInt(60);
+                                glaciusTasks.add(new GlaciusTask(melt, bx, by, bz, world.provider.dimensionId, Blocks.air, 0, Blocks.snow_layer));
                             }
                         }
                     }
@@ -941,18 +976,27 @@ public class EffectRegistry {
                 int px = (int)spell.posX;
                 int py = (int)spell.posY;
                 int pz = (int)spell.posZ;
-                for (int x = -5; x <= 5; ++x) {
-                    for (int y = -5; y <= 5; ++y) {
-                        for (int z = -5; z <= 5; ++z) {
-                            Block b = world.getBlock(px + x, py + y, pz + z);
+                int envRadius = 3 + level * 2;
+                for (int x = -envRadius; x <= envRadius; ++x) {
+                    for (int y = -envRadius; y <= envRadius; ++y) {
+                        for (int z = -envRadius; z <= envRadius; ++z) {
+                            int bx = px + x;
+                            int by = py + y;
+                            int bz = pz + z;
+                            Block b = world.getBlock(bx, by, bz);
+                            int meta = world.getBlockMetadata(bx, by, bz);
                             if (b == Blocks.water || b == Blocks.flowing_water) {
-                                world.setBlock(px + x, py + y, pz + z, Blocks.ice);
+                                world.setBlock(bx, by, bz, Blocks.ice);
+                                int melt = baseMelt + world.rand.nextInt(80);
+                                glaciusTasks.add(new GlaciusTask(melt, bx, by, bz, world.provider.dimensionId, b, meta, Blocks.ice));
                             } else if (b == Blocks.lava || b == Blocks.flowing_lava) {
-                                world.setBlock(px + x, py + y, pz + z, Blocks.cobblestone);
+                                world.setBlock(bx, by, bz, Blocks.cobblestone);
                             } else if (b == Blocks.fire) {
-                                world.setBlockToAir(px + x, py + y, pz + z);
-                            } else if (world.isAirBlock(px + x, py + y, pz + z) && world.getBlock(px + x, py + y - 1, pz + z).getMaterial().isSolid() && (x * x + z * z <= 9) && world.rand.nextInt(2) == 0) {
-                                world.setBlock(px + x, py + y, pz + z, Blocks.snow_layer);
+                                world.setBlockToAir(bx, by, bz);
+                            } else if (world.isAirBlock(bx, by, bz) && world.getBlock(bx, by - 1, bz).getMaterial().isSolid() && (x * x + z * z <= (envRadius * envRadius)) && world.rand.nextInt(2) == 0) {
+                                world.setBlock(bx, by, bz, Blocks.snow_layer);
+                                int melt = baseMelt + 40 + world.rand.nextInt(80);
+                                glaciusTasks.add(new GlaciusTask(melt, bx, by, bz, world.provider.dimensionId, Blocks.air, 0, Blocks.snow_layer));
                             }
                         }
                     }
@@ -966,12 +1010,14 @@ public class EffectRegistry {
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect effectEntity) {
             if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
                 EntityLivingBase entityLiving = (EntityLivingBase)mop.entityHit;
+                int level = Math.max(1, effectEntity.getEffectLevel());
+                entityLiving.attackEntityFrom(DamageSource.causeIndirectMagicDamage((Entity)effectEntity, (Entity)caster), 2.0f + (level - 1) * 2.0f);
                 if (!entityLiving.isPotionActive(Potion.moveSlowdown)) {
-                    entityLiving.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, 6000, 9));
+                    entityLiving.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, 4000 + level * 2000, 9));
                 }
-                entityLiving.addPotionEffect(new PotionEffect(Potion.confusion.id, 60, 0));
+                entityLiving.addPotionEffect(new PotionEffect(Potion.confusion.id, 60 + level * 60, level - 1));
                 if (effectEntity != null) {
-                    entityLiving.addVelocity(effectEntity.motionX * 2.0, 0.3, effectEntity.motionZ * 2.0);
+                    entityLiving.addVelocity(effectEntity.motionX * (1.5 + level * 0.8), 0.2 + level * 0.15, effectEntity.motionZ * (1.5 + level * 0.8));
                     entityLiving.velocityChanged = true;
                 }
             }
@@ -1197,20 +1243,22 @@ public class EffectRegistry {
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
             if (!world.isRemote && mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
                 EntityLivingBase target = (EntityLivingBase)mop.entityHit;
-                target.attackEntityFrom(DamageSource.causeIndirectMagicDamage((Entity)spell, (Entity)caster), 3.0f);
+                int level = Math.max(1, spell.getEffectLevel());
+                float damage = 3.0f + (level - 1) * 2.5f;
+                target.attackEntityFrom(DamageSource.causeIndirectMagicDamage((Entity)spell, (Entity)caster), damage);
                 if (target instanceof EntityPlayer) {
                     EntityPlayer pTarget = (EntityPlayer)target;
                     if (pTarget.isUsingItem()) {
                         pTarget.clearItemInUse();
                     }
                     int currentEnergy = Infusion.getCurrentEnergy(pTarget);
-                    Infusion.setCurrentEnergy(pTarget, Math.max(0, currentEnergy - 80));
+                    Infusion.setCurrentEnergy(pTarget, Math.max(0, currentEnergy - (80 + (level - 1) * 60)));
                     com.emoniph.witchery.common.ExtendedPlayer targetEx = com.emoniph.witchery.common.ExtendedPlayer.get(pTarget);
                     if (targetEx != null && targetEx.isVampire()) {
-                        targetEx.decreaseBloodPower(150, false);
+                        targetEx.decreaseBloodPower(150 + (level - 1) * 100, false);
                     }
                 }
-                target.addPotionEffect(new PotionEffect(Potion.weakness.id, 100, 0));
+                target.addPotionEffect(new PotionEffect(Potion.weakness.id, 100 * level, level - 1));
                 ParticleEffect.MAGIC_CRIT.send(SoundEffect.RANDOM_ORB, (Entity)target, 1.0, 1.0, 16);
             }
         }
@@ -1340,16 +1388,19 @@ public class EffectRegistry {
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
             if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
                 EntityLivingBase target = (EntityLivingBase)mop.entityHit;
+                int level = Math.max(1, spell.getEffectLevel());
                 if (target instanceof EntityPlayer) {
                     if (!world.isRemote && (!(caster instanceof EntityPlayer) || MinecraftServer.getServer().isPVPEnabled())) {
                         target.clearActivePotions();
-                        target.addPotionEffect(new PotionEffect(Potion.confusion.id, 200, 1));
+                        target.addPotionEffect(new PotionEffect(Potion.confusion.id, 200 + level * 100, level - 1));
+                        target.addPotionEffect(new PotionEffect(Potion.blindness.id, 60 + level * 40, 0));
                         ParticleEffect.SPELL.send(SoundEffect.RANDOM_FIZZ, (Entity)target, 1.0, 1.0, 16);
                     }
                 } else if (target instanceof EntityLiving) {
                     EntityLiving mobTarget = (EntityLiving)target;
                     mobTarget.setAttackTarget(null);
                     mobTarget.setRevengeTarget(null);
+                    target.addPotionEffect(new PotionEffect(Potion.confusion.id, 200 + level * 100, level - 1));
                     ParticleEffect.SPELL.send(SoundEffect.RANDOM_FIZZ, (Entity)target, 1.0, 1.0, 16);
                 }
             }
@@ -1426,6 +1477,7 @@ public class EffectRegistry {
                     double closestDist = Double.MAX_VALUE;
                     for (Object obj : list) {
                         Entity e = (Entity)obj;
+                        if (e == caster) continue;
                         double d = e.getDistanceSqToEntity(spell);
                         if (d < closestDist) {
                             closestDist = d;
@@ -1434,24 +1486,34 @@ public class EffectRegistry {
                     }
                 }
             }
-            if (target != null) {
-                if (target instanceof EntityPlayer && ((EntityPlayer)target).getEntityData().getInteger("WITCLeviosaTicks") > 0) {
-                    ((EntityPlayer)target).getEntityData().setInteger("WITCLeviosaTicks", 0);
-                    ParticleEffect.SMOKE.send(SoundEffect.RANDOM_FIZZ, target, 1.0D, 2.0D, 16);
-                } else {
-                    if (caster instanceof EntityPlayer) {
-                        EntityPlayer player = (EntityPlayer)caster;
-                        player.getEntityData().setInteger("WITCLeviosaEntity", target.getEntityId());
-                        player.getEntityData().setInteger("WITCLeviosaTicks", Integer.MAX_VALUE);
-                        if (!player.getEntityData().hasKey("WITCLeviosaDistance")) {
-                            player.getEntityData().setFloat("WITCLeviosaDistance", 5.0f);
-                        }
+            if (target != null && target != caster) {
+                int level = Math.max(1, spell.getEffectLevel());
+                if (caster instanceof EntityPlayer) {
+                    EntityPlayer player = (EntityPlayer)caster;
+                    if (player.getEntityData().getInteger("WITCLeviosaEntity") == target.getEntityId() && player.getEntityData().getInteger("WITCLeviosaTicks") > 0) {
+                        player.getEntityData().setInteger("WITCLeviosaTicks", 0);
+                        player.getEntityData().setInteger("WITCLeviosaEntity", 0);
+                        ParticleEffect.SMOKE.send(SoundEffect.RANDOM_FIZZ, target, 1.0D, 2.0D, 16);
+                        return;
                     }
-                    target.motionY = 0.5;
-                    if (target instanceof EntityLivingBase) {
-                        ((EntityLivingBase)target).addPotionEffect(new PotionEffect(Potion.resistance.id, 200, 4));
-                    }
+                    player.getEntityData().setInteger("WITCLeviosaEntity", target.getEntityId());
+                    player.getEntityData().setInteger("WITCLeviosaTicks", 300 + level * 200);
+                    float curDist = (float)Math.max(2.0, Math.min(25.0, player.getDistanceToEntity(target)));
+                    player.getEntityData().setFloat("WITCLeviosaDistance", curDist);
                 }
+                target.fallDistance = 0.0F;
+                if (target instanceof EntityPlayerMP) {
+                    EntityPlayerMP pTarget = (EntityPlayerMP)target;
+                    pTarget.setPositionAndUpdate(pTarget.posX, pTarget.posY + 0.5D, pTarget.posZ);
+                    pTarget.playerNetServerHandler.sendPacket(new S12PacketEntityVelocity(pTarget.getEntityId(), 0.0, 0.3, 0.0));
+                } else {
+                    target.motionY = 0.5;
+                }
+                target.velocityChanged = true;
+                if (target instanceof EntityLivingBase) {
+                    ((EntityLivingBase)target).addPotionEffect(new PotionEffect(Potion.resistance.id, 300 + level * 200, 4));
+                }
+                ParticleEffect.SPELL_COLORED.send(SoundEffect.RANDOM_ORB, target, 1.0D, 2.0D, 16, 0x88DDFF);
             }
         }
     }, new StrokeSet(0, new byte[]{(byte)2,(byte)2,(byte)1}));
@@ -1526,7 +1588,9 @@ public class EffectRegistry {
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
             if (!world.isRemote) {
-                world.newExplosion((Entity)caster, spell.posX, spell.posY, spell.posZ, 3.0f, false, true);
+                int level = Math.max(1, spell.getEffectLevel());
+                float power = 2.5f + (level - 1) * 1.0f;
+                world.newExplosion((Entity)caster, spell.posX, spell.posY, spell.posZ, power, false, true);
                 ParticleEffect.EXPLODE.send(SoundEffect.RANDOM_EXPLODE, world, spell.posX, spell.posY, spell.posZ, 2.0, 2.0, 16);
             }
         }
@@ -1536,7 +1600,9 @@ public class EffectRegistry {
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
             if (!world.isRemote) {
-                world.newExplosion((Entity)caster, spell.posX, spell.posY, spell.posZ, 6.0f, false, true);
+                int level = Math.max(1, spell.getEffectLevel());
+                float power = 5.0f + (level - 1) * 2.0f;
+                world.newExplosion((Entity)caster, spell.posX, spell.posY, spell.posZ, power, false, true);
                 ParticleEffect.LARGE_EXPLODE.send(SoundEffect.RANDOM_EXPLODE, world, spell.posX, spell.posY, spell.posZ, 4.0, 4.0, 16);
             }
         }
@@ -1597,10 +1663,14 @@ public class EffectRegistry {
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
             if (!world.isRemote) {
-                for (int i = 0; i < 3; ++i) {
+                int level = Math.max(1, spell.getEffectLevel());
+                int count = 2 + level;
+                int lifetime = 200 + level * 100;
+                for (int i = 0; i < count; ++i) {
                     EntityOwl owl = new EntityOwl(world);
                     owl.setLocationAndAngles(spell.posX, spell.posY, spell.posZ, 0.0f, 0.0f);
-                    owl.setTimeToLive(200);
+                    owl.setTimeToLive(lifetime);
+                    owl.getEntityData().setInteger("WITCLifetime", lifetime);
                     if (mop != null && mop.entityHit instanceof EntityLivingBase) {
                         owl.setAttackTarget((EntityLivingBase)mop.entityHit);
                     }
@@ -1615,13 +1685,21 @@ public class EffectRegistry {
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
             if (!world.isRemote) {
-                for (int i = 0; i < 3; ++i) {
+                int level = Math.max(1, spell.getEffectLevel());
+                int count = 2 + level;
+                int lifetime = 200 + level * 100;
+                EntityLivingBase hitTarget = (mop != null && mop.entityHit instanceof EntityLivingBase) ? (EntityLivingBase)mop.entityHit : null;
+
+                for (int i = 0; i < count; ++i) {
                     EntityWolf wolf = new EntityWolf(world);
-                    wolf.setLocationAndAngles(spell.posX, spell.posY, spell.posZ, 0.0f, 0.0f);
+                    wolf.setLocationAndAngles(spell.posX + (world.rand.nextDouble() - 0.5) * 2.0, spell.posY, spell.posZ + (world.rand.nextDouble() - 0.5) * 2.0, 0.0f, 0.0f);
                     wolf.setAngry(true);
-                    if (mop.entityHit instanceof EntityLivingBase) {
-                        wolf.setAttackTarget((EntityLivingBase)mop.entityHit);
+                    wolf.getEntityData().setInteger("WITCLifetime", lifetime);
+                    if (hitTarget != null && hitTarget != caster) {
+                        wolf.setAttackTarget(hitTarget);
                     }
+                    wolf.addPotionEffect(new PotionEffect(Potion.moveSpeed.id, lifetime, level - 1));
+                    wolf.addPotionEffect(new PotionEffect(Potion.damageBoost.id, lifetime, level - 1));
                     world.spawnEntityInWorld((Entity)wolf);
                 }
                 ParticleEffect.SMOKE.send(SoundEffect.RANDOM_POP, spell, 1.0, 1.0, 16);
@@ -1633,10 +1711,23 @@ public class EffectRegistry {
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
             if (!world.isRemote) {
-                EntityIronGolem golem = new EntityIronGolem(world);
-                golem.setLocationAndAngles(spell.posX, spell.posY, spell.posZ, 0.0f, 0.0f);
-                golem.setPlayerCreated(true);
-                world.spawnEntityInWorld((Entity)golem);
+                int level = Math.max(1, spell.getEffectLevel());
+                int lifetime = 600 + (level - 1) * 300;
+                int count = level >= 3 ? 2 : 1;
+                EntityLivingBase hitTarget = (mop != null && mop.entityHit instanceof EntityLivingBase) ? (EntityLivingBase)mop.entityHit : null;
+
+                for (int i = 0; i < count; ++i) {
+                    EntityIronGolem golem = new EntityIronGolem(world);
+                    golem.setLocationAndAngles(spell.posX + i * 1.5, spell.posY, spell.posZ + i * 1.5, 0.0f, 0.0f);
+                    golem.setPlayerCreated(true);
+                    golem.getEntityData().setInteger("WITCLifetime", lifetime);
+                    if (hitTarget != null && hitTarget != caster) {
+                        golem.setAttackTarget(hitTarget);
+                    }
+                    golem.addPotionEffect(new PotionEffect(Potion.resistance.id, lifetime, level - 1));
+                    golem.addPotionEffect(new PotionEffect(Potion.damageBoost.id, lifetime, level - 1));
+                    world.spawnEntityInWorld((Entity)golem);
+                }
                 ParticleEffect.SPELL.send(SoundEffect.RANDOM_FIZZ, spell, 2.0, 2.0, 16);
             }
         }
@@ -1646,7 +1737,8 @@ public class EffectRegistry {
         @Override
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
             if (!world.isRemote) {
-                double r = 4.0;
+                int level = Math.max(1, spell.getEffectLevel());
+                double r = 3.0 + (double)level;
                 List list = world.getEntitiesWithinAABB(EntityItem.class, spell.boundingBox.expand(r, r, r));
                 for (Object obj : list) {
                     ((EntityItem)obj).setDead();
@@ -1659,11 +1751,12 @@ public class EffectRegistry {
                 int cx = mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK ? mop.blockX : (int)spell.posX;
                 int cy = mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK ? mop.blockY : (int)spell.posY;
                 int cz = mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK ? mop.blockZ : (int)spell.posZ;
-                for (int x = -2; x <= 2; ++x) {
-                    for (int y = -2; y <= 2; ++y) {
-                        for (int z = -2; z <= 2; ++z) {
+                int rad = level;
+                for (int x = -rad - 1; x <= rad + 1; ++x) {
+                    for (int y = -rad - 1; y <= rad + 1; ++y) {
+                        for (int z = -rad - 1; z <= rad + 1; ++z) {
                             Block b = world.getBlock(cx + x, cy + y, cz + z);
-                            if (Math.abs(x) <= 1 && Math.abs(y) <= 1 && Math.abs(z) <= 1) {
+                            if (Math.abs(x) <= rad && Math.abs(y) <= rad && Math.abs(z) <= rad) {
                                 if (b == Blocks.air || b == Blocks.bedrock) continue;
                                 world.setBlockToAir(cx + x, cy + y, cz + z);
                                 continue;
@@ -1684,11 +1777,14 @@ public class EffectRegistry {
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
             if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
                 EntityLivingBase target = (EntityLivingBase)mop.entityHit;
+                int level = Math.max(1, spell.getEffectLevel());
                 if (target instanceof EntitySpider) {
-                    target.attackEntityFrom(DamageSource.causeIndirectMagicDamage((Entity)spell, (Entity)caster), 50.0f);
+                    target.attackEntityFrom(DamageSource.causeIndirectMagicDamage((Entity)spell, (Entity)caster), 50.0f * level);
                 } else {
-                    target.attackEntityFrom(DamageSource.causeIndirectMagicDamage((Entity)spell, (Entity)caster), 2.0f);
+                    target.attackEntityFrom(DamageSource.causeIndirectMagicDamage((Entity)spell, (Entity)caster), 2.0f + (level - 1) * 3.0f);
                 }
+                target.addVelocity(spell.motionX * (1.0 + level * 0.5), 0.2 + level * 0.15, spell.motionZ * (1.0 + level * 0.5));
+                target.velocityChanged = true;
                 ParticleEffect.SPELL_COLORED.send(SoundEffect.RANDOM_ORB, (Entity)target, 1.0, 1.0, 16);
             }
         }
@@ -1699,11 +1795,13 @@ public class EffectRegistry {
         public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
             if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
                 EntityLivingBase target = (EntityLivingBase)mop.entityHit;
+                int level = Math.max(1, spell.getEffectLevel());
+                int dur = 200 + level * 200;
                 if (target instanceof EntityPlayer) {
-                    target.addPotionEffect(new PotionEffect(Witchery.Potions.PARALYSED.id, 400, 0));
+                    target.addPotionEffect(new PotionEffect(Witchery.Potions.PARALYSED.id, dur, 0));
                 }
-                target.addPotionEffect(new PotionEffect(Potion.weakness.id, 400, 10));
-                target.addPotionEffect(new PotionEffect(Potion.digSlowdown.id, 400, 10));
+                target.addPotionEffect(new PotionEffect(Potion.weakness.id, dur, 10));
+                target.addPotionEffect(new PotionEffect(Potion.digSlowdown.id, dur, 10));
                 ParticleEffect.SPELL.send(SoundEffect.RANDOM_FIZZ, (Entity)target, 1.0, 1.0, 16);
             }
         }
@@ -1740,6 +1838,7 @@ public class EffectRegistry {
         }
     }, new StrokeSet(1, new byte[]{(byte)0,(byte)0,(byte)3,(byte)0,(byte)1,(byte)0})).setRequiredInfusion(1);
     public static List<ErectoTask> erectoTasks = new ArrayList<ErectoTask>();
+    public static final List<GlaciusTask> glaciusTasks = new ArrayList<GlaciusTask>();
     public static final SymbolEffect Apparition;
     public static final SymbolEffect Fiendfyre;
     public static final SymbolEffect Expulso;
@@ -2007,10 +2106,14 @@ public class EffectRegistry {
                         SoundEffect.NOTE_SNARE.playOnlyTo(caster instanceof EntityPlayer ? (EntityPlayer)caster : null, 1.0f, 0.5f);
                         return;
                     }
+                    int level = Math.max(1, spell.getEffectLevel());
                     double x = spell.posX;
                     double y = spell.posY;
                     double z = spell.posZ;
                     caster.setPositionAndUpdate(x, y + 1.0, z);
+                    caster.fallDistance = 0.0f;
+                    caster.addPotionEffect(new PotionEffect(Potion.resistance.id, 40 * level, 1));
+                    caster.addPotionEffect(new PotionEffect(Potion.moveSpeed.id, 60 * level, 0));
                     world.playSoundAtEntity((Entity)caster, "mob.endermen.portal", 1.0f, 1.0f);
                     ParticleEffect.PORTAL.send(SoundEffect.RANDOM_POP, spell, 1.0, 1.0, 16);
                 }
@@ -2021,20 +2124,30 @@ public class EffectRegistry {
             @Override
             public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
                 EntityPlayer player;
-                if (!world.isRemote && caster instanceof EntityPlayer && Infusion.getInfusionID(player = (EntityPlayer)caster) == 4 && Infusion.aquireEnergy(world, player, 100, false)) {
-                    for (int i = 0; i < 5; ++i) {
+                if (!world.isRemote && caster instanceof EntityPlayer && Infusion.aquireEnergy(world, (player = (EntityPlayer)caster), 100, false)) {
+                    int level = Math.max(1, spell.getEffectLevel());
+                    int count = 1 + level;
+                    int lifetime = 200 + level * 80;
+                    EntityLivingBase hitTarget = (mop != null && mop.entityHit instanceof EntityLivingBase) ? (EntityLivingBase)mop.entityHit : null;
+
+                    for (int i = 0; i < count; ++i) {
                         EntityBlaze blaze = new EntityBlaze(world);
                         blaze.setLocationAndAngles(spell.posX + (double)world.rand.nextInt(5) - 2.0, spell.posY, spell.posZ + (double)world.rand.nextInt(5) - 2.0, 0.0f, 0.0f);
-                        blaze.addPotionEffect(new PotionEffect(Potion.wither.id, 200, 3));
-                        if (mop.entityHit instanceof EntityLivingBase) {
-                            blaze.setAttackTarget((EntityLivingBase)mop.entityHit);
+                        blaze.getEntityData().setInteger("WITCLifetime", lifetime);
+                        blaze.addPotionEffect(new PotionEffect(Potion.damageBoost.id, lifetime, level - 1));
+                        if (hitTarget != null && hitTarget != caster) {
+                            blaze.setAttackTarget(hitTarget);
                         }
                         world.spawnEntityInWorld((Entity)blaze);
                     }
-                    for (int x = -3; x <= 3; ++x) {
-                        for (int z = -3; z <= 3; ++z) {
-                            if (world.rand.nextInt(3) != 0 || !world.isAirBlock(mop.blockX + x, mop.blockY + 1, mop.blockZ + z)) continue;
-                            world.setBlock(mop.blockX + x, mop.blockY + 1, mop.blockZ + z, (Block)Blocks.fire);
+                    int r = 2 + level;
+                    int hitX = mop != null ? mop.blockX : (int)spell.posX;
+                    int hitY = mop != null ? mop.blockY : (int)spell.posY;
+                    int hitZ = mop != null ? mop.blockZ : (int)spell.posZ;
+                    for (int x = -r; x <= r; ++x) {
+                        for (int z = -r; z <= r; ++z) {
+                            if (world.rand.nextInt(3) != 0 || !world.isAirBlock(hitX + x, hitY + 1, hitZ + z)) continue;
+                            world.setBlock(hitX + x, hitY + 1, hitZ + z, (Block)Blocks.fire);
                         }
                     }
                     ParticleEffect.FLAME.send(SoundEffect.MOB_GHAST_FIREBALL, spell, 3.0, 3.0, 16);
@@ -2044,13 +2157,13 @@ public class EffectRegistry {
         Expulso = EffectRegistry.instance().addEffect(new SymbolEffectProjectile(57, "witchery.pott.expulso"){
             @Override
             public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
-                double radius = 8.0D;
+                int level = Math.max(1, spell.getEffectLevel());
+                double radius = 6.0D + 2.0D * level;
                 List list = world.getEntitiesWithinAABB(EntityLivingBase.class, spell.boundingBox.expand(radius, radius, radius));
                 boolean hit = false;
                 for (Object obj : list) {
                     EntityLivingBase target = (EntityLivingBase)obj;
                     if (target != caster && target.getDistanceToEntity((Entity)spell) <= radius) {
-                        // Disarm: drop whatever the target is holding without deleting player boots.
                         ItemStack held = target.getHeldItem();
                         if (held != null) {
                             if (target instanceof EntityPlayer) {
@@ -2060,12 +2173,11 @@ public class EffectRegistry {
                                 target.setCurrentItemOrArmor(0, (ItemStack)null);
                             }
                         }
-                        // Knock the target away from the blast.
                         double dX = target.posX - spell.posX;
                         double dZ = target.posZ - spell.posZ;
                         double len = Math.sqrt(dX * dX + dZ * dZ);
                         if (len > 0.001D) { dX /= len; dZ /= len; }
-                        target.addVelocity(dX * 2.0D, 1.5D, dZ * 2.0D);
+                        target.addVelocity(dX * (1.5D + 0.5D * level), 1.0D + 0.5D * level, dZ * (1.5D + 0.5D * level));
                         target.velocityChanged = true;
                         hit = true;
                     }
@@ -2081,8 +2193,9 @@ public class EffectRegistry {
             public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
                 if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
                     EntityLivingBase target = (EntityLivingBase)mop.entityHit;
-                    target.addPotionEffect(new PotionEffect(Potion.field_76434_w.id, 1200, 4));
-                    target.addPotionEffect(new PotionEffect(Potion.damageBoost.id, 1200, 1));
+                    int level = Math.max(1, spell.getEffectLevel());
+                    target.addPotionEffect(new PotionEffect(Potion.field_76434_w.id, 600 * level, 2 + level));
+                    target.addPotionEffect(new PotionEffect(Potion.damageBoost.id, 600 * level, level - 1));
                     ParticleEffect.SPELL.send(SoundEffect.RANDOM_LEVELUP, (Entity)target, 1.0, 1.0, 16);
                 }
             }
@@ -2137,16 +2250,20 @@ public class EffectRegistry {
             @Override
             public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
                 if (!world.isRemote) {
+                    int level = Math.max(1, spell.getEffectLevel());
                     int px = (int)spell.posX;
                     int py = (int)spell.posY;
                     int pz = (int)spell.posZ;
-                    for (int x = -5; x <= 5; ++x) {
+                    int radius = 3 + 2 * level;
+                    for (int x = -radius; x <= radius; ++x) {
                         for (int y = -2; y <= 2; ++y) {
-                            for (int z = -5; z <= 5; ++z) {
+                            for (int z = -radius; z <= radius; ++z) {
                                 IGrowable growable;
                                 Block block = world.getBlock(px + x, py + y, pz + z);
                                 if (!(block instanceof IGrowable) || !(growable = (IGrowable)block).func_149851_a(world, px + x, py + y, pz + z, world.isRemote)) continue;
-                                growable.func_149853_b(world, world.rand, px + x, py + y, pz + z);
+                                for (int g = 0; g < level; ++g) {
+                                    growable.func_149853_b(world, world.rand, px + x, py + y, pz + z);
+                                }
                                 world.playAuxSFX(2005, px + x, py + y, pz + z, 0);
                             }
                         }
@@ -2158,17 +2275,14 @@ public class EffectRegistry {
 
             @Override
             public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
-                if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
-                    EntityLivingBase target = (EntityLivingBase)mop.entityHit;
-                    target.addPotionEffect(new PotionEffect(Potion.fireResistance.id, 6000, 0));
-                    target.addPotionEffect(new PotionEffect(Potion.waterBreathing.id, 6000, 0));
-                    target.addPotionEffect(new PotionEffect(Potion.resistance.id, 6000, 2));
+                int level = Math.max(1, spell.getEffectLevel());
+                int dur = 2400 + level * 2400;
+                EntityLivingBase target = (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) ? (EntityLivingBase)mop.entityHit : caster;
+                if (target != null) {
+                    target.addPotionEffect(new PotionEffect(Potion.fireResistance.id, dur, 0));
+                    target.addPotionEffect(new PotionEffect(Potion.waterBreathing.id, dur, 0));
+                    target.addPotionEffect(new PotionEffect(Potion.resistance.id, dur, 1 + level));
                     ParticleEffect.SPELL.send(SoundEffect.RANDOM_LEVELUP, (Entity)target, 1.0, 1.0, 16);
-                } else if (caster != null) {
-                    caster.addPotionEffect(new PotionEffect(Potion.fireResistance.id, 6000, 0));
-                    caster.addPotionEffect(new PotionEffect(Potion.waterBreathing.id, 6000, 0));
-                    caster.addPotionEffect(new PotionEffect(Potion.resistance.id, 6000, 2));
-                    ParticleEffect.SPELL.send(SoundEffect.RANDOM_LEVELUP, (Entity)caster, 1.0, 1.0, 16);
                 }
             }
         }, new StrokeSet(0, new byte[]{(byte)0,(byte)2,(byte)3,(byte)2}));
@@ -2309,21 +2423,32 @@ public class EffectRegistry {
             @Override
             public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
                 if (mop != null && !world.isRemote) {
-                    if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
-                        ArrayList drops;
-                        Block block = world.getBlock(mop.blockX, mop.blockY, mop.blockZ);
-                        int meta = world.getBlockMetadata(mop.blockX, mop.blockY, mop.blockZ);
-                        ItemStack stack = new ItemStack(block, 1, meta);
-                        ItemStack smelted = FurnaceRecipes.smelting().getSmeltingResult(stack);
-                        if (smelted == null && (drops = block.getDrops(world, mop.blockX, mop.blockY, mop.blockZ, meta, 0)) != null && !drops.isEmpty() && (smelted = FurnaceRecipes.smelting().getSmeltingResult((ItemStack)drops.get(0))) == null && block instanceof BlockSand) {
-                            smelted = new ItemStack(Blocks.glass);
+                    int level = Math.max(1, spell.getEffectLevel());
+                    if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+                        int r = level - 1;
+                        for (int dx = -r; dx <= r; ++dx) {
+                            for (int dy = -r; dy <= r; ++dy) {
+                                for (int dz = -r; dz <= r; ++dz) {
+                                    int bx = mop.blockX + dx;
+                                    int by = mop.blockY + dy;
+                                    int bz = mop.blockZ + dz;
+                                    Block block = world.getBlock(bx, by, bz);
+                                    int meta = world.getBlockMetadata(bx, by, bz);
+                                    ItemStack stack = new ItemStack(block, 1, meta);
+                                    ItemStack smelted = FurnaceRecipes.smelting().getSmeltingResult(stack);
+                                    ArrayList drops;
+                                    if (smelted == null && (drops = block.getDrops(world, bx, by, bz, meta, 0)) != null && !drops.isEmpty() && (smelted = FurnaceRecipes.smelting().getSmeltingResult((ItemStack)drops.get(0))) == null && block instanceof BlockSand) {
+                                        smelted = new ItemStack(Blocks.glass);
+                                    }
+                                    if (smelted != null) {
+                                        world.setBlockToAir(bx, by, bz);
+                                        world.spawnEntityInWorld((Entity)new EntityItem(world, (double)bx + 0.5, (double)by + 0.5, (double)bz + 0.5, smelted.copy()));
+                                        ParticleEffect.FLAME.send(SoundEffect.MOB_GHAST_FIREBALL, world, bx, by, bz, 1.0, 1.0, 16);
+                                    }
+                                }
+                            }
                         }
-                        if (smelted != null) {
-                            world.setBlockToAir(mop.blockX, mop.blockY, mop.blockZ);
-                            world.spawnEntityInWorld((Entity)new EntityItem(world, (double)mop.blockX, (double)mop.blockY, (double)mop.blockZ, smelted.copy()));
-                            ParticleEffect.FLAME.send(SoundEffect.MOB_GHAST_FIREBALL, world, mop.blockX, mop.blockY, mop.blockZ, 1.0, 1.0, 16);
-                        }
-                    } else if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit != null && mop.entityHit instanceof EntityItem) {
+                    } else if (mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityItem) {
                         EntityItem eItem = (EntityItem)mop.entityHit;
                         ItemStack smelted = FurnaceRecipes.smelting().getSmeltingResult(eItem.getEntityItem());
                         if (smelted != null) {
@@ -2342,16 +2467,17 @@ public class EffectRegistry {
             public void perform(World world, EntityPlayer player, int effectLevel) {
                 MovingObjectPosition mop = InfusionOtherwhere.doCustomRayTrace(world, player, true, 8.0);
                 if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && !world.isRemote) {
+                    int height = 2 + effectLevel * 2;
                     for (int x = -1; x <= 1; ++x) {
                         for (int z = -1; z <= 1; ++z) {
-                            for (int y = 0; y < 3; ++y) {
+                            for (int y = 0; y < height; ++y) {
                                 if (!world.isAirBlock(mop.blockX + x, mop.blockY + y + 1, mop.blockZ + z)) continue;
                                 world.setBlock(mop.blockX + x, mop.blockY + y + 1, mop.blockZ + z, Blocks.dirt);
                             }
                         }
                     }
-                    if (player.posX >= (double)mop.blockX - 1.5 && player.posX <= (double)mop.blockX + 2.5 && player.posZ >= (double)mop.blockZ - 1.5 && player.posZ <= (double)mop.blockZ + 2.5 && player.posY >= (double)mop.blockY && player.posY <= (double)mop.blockY + 3.0) {
-                        player.setPositionAndUpdate(player.posX, (double)mop.blockY + 4.0, player.posZ);
+                    if (player.posX >= (double)mop.blockX - 1.5 && player.posX <= (double)mop.blockX + 2.5 && player.posZ >= (double)mop.blockZ - 1.5 && player.posZ <= (double)mop.blockZ + 2.5 && player.posY >= (double)mop.blockY && player.posY <= (double)mop.blockY + (double)height) {
+                        player.setPositionAndUpdate(player.posX, (double)mop.blockY + height + 1.0, player.posZ);
                     }
                     ParticleEffect.EXPLODE.send(SoundEffect.RANDOM_EXPLODE, world, mop.blockX, mop.blockY, mop.blockZ, 2.0, 2.0, 16);
                 }
@@ -2362,22 +2488,33 @@ public class EffectRegistry {
             @Override
             public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
                 if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && !world.isRemote) {
-                    Block b = world.getBlock(mop.blockX, mop.blockY, mop.blockZ);
-                    Block newBlock = null;
-                    if (b == Blocks.dirt) {
-                        newBlock = Blocks.sand;
-                    } else if (b == Blocks.sand) {
-                        newBlock = Blocks.dirt;
-                    } else if (b == Blocks.stone) {
-                        newBlock = Blocks.cobblestone;
-                    } else if (b == Blocks.cobblestone) {
-                        newBlock = Blocks.stone;
-                    } else if (b == Blocks.log || b == Blocks.log2) {
-                        newBlock = Blocks.planks;
-                    }
-                    if (newBlock != null) {
-                        world.setBlock(mop.blockX, mop.blockY, mop.blockZ, (Block)newBlock);
-                        ParticleEffect.SPELL_COLORED.send(SoundEffect.RANDOM_LEVELUP, world, mop.blockX, mop.blockY, mop.blockZ, 1.0, 1.0, 16);
+                    int level = Math.max(1, spell.getEffectLevel());
+                    int r = level - 1;
+                    for (int x = -r; x <= r; ++x) {
+                        for (int y = -r; y <= r; ++y) {
+                            for (int z = -r; z <= r; ++z) {
+                                int bx = mop.blockX + x;
+                                int by = mop.blockY + y;
+                                int bz = mop.blockZ + z;
+                                Block b = world.getBlock(bx, by, bz);
+                                Block newBlock = null;
+                                if (b == Blocks.dirt) {
+                                    newBlock = Blocks.sand;
+                                } else if (b == Blocks.sand) {
+                                    newBlock = Blocks.dirt;
+                                } else if (b == Blocks.stone) {
+                                    newBlock = Blocks.cobblestone;
+                                } else if (b == Blocks.cobblestone) {
+                                    newBlock = Blocks.stone;
+                                } else if (b == Blocks.log || b == Blocks.log2) {
+                                    newBlock = Blocks.planks;
+                                }
+                                if (newBlock != null) {
+                                    world.setBlock(bx, by, bz, (Block)newBlock);
+                                    ParticleEffect.SPELL_COLORED.send(SoundEffect.RANDOM_LEVELUP, world, bx, by, bz, 1.0, 1.0, 16);
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -2407,10 +2544,107 @@ public class EffectRegistry {
             @Override
             public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
                 if (!world.isRemote && mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
-                    EntityBroom broom = new EntityBroom(world);
-                    broom.setLocationAndAngles(mop.blockX, mop.blockY + 1, mop.blockZ, 0.0f, 0.0f);
-                    world.spawnEntityInWorld((Entity)broom);
-                    ParticleEffect.PORTAL.send(SoundEffect.MOB_ENDERMEN_PORTAL, world, mop.blockX, mop.blockY, mop.blockZ, 1.0, 1.0, 16);
+                    if (!(caster instanceof EntityPlayer)) {
+                        return;
+                    }
+                    EntityPlayer player = (EntityPlayer) caster;
+                    double targetX = (double) mop.blockX + 0.5D;
+                    double targetY = (double) mop.blockY + 1.0D;
+                    double targetZ = (double) mop.blockZ + 0.5D;
+
+                    // 1. Teletransportar una escoba activa en el mundo que pertenezca al jugador
+                    EntityBroom existingBroom = null;
+                    if (world.loadedEntityList != null) {
+                        for (Object obj : world.loadedEntityList) {
+                            if (obj instanceof EntityBroom) {
+                                EntityBroom b = (EntityBroom) obj;
+                                if (!b.isDead && b.riddenByEntity == null && b.isOwner(player)) {
+                                    existingBroom = b;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (existingBroom != null) {
+                        ParticleEffect.PORTAL.send(SoundEffect.MOB_ENDERMEN_PORTAL, existingBroom.worldObj, existingBroom.posX, existingBroom.posY, existingBroom.posZ, 1.0D, 1.0D, 16);
+                        existingBroom.setLocationAndAngles(targetX, targetY, targetZ, player.rotationYaw, 0.0F);
+                        existingBroom.motionX = 0.0D;
+                        existingBroom.motionY = 0.0D;
+                        existingBroom.motionZ = 0.0D;
+                        ParticleEffect.PORTAL.send(SoundEffect.MOB_ENDERMEN_PORTAL, world, targetX, targetY, targetZ, 1.0D, 1.0D, 16);
+                        return;
+                    }
+
+                    // 2. Buscar en el inventario del jugador
+                    ItemStack foundBroomStack = null;
+                    int foundSlot = -1;
+                    boolean fromEnderChest = false;
+
+                    for (int i = 0; i < player.inventory.mainInventory.length; ++i) {
+                        ItemStack s = player.inventory.mainInventory[i];
+                        if (s != null && Witchery.Items.GENERIC.itemBroomEnchanted.isMatch(s)) {
+                            foundBroomStack = s;
+                            foundSlot = i;
+                            break;
+                        }
+                    }
+
+                    // 3. Buscar en el Cofre de Ender del jugador
+                    if (foundBroomStack == null) {
+                        net.minecraft.inventory.InventoryEnderChest enderChest = player.getInventoryEnderChest();
+                        if (enderChest != null) {
+                            for (int i = 0; i < enderChest.getSizeInventory(); ++i) {
+                                ItemStack s = enderChest.getStackInSlot(i);
+                                if (s != null && Witchery.Items.GENERIC.itemBroomEnchanted.isMatch(s)) {
+                                    foundBroomStack = s;
+                                    foundSlot = i;
+                                    fromEnderChest = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    // 4. Desplegar la escoba consumiendo el item encontrado
+                    if (foundBroomStack != null) {
+                        int woodType = Witchery.Items.GENERIC.getBroomWoodType(foundBroomStack);
+                        int brushColor = Witchery.Items.GENERIC.getBroomItemColor(foundBroomStack);
+                        String customName = foundBroomStack.hasDisplayName() ? foundBroomStack.getDisplayName() : null;
+
+                        --foundBroomStack.stackSize;
+                        if (foundBroomStack.stackSize <= 0) {
+                            if (fromEnderChest) {
+                                player.getInventoryEnderChest().setInventorySlotContents(foundSlot, (ItemStack) null);
+                            } else {
+                                player.inventory.setInventorySlotContents(foundSlot, (ItemStack) null);
+                            }
+                        }
+                        if (fromEnderChest) {
+                            player.getInventoryEnderChest().markDirty();
+                        } else {
+                            player.inventory.markDirty();
+                        }
+
+                        EntityBroom broom = new EntityBroom(world, targetX, targetY, targetZ);
+                        broom.setOwner(player);
+                        broom.setWoodType(woodType);
+                        if (brushColor >= 0 && brushColor <= 15) {
+                            broom.setBrushColor(brushColor);
+                        }
+                        if (customName != null && !customName.isEmpty()) {
+                            broom.setCustomNameTag(customName);
+                        }
+                        broom.rotationYaw = player.rotationYaw;
+                        world.spawnEntityInWorld((Entity) broom);
+
+                        ParticleEffect.PORTAL.send(SoundEffect.MOB_ENDERMEN_PORTAL, world, targetX, targetY, targetZ, 1.0D, 1.0D, 16);
+                        return;
+                    }
+
+                    // 5. No tiene escoba disponible
+                    SoundEffect.NOTE_SNARE.playOnlyTo(player);
+                    com.emoniph.witchery.util.ChatUtil.sendTranslated(net.minecraft.util.EnumChatFormatting.RED, player, "witchery.pott.broomsummon.nobroom");
                 }
             }
         }.setColor(8409152).setSize(2.0f), new StrokeSet(0, new byte[]{(byte)1,(byte)1,(byte)0,(byte)3}));
@@ -2419,9 +2653,9 @@ public class EffectRegistry {
             @Override
             public void perform(World world, EntityPlayer player, int effectLevel) {
                 if (!world.isRemote) {
-                    player.addVelocity(0.0, 1.5, 0.0);
+                    player.addVelocity(0.0, 1.0 + effectLevel * 0.5, 0.0);
                     player.velocityChanged = true;
-                    player.fallDistance = -20.0f;
+                    player.fallDistance = -20.0f * effectLevel;
                     ParticleEffect.SLIME.send(SoundEffect.MOB_SLIME_BIG, (Entity)player, 1.0, 1.0, 16);
                 }
             }
@@ -2453,7 +2687,8 @@ public class EffectRegistry {
                         nbt.setLong("AsisLastTime", time);
                         nbt.setInteger("AsisCombo", combo);
                     }
-                    float damage = 3.0f + (float)Math.min(combo, 5) * 1.5f;
+                    int level = Math.max(1, spell.getEffectLevel());
+                    float damage = (3.0f + (float)Math.min(combo, 5) * 1.5f) * (1.0f + (level - 1) * 0.5f);
                     target.attackEntityFrom(new EntityDamageSourceIndirect("arrow", (Entity)spell, (Entity)caster).setProjectile(), damage);
                     ParticleEffect.MAGIC_CRIT.send(SoundEffect.DAMAGE_HIT, (Entity)target, 0.5, 1.0, 16);
                 }
@@ -2576,13 +2811,17 @@ public class EffectRegistry {
                     if (target instanceof net.minecraft.entity.monster.EntitySpider) {
                         return; // Prevent crash when webs touch spiders
                     }
+                    int level = Math.max(1, spell.getEffectLevel());
+                    target.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, 100 * level, level));
+                    target.addPotionEffect(new PotionEffect(Potion.weakness.id, 100 * level, 1));
                     int cx = (int)target.posX;
                     int cy = (int)target.posY;
                     int cz = (int)target.posZ;
-                    for (int x = -1; x <= 1; ++x) {
-                        for (int y = 0; y <= 1; ++y) {
-                            for (int z = -1; z <= 1; ++z) {
-                                if (Math.abs(x) + Math.abs(z) > 1 || !world.isAirBlock(cx + x, cy + y, cz + z)) continue;
+                    int rad = level;
+                    for (int x = -rad; x <= rad; ++x) {
+                        for (int y = 0; y <= rad; ++y) {
+                            for (int z = -rad; z <= rad; ++z) {
+                                if (Math.abs(x) + Math.abs(z) > rad || !world.isAirBlock(cx + x, cy + y, cz + z)) continue;
                                 world.setBlock(cx + x, cy + y, cz + z, Blocks.web);
                             }
                         }
@@ -2596,6 +2835,12 @@ public class EffectRegistry {
             @Override
             public void onCollision(World world, EntityLivingBase caster, MovingObjectPosition mop, EntitySpellEffect spell) {
                 if (!world.isRemote) {
+                    int level = Math.max(1, spell.getEffectLevel());
+                    if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityLivingBase) {
+                        EntityLivingBase target = (EntityLivingBase)mop.entityHit;
+                        target.attackEntityFrom(DamageSource.causeIndirectMagicDamage((Entity)spell, (Entity)caster), 3.0f + (level - 1) * 2.5f);
+                        target.setFire(3 * level);
+                    }
                     ItemStack itemstack = new ItemStack(Items.fireworks);
                     NBTTagCompound nbttagcompound = new NBTTagCompound();
                     NBTTagCompound nbttagcompound1 = new NBTTagCompound();
@@ -2610,12 +2855,11 @@ public class EffectRegistry {
                     nbttagcompound1.setByte("Flight", (byte)2);
                     nbttagcompound.setTag("Fireworks", (NBTBase)nbttagcompound1);
                     itemstack.setTagCompound(nbttagcompound);
-                    EntityFireworkRocket rocket = new EntityFireworkRocket(world, spell.posX, spell.posY + 1.0, spell.posZ, itemstack);
-                    world.spawnEntityInWorld((Entity)rocket);
-                    world.playSoundAtEntity((Entity)rocket, "fireworks.launch", 3.0f, 1.0f);
+                    EntityFireworkRocket entityfireworkrocket = new EntityFireworkRocket(world, spell.posX, spell.posY, spell.posZ, itemstack);
+                    world.spawnEntityInWorld((Entity)entityfireworkrocket);
                 }
             }
-        }, new StrokeSet(1, new byte[]{(byte)1,(byte)3,(byte)1,(byte)2}));
+        }.setColor(0xFF0000).setSize(1.0f), new StrokeSet(1, new byte[]{(byte)2,(byte)1,(byte)1,(byte)2}));
     }
 
     public static interface IEntityEffect<T extends Entity> {
@@ -2655,6 +2899,30 @@ public class EffectRegistry {
                         it.remove();
                     }
                 }
+                List<GlaciusTask> gList = glaciusTasks;
+                synchronized (gList) {
+                    Iterator<GlaciusTask> it = glaciusTasks.iterator();
+                    while (it.hasNext()) {
+                        GlaciusTask task = it.next();
+                        --task.ticks;
+                        if (task.ticks > 0) continue;
+                        MinecraftServer server = MinecraftServer.getServer();
+                        if (server != null) {
+                            WorldServer world = server.worldServerForDimension(task.dim);
+                            if (world != null) {
+                                if (world.getBlock(task.x, task.y, task.z) == task.placedBlock) {
+                                    if (task.origBlock != null && task.origBlock != Blocks.air) {
+                                        world.setBlock(task.x, task.y, task.z, task.origBlock, task.origMeta, 3);
+                                    } else {
+                                        world.setBlockToAir(task.x, task.y, task.z);
+                                    }
+                                    world.playAuxSFX(2001, task.x, task.y, task.z, Block.getIdFromBlock(task.placedBlock));
+                                }
+                            }
+                        }
+                        it.remove();
+                    }
+                }
             }
         }
     }
@@ -2674,5 +2942,25 @@ public class EffectRegistry {
             this.dim = d;
         }
     }
-}
+    public static class GlaciusTask {
+        public int ticks;
+        public int x;
+        public int y;
+        public int z;
+        public int dim;
+        public Block origBlock;
+        public int origMeta;
+        public Block placedBlock;
 
+        public GlaciusTask(int t, int x, int y, int z, int d, Block orig, int origMeta, Block placed) {
+            this.ticks = t;
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.dim = d;
+            this.origBlock = orig;
+            this.origMeta = origMeta;
+            this.placedBlock = placed;
+        }
+    }
+}

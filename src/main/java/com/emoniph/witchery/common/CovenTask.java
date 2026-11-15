@@ -142,6 +142,7 @@ public class CovenTask {
         if (nbtPlayer != null) {
             totalDone = nbtPlayer.getInteger("WITCCovenTasksCompleted") + 1;
             nbtPlayer.setInteger("WITCCovenTasksCompleted", totalDone);
+            nbtPlayer.setLong("WITCLastCovenTaskTime", player.worldObj.getTotalWorldTime());
         }
         int curEnergy = com.emoniph.witchery.infusion.Infusion.getCurrentEnergy(player);
         int maxEnergy = com.emoniph.witchery.infusion.Infusion.getMaxEnergy(player);

@@ -157,12 +157,13 @@ public abstract class SymbolEffect {
       return this;
    }
 
+   public boolean requiresInfernalInfusion() {
+      return this.requiredInfusionID == 2 || this.isCurse() || this.getSpellTier() == 4;
+   }
+
    public int getRequiredInfusionID() {
-      if(this.requiredInfusionID > 0) {
-         return this.requiredInfusionID;
-      }
-      if(this.isUnforgivable()) {
-         return 4;
+      if(this.requiresInfernalInfusion()) {
+         return 2;
       }
       return 0;
    }
@@ -174,11 +175,55 @@ public abstract class SymbolEffect {
       if(infusionID <= 0) {
          return false;
       }
-      int req = this.getRequiredInfusionID();
-      if(req > 0) {
-         return infusionID == req;
+      if(this.requiresInfernalInfusion()) {
+         return infusionID == 2;
       }
       return true;
+   }
+
+      public int getSpellTier() {
+      int id = this.getEffectID();
+      // Tier 4: Artes Oscuras y Maleficios Prohibidos
+      if(this.isCurse() || id == 4 || id == 9 || id == 20 || id == 39 || id == 40 || id == 41 || id == 42 || id == 43 || id == 44 || id == 45 || id == 46 || id == 56 || id == 99) {
+         return 4;
+      }
+      // Tier 3: Magister (Alta Magia, Destrucción, Invocación y Espacio)
+      if(id == 5 || id == 7 || id == 11 || id == 23 || id == 24 || id == 27 || id == 29 || id == 30 || id == 34 || id == 53 || id == 54 || id == 55 || id == 57 || id == 58 || id == 59 || id == 64 || id == 65 || id == 74 || id == 75 || id == 76 || id == 77 || id == 79 || id == 103) {
+         return 3;
+      }
+      // Tier 2: Adepto (Duelo táctico, movilidad, control y defensa)
+      if(id == 8 || id == 10 || id == 14 || id == 15 || id == 19 || id == 25 || id == 28 || id == 31 || id == 32 || id == 33 || id == 35 || id == 36 || id == 37 || id == 60 || id == 62 || id == 63 || id == 72 || id == 73 || id == 78 || id == 83 || id == 85 || id == 86 || id == 101) {
+         return 2;
+      }
+      // Tier 1: Iniciado (Hechizos básicos, cotidianos y trucos iniciales)
+      return 1;
+   }
+
+   public int getRequiredMasteryCount() {
+      int tier = this.getSpellTier();
+      if(tier == 1) return 0;
+      if(tier == 2) return 6;
+      if(tier == 3) return 14;
+      return 24;
+   }
+
+   public static int getMasteredSpellCount(EntityPlayer player) {
+      if(player == null) return 0;
+      NBTTagCompound nbt = Infusion.getNBT(player);
+      if(nbt == null || !nbt.hasKey("WITCSpellBook")) return 0;
+      NBTTagCompound nbtSpells = nbt.getCompoundTag("WITCSpellBook");
+      int count = 0;
+      Iterator it = EffectRegistry.instance().getEffects().iterator();
+      while(it.hasNext()) {
+         SymbolEffect eff = (SymbolEffect)it.next();
+         if(eff != null) {
+            boolean mastered = nbtSpells.getBoolean("Mastered_" + eff.getEffectID()) || (eff.knowledgeKey != null && nbtSpells.getBoolean(eff.knowledgeKey));
+            if(mastered) {
+               count++;
+            }
+         }
+      }
+      return count;
    }
 
    public boolean isVisible(EntityPlayer player) {
@@ -232,18 +277,21 @@ public abstract class SymbolEffect {
          sb.append(Const.BOOK_NEWLINE);
       }
 
-      int reqInf = this.getRequiredInfusionID();
-      if(reqInf > 0) {
+      int tier = this.getSpellTier();
+      if(tier == 1) {
+         sb.append("§6[Tier 1: Aprendiz]§0");
+      } else if(tier == 2) {
+         sb.append("§b[Tier 2: Iniciado - Requiere 4 Dominados]§0");
+      } else if(tier == 3) {
+         sb.append("§d[Tier 3: Adepto - Requiere 10 Dominados]§0");
+      } else {
+         sb.append("§4[Tier 4: Artes Oscuras - Requiere 16 Dominados]§0");
+      }
+      sb.append(Const.BOOK_NEWLINE);
+
+      if(this.requiresInfernalInfusion()) {
          sb.append("§4");
-         if(reqInf == 1) {
-            sb.append(Witchery.resource("witchery.infuse.branch.reqlight"));
-         } else if(reqInf == 2) {
-            sb.append(Witchery.resource("witchery.infuse.branch.reqearth"));
-         } else if(reqInf == 3) {
-            sb.append(Witchery.resource("witchery.infuse.branch.reqender"));
-         } else if(reqInf == 4) {
-            sb.append(Witchery.resource("witchery.infuse.branch.reqinfernal"));
-         }
+         sb.append(Witchery.resource("witchery.infuse.branch.reqinfernal"));
          sb.append("§0");
          sb.append(Const.BOOK_NEWLINE);
       }
@@ -271,16 +319,27 @@ public abstract class SymbolEffect {
    public boolean hasValidKnowledge(EntityPlayer player, NBTTagCompound nbtPlayer) {
       if(player.capabilities.isCreativeMode || isPlayerSupremeOrSynced(player)) {
          return true;
-      } else if(this.knowledgeKey != null) {
-         if(nbtPlayer.hasKey("WITCSpellBook")) {
+      }
+      int tier = this.getSpellTier();
+      int mastered = getMasteredSpellCount(player);
+      if(tier == 2 && mastered < 4) {
+         return false;
+      }
+      if(tier == 3 && mastered < 10) {
+         return false;
+      }
+      if(tier == 4 && mastered < 16) {
+         return false;
+      }
+      if(this.knowledgeKey != null) {
+         if(nbtPlayer != null && nbtPlayer.hasKey("WITCSpellBook")) {
             NBTTagCompound nbtSpells = nbtPlayer.getCompoundTag("WITCSpellBook");
             return nbtSpells.getBoolean(this.knowledgeKey);
          } else {
             return false;
          }
-      } else {
-         return true;
       }
+      return true;
    }
 
    public void acquireKnowledge(EntityPlayer player) {
@@ -356,35 +415,29 @@ public abstract class SymbolEffect {
       if(player == null || player.worldObj == null || player.worldObj.isRemote) return;
       NBTTagCompound nbtPlayer = Infusion.getNBT(player);
       if(nbtPlayer == null) return;
+      nbtPlayer.setLong("WITCLastArcaneActivity", player.worldObj.getTotalWorldTime());
       if(!nbtPlayer.hasKey("WITCSpellBook")) {
          nbtPlayer.setTag("WITCSpellBook", new NBTTagCompound());
       }
       NBTTagCompound nbtSpells = nbtPlayer.getCompoundTag("WITCSpellBook");
-      String masteredKey = "Mastered_" + this.effectID;
-      boolean firstTime = !nbtSpells.getBoolean(masteredKey);
-      nbtSpells.setBoolean(masteredKey, true);
+      String castKey = "CastCount_" + this.effectID;
+      int castCount = nbtSpells.getInteger(castKey) + 1;
+      nbtSpells.setInteger(castKey, castCount);
       nbtSpells.setBoolean("Discovered_" + this.effectID, true);
-      int castCount = nbtSpells.getInteger("CastCount_" + this.effectID) + 1;
-      nbtSpells.setInteger("CastCount_" + this.effectID, castCount);
 
-      if(firstTime) {
-         com.emoniph.witchery.common.SupremeWitchData.updateSupremeStatus(player.worldObj);
-      }
+      String masteredKey = "Mastered_" + this.effectID;
+      boolean wasMastered = nbtSpells.getBoolean(masteredKey);
+      int requiredCasts = 3;
 
-      // Check Seven Wonders progression based on spell cast
-      int id = this.effectID;
-      if(id == 1 || id == 15 || id == 44 || id == 56 || id == 60 || id == 94) {
-         com.emoniph.witchery.common.SupremeWitchData.completeWonder(player, com.emoniph.witchery.common.SupremeWitchData.WONDER_TELEKINESIS);
-      } else if(id == 19 || id == 38 || id == 46) {
-         com.emoniph.witchery.common.SupremeWitchData.completeWonder(player, com.emoniph.witchery.common.SupremeWitchData.WONDER_CONCILIUM);
-      } else if(id == 11 || id == 20 || id == 29 || id == 99) {
-         com.emoniph.witchery.common.SupremeWitchData.completeWonder(player, com.emoniph.witchery.common.SupremeWitchData.WONDER_THERMOKINESIS);
-      } else if(id == 13 || id == 61 || id == 80 || id == 97) {
-         com.emoniph.witchery.common.SupremeWitchData.completeWonder(player, com.emoniph.witchery.common.SupremeWitchData.WONDER_VITALUM_VITALIS);
-      } else if(id == 2 || id == 5 || id == 55) {
-         com.emoniph.witchery.common.SupremeWitchData.completeWonder(player, com.emoniph.witchery.common.SupremeWitchData.WONDER_TRANSMUTATION);
-      } else if(id == 51 || id == 74 || id == 76 || id == 85) {
-         com.emoniph.witchery.common.SupremeWitchData.completeWonder(player, com.emoniph.witchery.common.SupremeWitchData.WONDER_DIVINATION);
+      if(!wasMastered) {
+         if(castCount >= requiredCasts) {
+            nbtSpells.setBoolean(masteredKey, true);
+            player.addChatMessage(new net.minecraft.util.ChatComponentText(net.minecraft.util.EnumChatFormatting.GOLD + "✦ ¡Has Dominado " + this.getLocalizedName() + "! (+10 Maestría)"));
+            com.emoniph.witchery.util.SoundEffect.RANDOM_LEVELUP.playAtPlayer(player.worldObj, player);
+            com.emoniph.witchery.common.SupremeWitchData.updateSupremeStatus(player.worldObj);
+         } else {
+            player.addChatMessage(new net.minecraft.util.ChatComponentText(net.minecraft.util.EnumChatFormatting.AQUA + "✦ Progreso con " + this.getLocalizedName() + ": " + net.minecraft.util.EnumChatFormatting.YELLOW + castCount + "/" + requiredCasts + net.minecraft.util.EnumChatFormatting.GRAY + " lanzamientos"));
+         }
       }
 
       Infusion.syncPlayer(player.worldObj, player);

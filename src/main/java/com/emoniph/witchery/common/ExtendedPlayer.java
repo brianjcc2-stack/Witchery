@@ -117,6 +117,31 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
    }
    private String unbreakableVowID = "";
    private int subduedSpiritStyle = 0;
+   private int witchNotoriety = 0;
+   private long lastInquisitionRaid = 0L;
+
+   public int getWitchNotoriety() {
+      return this.witchNotoriety;
+   }
+
+   public void setWitchNotoriety(int val) {
+      this.witchNotoriety = Math.max(0, Math.min(100, val));
+      if (!this.player.worldObj.isRemote) {
+         this.sync();
+      }
+   }
+
+   public void addWitchNotoriety(int delta) {
+      this.setWitchNotoriety(this.witchNotoriety + delta);
+   }
+
+   public long getLastInquisitionRaid() {
+      return this.lastInquisitionRaid;
+   }
+
+   public void setLastInquisitionRaid(long ticks) {
+      this.lastInquisitionRaid = ticks;
+   }
 
    public int getSubduedSpiritStyle() {
       return this.subduedSpiritStyle;
@@ -248,6 +273,8 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
          }
       }
       props.setTag("PreservedDeathItems", nbtPreserved);
+      props.setInteger("WitchNotoriety", this.witchNotoriety);
+      props.setLong("LastInquisitionRaid", this.lastInquisitionRaid);
       if (this.storedSuccessorNBT != null) {
          props.setTag("StoredSuccessorNBT", this.storedSuccessorNBT);
       }
@@ -329,6 +356,13 @@ public class ExtendedPlayer implements IExtendedEntityProperties {
             this.unbreakableVowID = nbtRoot.getString("UnbreakableVowID");
          } else {
             this.unbreakableVowID = "";
+         }
+
+         if(nbtRoot.hasKey("WitchNotoriety")) {
+            this.witchNotoriety = nbtRoot.getInteger("WitchNotoriety");
+         }
+         if(nbtRoot.hasKey("LastInquisitionRaid")) {
+            this.lastInquisitionRaid = nbtRoot.getLong("LastInquisitionRaid");
          }
 
          this.preservedDeathItems.clear();

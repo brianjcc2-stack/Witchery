@@ -6,6 +6,7 @@ import com.emoniph.witchery.blocks.BlockGrassper;
 import com.emoniph.witchery.blocks.TileEntityBase;
 import com.emoniph.witchery.common.PowerSources;
 import com.emoniph.witchery.entity.EntityCovenWitch;
+import com.emoniph.witchery.infusion.Infusion;
 import com.emoniph.witchery.ritual.Circle;
 import com.emoniph.witchery.ritual.RiteRegistry;
 import com.emoniph.witchery.ritual.RitualStep;
@@ -395,6 +396,13 @@ public class BlockCircle extends BlockBaseContainer {
 
                   if(var6.steps.isEmpty()) {
                      this.activeRituals.remove(0);
+                     EntityPlayer initiator = var6.getInitiatingPlayer(super.worldObj);
+                     if(initiator != null) {
+                        NBTTagCompound nbtInit = Infusion.getNBT(initiator);
+                        if(nbtInit != null) {
+                           nbtInit.setLong("WITCLastArcaneActivity", super.worldObj.getTotalWorldTime());
+                        }
+                     }
                   }
                   break;
                case 2:

@@ -509,6 +509,21 @@ public class GenericEvents {
       priority = EventPriority.HIGH
    )
    public void onEntityInteract(EntityInteractEvent event) {
+      if (!event.entityPlayer.worldObj.isRemote && event.entityPlayer.getEntityData().getInteger("WITCLeviosaTicks") > 0) {
+         if (event.entityPlayer.getHeldItem() != null && event.entityPlayer.getHeldItem().getItem() == Witchery.Items.MYSTIC_BRANCH) {
+            float currentDist = event.entityPlayer.getEntityData().hasKey("WITCLeviosaDistance") ? event.entityPlayer.getEntityData().getFloat("WITCLeviosaDistance") : 5.0f;
+            if (event.entityPlayer.isSneaking()) {
+               currentDist = Math.min(30.0f, currentDist + 2.0f);
+            } else {
+               currentDist = Math.max(1.5f, currentDist - 2.0f);
+            }
+            event.entityPlayer.getEntityData().setFloat("WITCLeviosaDistance", currentDist);
+            com.emoniph.witchery.util.SoundEffect.NOTE_PLING.playOnlyTo(event.entityPlayer, 1.0F, 0.6F + (currentDist / 30.0F) * 0.8F);
+            com.emoniph.witchery.util.ChatUtil.sendTranslated(net.minecraft.util.EnumChatFormatting.AQUA, event.entityPlayer, "witchery.pott.wingardiumleviosa.dist", new Object[]{String.format("%.1f", currentDist)});
+            event.setCanceled(true);
+            return;
+         }
+      }
       ExtendedPlayer playerEx = ExtendedPlayer.get(event.entityPlayer);
       if (playerEx != null && playerEx.isAstralProjecting() && event.entityPlayer.ridingEntity == null && event.entityPlayer.getHeldItem() == null && event.target instanceof EntityLivingBase && !(event.target instanceof EntityPlayer)) {
          if (!event.entityPlayer.worldObj.isRemote) {
@@ -842,6 +857,9 @@ public class GenericEvents {
                target.motionY = look.yCoord * 2.2D + 0.2D;
                target.motionZ = look.zCoord * 2.2D;
                target.velocityChanged = true;
+               if (target instanceof net.minecraft.entity.player.EntityPlayerMP) {
+                  ((net.minecraft.entity.player.EntityPlayerMP)target).playerNetServerHandler.sendPacket(new net.minecraft.network.play.server.S12PacketEntityVelocity(target));
+               }
             }
             event.entityPlayer.getEntityData().setInteger("WITCLeviosaTicks", 0);
             event.setCanceled(true);
@@ -889,6 +907,9 @@ public class GenericEvents {
                   target.motionY = look.yCoord * 2.2D + 0.2D;
                   target.motionZ = look.zCoord * 2.2D;
                   target.velocityChanged = true;
+                  if (target instanceof net.minecraft.entity.player.EntityPlayerMP) {
+                     ((net.minecraft.entity.player.EntityPlayerMP)target).playerNetServerHandler.sendPacket(new net.minecraft.network.play.server.S12PacketEntityVelocity(target));
+                  }
               }
               event.entityPlayer.getEntityData().setInteger("WITCLeviosaTicks", 0);
               event.setCanceled(true);
@@ -896,6 +917,8 @@ public class GenericEvents {
           }
           if (changed) {
               event.entityPlayer.getEntityData().setFloat("WITCLeviosaDistance", currentDist);
+              com.emoniph.witchery.util.SoundEffect.NOTE_PLING.playOnlyTo(event.entityPlayer, 1.0F, 0.6F + (currentDist / 30.0F) * 0.8F);
+              com.emoniph.witchery.util.ChatUtil.sendTranslated(net.minecraft.util.EnumChatFormatting.AQUA, event.entityPlayer, "witchery.pott.wingardiumleviosa.dist", new Object[]{String.format("%.1f", currentDist)});
               event.setCanceled(true);
               return;
           }
@@ -965,6 +988,15 @@ public class GenericEvents {
 
    @SubscribeEvent
    public void onLivingUpdate(LivingUpdateEvent event) {
+      if (!event.entityLiving.worldObj.isRemote && event.entityLiving.getEntityData().hasKey("WITCLifetime")) {
+         int ttl = event.entityLiving.getEntityData().getInteger("WITCLifetime");
+         if (--ttl <= 0) {
+            com.emoniph.witchery.util.ParticleEffect.SMOKE.send(com.emoniph.witchery.util.SoundEffect.RANDOM_POP, event.entityLiving, 1.0D, 1.0D, 16);
+            event.entityLiving.setDead();
+            return;
+         }
+         event.entityLiving.getEntityData().setInteger("WITCLifetime", ttl);
+      }
       if (event.entity instanceof EntityLivingBase && event.entity.riddenByEntity instanceof EntityPlayer) {
          EntityPlayer rider = (EntityPlayer)event.entity.riddenByEntity;
          ExtendedPlayer riderEx = ExtendedPlayer.get(rider);
@@ -1873,6 +1905,22 @@ public class GenericEvents {
                   return;
                }
             }
+
+            NBTTagCompound nbtVictim = Infusion.getNBT(attacker);
+            if (nbtVictim != null) {
+               if (nbtVictim.getBoolean("WITCHorrocrux")) {
+                  nbtVictim.setBoolean("WITCHorrocrux", false);
+                  event.setCanceled(true);
+                  attacker.setHealth(attacker.getMaxHealth());
+                  ChatUtil.sendTranslated(EnumChatFormatting.GOLD, attacker, "witchery.rite.horrocrux.saved", new Object[0]);
+                  ParticleEffect.FLAME.send(SoundEffect.MOB_ENDERMEN_PORTAL, attacker, 1.5D, 2.0D, 32);
+                  Infusion.syncPlayer(attacker.worldObj, attacker);
+                  SupremeWitchData.updateSupremeStatus(attacker.worldObj);
+                  return;
+               }
+               nbtVictim.setLong("WITCLastDeathTime", attacker.worldObj.getTotalWorldTime());
+            }
+            SupremeWitchData.updateSupremeStatus(attacker.worldObj);
          }
 
          this.dropExtraItemsFromNBT(event);
@@ -1889,6 +1937,77 @@ public class GenericEvents {
                if(playerEx) {
                   EntityItem hasArthana = new EntityItem(event.entityLiving.worldObj, event.entityLiving.posX, event.entityLiving.posY + 1.0D, event.entityLiving.posZ, Witchery.Items.GENERIC.itemVampireBookPage.createStack());
                   event.entityLiving.worldObj.spawnEntityInWorld(hasArthana);
+               }
+            }
+         }
+
+         EntityPlayer killerPlayer = null;
+         if (event.source.getEntity() instanceof EntityPlayer) {
+            killerPlayer = (EntityPlayer) event.source.getEntity();
+         } else if (event.source.getSourceOfDamage() instanceof EntityPlayer) {
+            killerPlayer = (EntityPlayer) event.source.getSourceOfDamage();
+         }
+
+         if (killerPlayer != null && !event.entityLiving.worldObj.isRemote) {
+            String bossKey = null;
+            String bossName = null;
+            int bossPoints = 0;
+
+            if (event.entityLiving instanceof net.minecraft.entity.boss.EntityDragon) {
+               bossKey = "ender_dragon"; bossName = "Ender Dragón"; bossPoints = 80;
+            } else if (event.entityLiving instanceof net.minecraft.entity.boss.EntityWither) {
+               bossKey = "wither"; bossName = "Wither"; bossPoints = 70;
+            } else if (event.entityLiving instanceof com.emoniph.witchery.entity.EntityDeath) {
+               bossKey = "death"; bossName = "La Muerte"; bossPoints = 100;
+            } else if (event.entityLiving instanceof com.emoniph.witchery.entity.EntityLordOfTorment) {
+               bossKey = "lord_of_torment"; bossName = "Señor del Tormento"; bossPoints = 90;
+            } else if (event.entityLiving instanceof com.emoniph.witchery.entity.EntityLilith) {
+               bossKey = "lilith"; bossName = "Lilith"; bossPoints = 90;
+            } else if (event.entityLiving instanceof com.emoniph.witchery.entity.EntityLeonard) {
+               bossKey = "leonard"; bossName = "Leonard"; bossPoints = 90;
+            } else if (event.entityLiving instanceof com.emoniph.witchery.entity.EntityHornedHuntsman) {
+               bossKey = "horned_huntsman"; bossName = "El Cazador Cornudo"; bossPoints = 80;
+            } else if (event.entityLiving instanceof com.emoniph.witchery.entity.EntityBabaYaga) {
+               bossKey = "baba_yaga"; bossName = "Baba Yaga"; bossPoints = 100;
+            } else if (event.entityLiving instanceof com.emoniph.witchery.entity.EntityReflection) {
+               bossKey = "reflection"; bossName = "Reflejo del Espejo"; bossPoints = 60;
+            } else if (event.entityLiving instanceof com.emoniph.witchery.entity.EntityGoblinGulg) {
+               bossKey = "gulg"; bossName = "Gulg"; bossPoints = 50;
+            } else if (event.entityLiving instanceof com.emoniph.witchery.entity.EntityGoblinMog) {
+               bossKey = "mog"; bossName = "Mog"; bossPoints = 50;
+            }
+
+            if (bossKey != null) {
+               NBTTagCompound nbtKiller = Infusion.getNBT(killerPlayer);
+               if (nbtKiller != null) {
+                  if (!nbtKiller.hasKey("WITCBossDefeats")) {
+                     nbtKiller.setTag("WITCBossDefeats", new NBTTagCompound());
+                  }
+                  NBTTagCompound nbtBosses = nbtKiller.getCompoundTag("WITCBossDefeats");
+                  int kills = nbtBosses.getInteger(bossKey) + 1;
+                  nbtBosses.setInteger(bossKey, kills);
+                  nbtKiller.setLong("WITCLastBossKillTime", killerPlayer.worldObj.getTotalWorldTime());
+
+                  if (bossKey.equals("baba_yaga")) {
+                     nbtKiller.setBoolean("WITCDefeatedBabaYaga", true);
+                  }
+
+                  SoundEffect.RANDOM_LEVELUP.playAtPlayer(killerPlayer.worldObj, killerPlayer, 1.0F, 1.0F);
+                  ParticleEffect.PORTAL.send(SoundEffect.RANDOM_ORB, killerPlayer.worldObj, killerPlayer.posX, killerPlayer.posY + 1.0D, killerPlayer.posZ, 1.5D, 2.0D, 32);
+
+                  killerPlayer.addChatMessage(new net.minecraft.util.ChatComponentText(
+                     net.minecraft.util.EnumChatFormatting.DARK_PURPLE + "★ " + net.minecraft.util.EnumChatFormatting.GOLD + "[Trofeo de Conquista] " +
+                     net.minecraft.util.EnumChatFormatting.LIGHT_PURPLE + "¡Has derrotado a " + net.minecraft.util.EnumChatFormatting.YELLOW + bossName + net.minecraft.util.EnumChatFormatting.LIGHT_PURPLE + "! (+ " + bossPoints + " Maestría Suprema)"));
+
+                  net.minecraft.server.MinecraftServer srv = net.minecraft.server.MinecraftServer.getServer();
+                  if (srv != null && srv.getConfigurationManager() != null) {
+                     srv.getConfigurationManager().sendChatMsg(new net.minecraft.util.ChatComponentText(
+                        net.minecraft.util.EnumChatFormatting.DARK_PURPLE + "★ [Witchery] " + net.minecraft.util.EnumChatFormatting.LIGHT_PURPLE + "¡" +
+                        net.minecraft.util.EnumChatFormatting.GOLD + killerPlayer.getCommandSenderName() + net.minecraft.util.EnumChatFormatting.LIGHT_PURPLE +
+                        " ha asestado el golpe final a " + net.minecraft.util.EnumChatFormatting.YELLOW + bossName + net.minecraft.util.EnumChatFormatting.LIGHT_PURPLE + "! Su poder en el Aquelarre asciende."));
+                  }
+
+                  SupremeWitchData.updateSupremeStatus(killerPlayer.worldObj);
                }
             }
          }

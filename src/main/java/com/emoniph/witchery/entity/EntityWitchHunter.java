@@ -6,6 +6,7 @@ import com.emoniph.witchery.entity.EntityBolt;
 import com.emoniph.witchery.entity.EntityVillageGuard;
 import com.emoniph.witchery.infusion.Infusion;
 import com.emoniph.witchery.network.PacketSound;
+import com.emoniph.witchery.util.ChatUtil;
 import com.emoniph.witchery.util.Config;
 import com.emoniph.witchery.util.CreatureUtil;
 import com.emoniph.witchery.util.EntityUtil;
@@ -315,6 +316,10 @@ public class EntityWitchHunter extends EntityCreature implements IRangedAttackMo
 
    public static void blackMagicPerformed(EntityPlayer player) {
       if(player != null && player.worldObj != null && !player.worldObj.isRemote) {
+         ExtendedPlayer playerEx = ExtendedPlayer.get(player);
+         if(playerEx != null) {
+            playerEx.addWitchNotoriety(15);
+         }
          NBTTagCompound nbtPlayer = Infusion.getNBT(player);
          if(nbtPlayer != null && nbtPlayer.getLong("WITCHunterTrigger") <= 0L && player.worldObj.rand.nextDouble() < 0.1D) {
             long totalWorldTicks = TimeUtil.getServerTimeInTicks();
@@ -324,7 +329,66 @@ public class EntityWitchHunter extends EntityCreature implements IRangedAttackMo
 
    }
 
+   public static void triggerInquisitionRaid(EntityPlayer player) {
+      World world = player.worldObj;
+      int px = MathHelper.floor_double(player.posX);
+      int py = MathHelper.floor_double(player.posY);
+      int pz = MathHelper.floor_double(player.posZ);
+
+      // 1. Inquisidor Mayor
+      EntityWitchHunter grandInquisitor = (EntityWitchHunter)Infusion.spawnCreature(world, EntityWitchHunter.class, px, py, pz, player, 8, 14, ParticleEffect.SMOKE, (SoundEffect)null);
+      if(grandInquisitor != null) {
+         grandInquisitor.setCustomNameTag(net.minecraft.util.EnumChatFormatting.GOLD + "Inquisidor Mayor");
+         grandInquisitor.func_110163_bv();
+         grandInquisitor.setCurrentItemOrArmor(0, new ItemStack(Witchery.Items.INQUISITOR_CROSSBOW));
+         grandInquisitor.setCurrentItemOrArmor(3, new ItemStack(Witchery.Items.INQUISITOR_CLOAK));
+         grandInquisitor.setCurrentItemOrArmor(4, new ItemStack(Witchery.Items.HUNTER_HAT_SILVERED));
+         grandInquisitor.setEquipmentDropChance(0, 0.5F);
+         grandInquisitor.setEquipmentDropChance(3, 0.5F);
+         grandInquisitor.setEquipmentDropChance(4, 0.5F);
+         grandInquisitor.targetPlayerName = player.getCommandSenderName();
+         EntityUtil.setTarget(grandInquisitor, player);
+      }
+
+      // 2. Guardias Cazadores (2)
+      for(int i = 0; i < 2; ++i) {
+         EntityWitchHunter guard = (EntityWitchHunter)Infusion.spawnCreature(world, EntityWitchHunter.class, px, py, pz, player, 8, 14, ParticleEffect.SMOKE, (SoundEffect)null);
+         if(guard != null) {
+            guard.setCustomNameTag(net.minecraft.util.EnumChatFormatting.RED + "Cazador de Herejes");
+            guard.setCurrentItemOrArmor(0, new ItemStack(Witchery.Items.CROSSBOW_PISTOL));
+            guard.setCurrentItemOrArmor(3, new ItemStack(Witchery.Items.HUNTER_COAT_SILVERED));
+            guard.targetPlayerName = player.getCommandSenderName();
+            EntityUtil.setTarget(guard, player);
+         }
+      }
+
+      // 3. Sabuesos de la Inquisición (2)
+      for(int i = 0; i < 2; ++i) {
+         EntityHellhound hound = (EntityHellhound)Infusion.spawnCreature(world, EntityHellhound.class, px, py, pz, player, 8, 14, ParticleEffect.FLAME, (SoundEffect)null);
+         if(hound != null) {
+            hound.setCustomNameTag(net.minecraft.util.EnumChatFormatting.DARK_RED + "Sabueso Inquisitorial");
+            hound.addPotionEffect(new net.minecraft.potion.PotionEffect(net.minecraft.potion.Potion.moveSpeed.id, 2400, 1));
+            EntityUtil.setTarget(hound, player);
+         }
+      }
+
+      Witchery.packetPipeline.sendTo((IMessage)(new PacketSound(SoundEffect.WITCHERY_RANDOM_THEYCOME, player, 1.0F, 1.0F)), player);
+      ChatUtil.sendTranslated(net.minecraft.util.EnumChatFormatting.DARK_RED, player, "witchery.inquisition.raid");
+   }
+
    public static void handleWitchHunterEffects(EntityPlayer player, long totalWorldTicks) {
+      ExtendedPlayer playerEx = ExtendedPlayer.get(player);
+      if(playerEx != null && player.worldObj != null && !player.worldObj.isRemote && !player.capabilities.isCreativeMode) {
+         int notoriety = playerEx.getWitchNotoriety();
+         if(notoriety >= 50 && totalWorldTicks >= playerEx.getLastInquisitionRaid() + 24000L && player.worldObj.provider.dimensionId == 0) {
+            if(player.worldObj.rand.nextDouble() < 0.05D) {
+               playerEx.setLastInquisitionRaid(totalWorldTicks);
+               triggerInquisitionRaid(player);
+               return;
+            }
+         }
+      }
+
       NBTTagCompound nbtPlayer = Infusion.getNBT(player);
       if(nbtPlayer != null) {
          long triggerTimeTicks = nbtPlayer.getLong("WITCHunterTrigger");
@@ -409,6 +473,18 @@ public class EntityWitchHunter extends EntityCreature implements IRangedAttackMo
 
    public boolean getCanSpawnHere() {
       return super.worldObj.difficultySetting != EnumDifficulty.PEACEFUL && this.isValidLightLevel() && super.getCanSpawnHere();
+   }
+
+   @Override
+   public void onDeath(DamageSource source) {
+      super.onDeath(source);
+      if(!super.worldObj.isRemote && source != null && source.getEntity() instanceof EntityPlayer) {
+         EntityPlayer killer = (EntityPlayer)source.getEntity();
+         ExtendedPlayer killerEx = ExtendedPlayer.get(killer);
+         if(killerEx != null) {
+            killerEx.addWitchNotoriety(-15);
+         }
+      }
    }
 
    protected boolean func_146066_aG() {

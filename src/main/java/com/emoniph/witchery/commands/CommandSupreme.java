@@ -47,7 +47,7 @@ public class CommandSupreme extends CommandBase {
     @Override
     public List addTabCompletionOptions(ICommandSender sender, String[] args) {
         if (args.length == 1) {
-            return getListOfStringsMatchingLastWord(args, "maravillas", "trial", "claim", "revoke", "silence", "infusion", "beast", "aura", "status", "guia", "reclamar", "renunciar", "silenciar", "infundir", "bestia", "ayuda");
+            return getListOfStringsMatchingLastWord(args, "maravillas", "trial", "claim", "revoke", "silence", "infusion", "beast", "aura", "status", "guia", "reclamar", "renunciar", "silenciar", "infundir", "bestia", "ayuda", "notoriedad", "purificar", "raid");
         }
         if (args.length == 2 && (args[0].equalsIgnoreCase("guia") || args[0].equalsIgnoreCase("guide") || args[0].equalsIgnoreCase("ayuda"))) {
             return getListOfStringsMatchingLastWord(args, "1", "2");
@@ -122,28 +122,20 @@ public class CommandSupreme extends CommandBase {
             sendWonderLine(player, SupremeWitchData.WONDER_TRANSMUTATION, "VI. Transmutation", "Plegar el espacio y la materia (Apparition, Aguamenti o Piedra Filosofal).");
             sendWonderLine(player, SupremeWitchData.WONDER_DIVINATION, "VII. Divination", "Ver lo oculto (Revelio, Homenum Revelio o vincular un Familiar con /pet bind).");
 
-            if (done == 7 && !isSupreme) {
-                SupremeWitchData data = SupremeWitchData.get(player.worldObj);
-                if (data != null) {
-                    data.setSupreme(player);
-                }
-                ParticleEffect.PORTAL.send(SoundEffect.RANDOM_LEVELUP, player.worldObj, player.posX, player.posY + 1.0D, player.posZ, 1.5D, 2.0D, 40);
-                if (MinecraftServer.getServer() != null) {
-                    MinecraftServer.getServer().getConfigurationManager().sendChatMsg(new ChatComponentText(
-                            EnumChatFormatting.DARK_PURPLE + "★ " + EnumChatFormatting.GOLD + EnumChatFormatting.BOLD + player.getCommandSenderName() +
-                            EnumChatFormatting.LIGHT_PURPLE + " ha consumado las " + EnumChatFormatting.GOLD + "Siete Maravillas" +
-                            EnumChatFormatting.LIGHT_PURPLE + " y se ha alzado como la legítima " +
-                            EnumChatFormatting.GOLD + EnumChatFormatting.BOLD + "Bruja Suprema" + EnumChatFormatting.LIGHT_PURPLE + "!"));
-                }
-            } else if (done < 7) {
-                player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "Completa las " + (7 - done) + " maravillas restantes (+50 Maestría c/u) y vuelve a ejecutar " + EnumChatFormatting.YELLOW + "/suprema maravillas" + EnumChatFormatting.LIGHT_PURPLE + " para tu coronación."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "Progreso de Maravillas: " + EnumChatFormatting.GOLD + done + "/7" + EnumChatFormatting.LIGHT_PURPLE + " (+" + (done * 50) + " pts de Maestría otorgados)."));
+            if (done == 7) {
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "★ ¡Has consumado las Siete Maravillas del Aquelarre! (+350 pts totales sumados a tu Maestría)."));
             } else {
-                player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "★ Has consumado las Siete Maravillas y reinas como la Bruja Suprema."));
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Supera las " + (7 - done) + " maravillas restantes (+50 pts c/u) para alcanzar el umbral supremo de " + SupremeWitchData.SUPREME_MASTERY_THRESHOLD + " pts."));
             }
             return;
         }
 
         if (sub.equals("claim") || sub.equals("reclamar") || sub.equals("reinar")) {
+            if (!isOp && !player.capabilities.isCreativeMode) {
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "El manto de la Bruja Suprema no se puede reclamar manualmente. Debes alcanzar " + EnumChatFormatting.GOLD + SupremeWitchData.SUPREME_MASTERY_THRESHOLD + "+ pts" + EnumChatFormatting.RED + " de Maestría Integral (/suprema status)."));
+                return;
+            }
             if (isSupreme) {
                 player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "Ya eres la Bruja Suprema reinante."));
                 return;
@@ -383,19 +375,73 @@ public class CommandSupreme extends CommandBase {
         }
 
         if (sub.equals("status") || sub.equals("estado")) {
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "╔════════════════════════════════════════════╗"));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "  ★ ESTADO DE LA BRUJA SUPREMA ★"));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "╚════════════════════════════════════════════╝"));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "Soberanía: " + (isSupreme ? EnumChatFormatting.GOLD + "ERES LA BRUJA SUPREMA" : EnumChatFormatting.GRAY + "No ostentas el Manto")));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "Aura canalizadora: " + (SupremeWitchData.isSupremeAuraActive(player) ? EnumChatFormatting.GREEN + "Activada" : EnumChatFormatting.RED + "Desactivada") + EnumChatFormatting.GRAY + " (" + SupremeWitchData.getColorName(SupremeWitchData.getSupremeAuraColor(player)) + ", " + SupremeWitchData.getSupremeAuraAmount(player) + "/10)"));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "Infusión actual: " + EnumChatFormatting.AQUA + Infusion.getInfusionID(player)));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "Energía de infusión: " + EnumChatFormatting.GOLD + Infusion.getCurrentEnergy(player) + "/3000 (Regen. +15/s, -50% coste)"));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "Puntuación de Maestría: " + EnumChatFormatting.GOLD + SupremeWitchData.calculateWitcheryMasteryScore(player) + " pts (Umbral auto: " + SupremeWitchData.SUPREME_MASTERY_THRESHOLD + ")"));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "Las Siete Maravillas: " + EnumChatFormatting.YELLOW + SupremeWitchData.getCompletedWondersCount(player) + "/7 (/suprema maravillas)"));
+            SupremeWitchData.MasteryScoreBreakdown b = SupremeWitchData.getMasteryScoreBreakdown(player);
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "╔══════════════════════════════════════════════════╗"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "" + EnumChatFormatting.BOLD + "  ★ EVALUACIÓN DE PODER VIVO DEL AQUELARRE ★"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_PURPLE + "╚══════════════════════════════════════════════════╝"));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "Soberanía: " + (isSupreme ? EnumChatFormatting.GOLD + "ERES LA BRUJA SUPREMA" : EnumChatFormatting.GRAY + "No ostentas el Manto Sagrado")));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "Poder Vivo Neto: " + EnumChatFormatting.GOLD + b.getNetScore() + " pts" + EnumChatFormatting.GRAY + " (Mínimo requerido para ascender: " + SupremeWitchData.SUPREME_MASTERY_THRESHOLD + " pts)"));
+
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "✦ Fuentes de Poder Activo (+" + b.getTotalPositive() + " pts):"));
+            if (b.spiritScore > 0) player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "  • Sintonía Espiritual: " + EnumChatFormatting.GREEN + "+" + b.spiritScore + " pts" + EnumChatFormatting.DARK_GRAY + " (Nivel " + playerEx.getSpiritLevel() + "/3)"));
+            if (b.covenScore > 0) player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "  • Aquelarre Vivo: " + EnumChatFormatting.GREEN + "+" + b.covenScore + " pts" + EnumChatFormatting.DARK_GRAY + " (" + (b.covenScore / 50) + "/6 brujas reclutadas)"));
+            if (b.familiarBaseScore + b.familiarActiveScore > 0) player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "  • Familiar Vinculado: " + EnumChatFormatting.GREEN + "+" + (b.familiarBaseScore + b.familiarActiveScore) + " pts" + EnumChatFormatting.DARK_GRAY + " (" + (b.familiarActiveScore > 0 ? "Invocado y vivo" : "En espera") + ")"));
+            if (b.infusionBaseScore + b.infusionEnergyBonus > 0) player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "  • Infusión Arcana: " + EnumChatFormatting.GREEN + "+" + (b.infusionBaseScore + b.infusionEnergyBonus) + " pts" + EnumChatFormatting.DARK_GRAY + " (ID: " + Infusion.getInfusionID(player) + (b.infusionEnergyBonus > 0 ? ", Reserva vigorosa" : "") + ")"));
+            if (b.spellScore > 0) player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "  • Hechizos Dominados: " + EnumChatFormatting.GREEN + "+" + b.spellScore + " pts" + EnumChatFormatting.DARK_GRAY + " (" + (b.spellScore / 10) + " dominados)"));
+            if (b.wondersScore > 0) player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "  • Las Siete Maravillas: " + EnumChatFormatting.GREEN + "+" + b.wondersScore + " pts" + EnumChatFormatting.DARK_GRAY + " (" + (b.wondersScore / 50) + "/7 consumadas)"));
+            if (b.babaYagaScore > 0) player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "  • Victoria Ancestral (Baba Yaga): " + EnumChatFormatting.GREEN + "+" + b.babaYagaScore + " pts"));
+            if (b.horrocruxScore > 0) player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "  • Horrocrux consagrado: " + EnumChatFormatting.GREEN + "+" + b.horrocruxScore + " pts" + EnumChatFormatting.DARK_GRAY + " (Salvaguarda de alma)"));
+            if (b.brewingScore > 0) player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "  • Alquimia y Pociones: " + EnumChatFormatting.GREEN + "+" + b.brewingScore + " pts"));
+            if (b.altarScore > 0) player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "  • Santuario Altar Maestro: " + EnumChatFormatting.GREEN + "+" + b.altarScore + " pts"));
+            if (b.poppetScore > 0) player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "  • Poppet de Protección: " + EnumChatFormatting.GREEN + "+" + b.poppetScore + " pts"));
+            if (b.creatureScore > 0) player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "  • Linaje de la Noche: " + EnumChatFormatting.GREEN + "+" + b.creatureScore + " pts"));
+            if (b.tasksScore > 0) player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "  • Misiones de Aquelarre: " + EnumChatFormatting.GREEN + "+" + b.tasksScore + " pts" + EnumChatFormatting.DARK_GRAY + " (" + (Infusion.getNBT(player) != null ? Infusion.getNBT(player).getInteger("WITCCovenTasksCompleted") : 0) + " completadas)"));
+            if (b.bossScore > 0) player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "  • Conquista de Jefes: " + EnumChatFormatting.GREEN + "+" + b.bossScore + " pts" + EnumChatFormatting.DARK_GRAY + " (" + b.bossCount + " jefes derrotados)"));
+
+            if (b.getTotalPenalties() > 0) {
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "⚠ Descuidos y Penalizaciones Activas (-" + b.getTotalPenalties() + " pts):"));
+                if (b.energyPenalty > 0) player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "  ✖ Infusión Agotada por Descuido: -" + b.energyPenalty + " pts " + EnumChatFormatting.DARK_GRAY + "(¡Recarga en un Altar!)"));
+                if (b.cursePenalty > 0) player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "  ✖ Maleficios Padecidos: -" + b.cursePenalty + " pts " + EnumChatFormatting.DARK_GRAY + "(" + b.curseCount + " maldición/es sin purificar)"));
+                if (b.deathPenalty > 0) player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "  ✖ Trauma de Muerte Reciente: -" + b.deathPenalty + " pts " + EnumChatFormatting.DARK_GRAY + "(Alma quebrantada tras morir)"));
+                if (b.familiarDeathPenalty > 0) player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "  ✖ Luto de Familiar Roto: -" + b.familiarDeathPenalty + " pts " + EnumChatFormatting.DARK_GRAY + "(Tu familiar ha perecido)"));
+                if (b.stagnationPenalty > 0) player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "  ✖ Atrofia Mágica por Inactividad: -" + b.stagnationPenalty + " pts " + EnumChatFormatting.DARK_GRAY + "(¡Practica hechizos, ritos o pociones!)"));
+                if (b.covenTaskNeglectPenalty > 0) player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "  ✖ Negligencia de Misiones del Aquelarre: -" + b.covenTaskNeglectPenalty + " pts " + EnumChatFormatting.DARK_GRAY + "(Más de 1 semana sin cumplir peticiones del Coven)"));
+            } else {
+                player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "✔ No tienes penalizaciones ni descuidos arcanos activos."));
+            }
+            int not = playerEx.getWitchNotoriety();
+            EnumChatFormatting col = not >= 75 ? EnumChatFormatting.DARK_RED : (not >= 50 ? EnumChatFormatting.RED : (not >= 25 ? EnumChatFormatting.GOLD : EnumChatFormatting.GREEN));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "Notoriedad ante la Inquisición: " + col + not + "/100" + (not >= 50 ? EnumChatFormatting.RED + " [¡AMENAZA DE ASALTO!]" : EnumChatFormatting.GRAY + " [Vigilancia normal]")));
             return;
         }
 
-        player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Comando desconocido. Usa: /suprema <maravillas|claim|revoke|silence|infusion|beast|aura|status|guia>"));
+        if (sub.equals("notoriedad") || sub.equals("notoriety")) {
+            if (args.length >= 2) {
+                try {
+                    int val = Integer.parseInt(args[1]);
+                    playerEx.setWitchNotoriety(val);
+                    player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "✦ [Inquisición] Notoriedad de brujería ajustada a: " + EnumChatFormatting.YELLOW + playerEx.getWitchNotoriety() + "/100."));
+                    return;
+                } catch (NumberFormatException ignored) {}
+            }
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "✦ [Inquisición] Tu nivel actual de notoriedad es: " + EnumChatFormatting.YELLOW + playerEx.getWitchNotoriety() + "/100."));
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "A partir de 50 pts, escuadrones inquisitoriales rastrearán tu posición en el Overworld."));
+            return;
+        }
+
+        if (sub.equals("purificar") || sub.equals("purify")) {
+            playerEx.setWitchNotoriety(0);
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "✦ Has purificado tus pecados arcanos. Notoriedad restablecida a 0."));
+            return;
+        }
+
+        if (sub.equals("raid") || sub.equals("asalto")) {
+            com.emoniph.witchery.entity.EntityWitchHunter.triggerInquisitionRaid(player);
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_RED + "✦ ¡Has provocado un Asalto de la Santa Inquisición!"));
+            return;
+        }
+
+        player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Comando desconocido. Usa: /suprema <maravillas|claim|revoke|silence|infusion|beast|aura|status|notoriedad|purificar|raid|guia>"));
     }
 
     private void sendWonderLine(EntityPlayer player, String key, String name, String desc) {

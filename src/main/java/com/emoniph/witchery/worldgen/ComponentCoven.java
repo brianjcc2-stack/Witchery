@@ -1,11 +1,14 @@
 package com.emoniph.witchery.worldgen;
 
+import com.emoniph.witchery.Witchery;
 import com.emoniph.witchery.entity.EntityCovenWitch;
 import com.emoniph.witchery.worldgen.WitcheryComponent;
 import java.util.Random;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.WeightedRandomChestContent;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
@@ -16,6 +19,22 @@ public class ComponentCoven extends WitcheryComponent {
    public static final int DIM_Y = 4;
    public static final int DIM_Z = 11;
    private int witchesSpawned = 0;
+   private boolean hasMadeChest = false;
+
+   public static final WeightedRandomChestContent[] covenChestContents = new WeightedRandomChestContent[]{
+      new WeightedRandomChestContent(Witchery.Items.SEEDS_BELLADONNA, 0, 1, 3, 20),
+      new WeightedRandomChestContent(Witchery.Items.SEEDS_MANDRAKE, 0, 1, 3, 20),
+      new WeightedRandomChestContent(Witchery.Items.SEEDS_ARTICHOKE, 0, 1, 2, 15),
+      new WeightedRandomChestContent(Witchery.Items.SEEDS_SNOWBELL, 0, 1, 2, 15),
+      new WeightedRandomChestContent(Witchery.Items.GENERIC, Witchery.Items.GENERIC.itemRowanBerries.damageValue, 2, 6, 20),
+      new WeightedRandomChestContent(Witchery.Items.GENERIC, Witchery.Items.GENERIC.itemEmptyClayJar.damageValue, 2, 5, 20),
+      new WeightedRandomChestContent(Witchery.Items.GENERIC, Witchery.Items.GENERIC.itemTearOfTheGoddess.damageValue, 1, 2, 5),
+      new WeightedRandomChestContent(Witchery.Items.CHALK_RITUAL, 0, 1, 1, 15),
+      new WeightedRandomChestContent(Witchery.Items.CHALK_OTHERWHERE, 0, 1, 1, 10),
+      new WeightedRandomChestContent(Items.glass_bottle, 0, 2, 6, 25),
+      new WeightedRandomChestContent(Items.brewing_stand, 0, 1, 1, 10),
+      new WeightedRandomChestContent(Items.gold_nugget, 0, 3, 9, 15)
+   };
 
 
    public ComponentCoven() {}
@@ -24,26 +43,22 @@ public class ComponentCoven extends WitcheryComponent {
       super(direction, random, x, z, 11, 4, 11);
    }
 
-   private void spawnWitches(World par1World, StructureBoundingBox par2StructureBoundingBox, int par3, int par4, int par5, int par6) {
-      if(this.witchesSpawned < par6) {
-         for(int i1 = this.witchesSpawned; i1 < par6; ++i1) {
-            int j1 = this.getXWithOffset(par3 + i1, par5);
-            int k1 = this.getYWithOffset(par4);
-            int l1 = this.getZWithOffset(par3 + i1, par5);
-            if(!par2StructureBoundingBox.isVecInside(j1, k1, l1)) {
-               break;
-            }
-
-            ++this.witchesSpawned;
-            if(par1World.rand.nextInt(10) != 0) {
-               EntityCovenWitch entityvillager = new EntityCovenWitch(par1World);
-               entityvillager.func_110163_bv();
-               entityvillager.setLocationAndAngles((double)j1 + 0.5D, (double)k1, (double)l1 + 0.5D, 0.0F, 0.0F);
-               par1World.spawnEntityInWorld(entityvillager);
+   private void spawnWitches(World world, StructureBoundingBox box, int ground) {
+      if(this.witchesSpawned < 3) {
+         int[][] coords = new int[][]{{3, ground, 3}, {7, ground, 3}, {5, ground, 7}};
+         for(int i = this.witchesSpawned; i < 3; ++i) {
+            int j1 = this.getXWithOffset(coords[i][0], coords[i][2]);
+            int k1 = this.getYWithOffset(coords[i][1]);
+            int l1 = this.getZWithOffset(coords[i][0], coords[i][2]);
+            if(box.isVecInside(j1, k1, l1)) {
+               EntityCovenWitch witch = new EntityCovenWitch(world);
+               witch.func_110163_bv();
+               witch.setLocationAndAngles((double)j1 + 0.5D, (double)k1, (double)l1 + 0.5D, world.rand.nextFloat() * 360.0F, 0.0F);
+               world.spawnEntityInWorld(witch);
+               ++this.witchesSpawned;
             }
          }
       }
-
    }
 
    public boolean addComponentParts(World world, Random random) {
@@ -85,12 +100,17 @@ public class ComponentCoven extends WitcheryComponent {
             this.place(altarBrick, 3, 4, ground, 5, super.boundingBox, world);
             this.place(altarBrick, 3, 4, ground, 6, super.boundingBox, world);
             this.place(altarBrick, 3, 5, ground, 4, super.boundingBox, world);
-            this.place(Blocks.water, 0, 5, ground, 5, super.boundingBox, world);
-            this.setDispenser(5, ground - 1, 5, random, world, 5);
+            this.place(Witchery.Blocks.BRAZIER, 0, 5, ground, 5, super.boundingBox, world);
             this.place(altarBrick, 3, 5, ground, 6, super.boundingBox, world);
             this.place(altarBrick, 3, 6, ground, 4, super.boundingBox, world);
             this.place(altarBrick, 3, 6, ground, 5, super.boundingBox, world);
             this.place(altarBrick, 3, 6, ground, 6, super.boundingBox, world);
+
+            if(!this.hasMadeChest) {
+               this.place(Blocks.chest, 0, 5, ground, 4, super.boundingBox, world);
+               this.hasMadeChest = true;
+               this.generateStructureChestContents(world, super.boundingBox, random, 5, ground, 4, covenChestContents, 4 + random.nextInt(4));
+            }
             String mobType = "Witch";
             this.setSpawner(4, ground - 1, 4, "Witch", world);
             this.setSpawner(6, ground - 1, 6, "Witch", world);
@@ -167,7 +187,7 @@ public class ComponentCoven extends WitcheryComponent {
                }
             }
 
-            this.spawnWitches(world, super.boundingBox, 7, 1, 4, 1);
+            this.spawnWitches(world, super.boundingBox, ground);
             return true;
          } else {
             return false;
@@ -178,6 +198,7 @@ public class ComponentCoven extends WitcheryComponent {
    protected void func_143012_a(NBTTagCompound par1NBTTagCompound) {
       super.func_143012_a(par1NBTTagCompound);
       par1NBTTagCompound.setInteger("WITCWCount", this.witchesSpawned);
+      par1NBTTagCompound.setBoolean("WITCChest", this.hasMadeChest);
    }
 
    protected void func_143011_b(NBTTagCompound par1NBTTagCompound) {
@@ -187,6 +208,8 @@ public class ComponentCoven extends WitcheryComponent {
       } else {
          this.witchesSpawned = 0;
       }
-
+      if(par1NBTTagCompound.hasKey("WITCChest")) {
+         this.hasMadeChest = par1NBTTagCompound.getBoolean("WITCChest");
+      }
    }
 }

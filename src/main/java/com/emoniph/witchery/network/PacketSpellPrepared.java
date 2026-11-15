@@ -38,9 +38,13 @@ public class PacketSpellPrepared implements IMessage {
 
       public IMessage onMessage(PacketSpellPrepared message, MessageContext ctx) {
          EntityPlayer player = Witchery.proxy.getPlayer(ctx);
+         SymbolEffect effect = EffectRegistry.instance().getEffect(message.effectID);
+         int maxAllowed = com.emoniph.witchery.item.ItemMysticBranch.getMaxAllowedChargeLevel(player, effect);
+         int finalLevel = Math.min(Math.max(1, message.level), maxAllowed);
          player.getEntityData().setInteger("WITCSpellEffectID", message.effectID);
-         player.getEntityData().setInteger("WITCSpellEffectEnhanced", message.level);
-         SoundEffect.NOTE_HARP.playAtPlayer(player.worldObj, player, 1.0F);
+         player.getEntityData().setInteger("WITCSpellEffectEnhanced", finalLevel);
+         float pitch = finalLevel == 1 ? 0.8F : (finalLevel == 2 ? 1.2F : 1.6F);
+         SoundEffect.NOTE_HARP.playAtPlayer(player.worldObj, player, pitch);
          return null;
       }
    }

@@ -1994,6 +1994,7 @@ public class ItemGeneral extends ItemBase {
                }
 
                EntityBroom var41 = new EntityBroom(world, (double)((float)i + 0.5F), (double)((float)var40 + 1.0F), (double)((float)var42 + 0.5F));
+               var41.setOwner(player);
                if(itemstack.hasDisplayName()) {
                   var41.setCustomNameTag(itemstack.getDisplayName());
                }
