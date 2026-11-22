@@ -56,7 +56,10 @@ public class CommandCrucio extends CommandBase {
             player.addChatMessage(new ChatComponentText("\u00a74\u00a7l=== Maldición Cruciatus (/crucio) ==="));
             player.addChatMessage(new ChatComponentText("\u00a7cPotencia actual configurada: \u00a7e" + actual + " corazones\u00a77 (máx. 10)."));
             player.addChatMessage(new ChatComponentText("\u00a7eUso: \u00a7f/crucio <1-10> \u00a77- Ajusta cuántos corazones de agonía progresiva infligirá tu próximo hechizo Crucio."));
-            player.addChatMessage(new ChatComponentText("\u00a76Trazo en Rama Mística: \u00a7f↓ → ← ↑ ↓ \u00a77(Requiere Infusión Infernal o Bruja Suprema)."));
+            String crucioStrokes = com.emoniph.witchery.infusion.infusions.symbols.SymbolEffect.formatStrokesCompact(
+                    com.emoniph.witchery.infusion.infusions.symbols.EffectRegistry.Crucio.getDefaultStrokes()
+            );
+            player.addChatMessage(new ChatComponentText("\u00a76Trazos en Rama Mística: \u00a7f" + crucioStrokes + " \u00a77(Requiere Infusión Infernal o Bruja Suprema)."));
             return;
         }
 

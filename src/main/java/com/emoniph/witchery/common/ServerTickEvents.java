@@ -45,22 +45,20 @@ public class ServerTickEvents {
       }
 
       if(event.side == Side.SERVER && event.phase == Phase.START && TASKS.size() > 0) {
+         ArrayList snapshot = new ArrayList(TASKS);
          ArrayList completedTasks = new ArrayList();
-         Iterator i$ = TASKS.iterator();
+         Iterator i$ = snapshot.iterator();
 
          ServerTickEvents.ServerTickTask task;
          while(i$.hasNext()) {
             task = (ServerTickEvents.ServerTickTask)i$.next();
-            if(task.process()) {
+            if(task != null && task.process()) {
                completedTasks.add(task);
             }
          }
 
-         i$ = completedTasks.iterator();
-
-         while(i$.hasNext()) {
-            task = (ServerTickEvents.ServerTickTask)i$.next();
-            TASKS.remove(task);
+         if(!completedTasks.isEmpty()) {
+            TASKS.removeAll(completedTasks);
          }
       }
 

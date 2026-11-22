@@ -219,10 +219,23 @@ public class GuiScreenWitchcraftBook extends GuiScreen {
                   + "§8Lanzar un hechizo por primera vez te otorgará maestría sobre él (+10 pts).§0";
                this.addSummaryPage(symbologyStatus);
 
+               java.util.List<SymbolEffect> sortedEffects = new java.util.ArrayList<SymbolEffect>();
                i$ = EffectRegistry.instance().getEffects().iterator();
                while(i$.hasNext()) {
                   SymbolEffect var21 = (SymbolEffect)i$.next();
-                  if(var21.isVisible(player)) {
+                  if(var21 != null && var21.getDefaultStrokes() != null && var21.isVisible(player)) {
+                     sortedEffects.add(var21);
+                  }
+               }
+               SymbolEffect.sortByComplexity(sortedEffects);
+               boolean flagratePageAdded = false;
+               for(SymbolEffect var21 : sortedEffects) {
+                  if(SymbolEffect.isFlagrateFamily(var21.getEffectID())) {
+                     if(!flagratePageAdded) {
+                        this.addSummaryPage(SymbolEffect.getUnifiedFlagrateBookPage(player));
+                        flagratePageAdded = true;
+                     }
+                  } else {
                      this.addSummaryPage(var21.getDescription(player));
                   }
                }
@@ -521,7 +534,7 @@ public class GuiScreenWitchcraftBook extends GuiScreen {
    }
 
    private void sendBookToServer(boolean par1) {
-      if(this.player != null && this.currPage >= 0 && this.currPage < 1000 && this.player.inventory.currentItem >= 0 && this.player.inventory.getCurrentItem() != null) {
+      if(this.player != null && this.currPage >= 0 && this.currPage < 1000 && this.player.inventory.currentItem >= 0 && this.player.inventory.getCurrentItem() != null && this.player.inventory.getCurrentItem() == this.itemstack) {
          Witchery.packetPipeline.sendToServer(new PacketItemUpdate(this.player.inventory.currentItem, this.currPage, this.player.inventory.getCurrentItem()));
       }
 

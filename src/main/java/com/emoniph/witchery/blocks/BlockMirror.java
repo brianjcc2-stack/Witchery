@@ -295,12 +295,11 @@ public class BlockMirror extends BlockBaseContainer {
 
                               var10000 = Witchery.Items.GENERIC;
                               ItemGeneral.teleportToLocation(world, 0.5D + (double)x + (double)xShift, (double)dimCoords + 0.01D, 0.5D + (double)z + (double)zShift, world.provider.dimensionId, entity, true, ParticleEffect.SPLASH, SoundEffect.RANDOM_SPLASH);
-                              if(entity instanceof EntityPlayer) {
-                                 var66 = (EntityPlayer)entity;
-                                 var63 = (double)(var66.rotationYaw + 180.0F);
+                              if(entity instanceof EntityPlayerMP) {
+                                 EntityPlayerMP playerMP = (EntityPlayerMP)entity;
+                                 var63 = (double)(playerMP.rotationYaw + 180.0F);
                                  var71 = (float)var63 % 360.0F;
-                                 mside = new S08PacketPlayerPosLook(var66.posX, var66.posY, var66.posZ, var71, var66.rotationPitch, false);
-                                 Witchery.packetPipeline.sendTo((Packet)mside, var66);
+                                 playerMP.playerNetServerHandler.setPlayerLocation(playerMP.posX, playerMP.posY, playerMP.posZ, var71, playerMP.rotationPitch);
                               }
 
                               return;
@@ -320,12 +319,11 @@ public class BlockMirror extends BlockBaseContainer {
 
                               var10000 = Witchery.Items.GENERIC;
                               ItemGeneral.teleportToLocation(world, 0.5D + (double)x + (double)xShift, (double)dimCoords + 0.01D, 0.5D + (double)z + (double)zShift, world.provider.dimensionId, entity, true, ParticleEffect.SPLASH, SoundEffect.RANDOM_SPLASH);
-                              if(entity instanceof EntityPlayer) {
-                                 var66 = (EntityPlayer)entity;
-                                 var63 = (double)(var66.rotationYaw + 180.0F);
+                              if(entity instanceof EntityPlayerMP) {
+                                 EntityPlayerMP playerMP = (EntityPlayerMP)entity;
+                                 var63 = (double)(playerMP.rotationYaw + 180.0F);
                                  var71 = (float)var63 % 360.0F;
-                                 mside = new S08PacketPlayerPosLook(var66.posX, var66.posY, var66.posZ, var71, var66.rotationPitch, false);
-                                 Witchery.packetPipeline.sendTo((Packet)mside, var66);
+                                 playerMP.playerNetServerHandler.setPlayerLocation(playerMP.posX, playerMP.posY, playerMP.posZ, var71, playerMP.rotationPitch);
                               }
 
                               return;
@@ -586,28 +584,8 @@ public class BlockMirror extends BlockBaseContainer {
       return false;
    }
 
-   public AxisAlignedBB getCollisionBoundingBoxFromPool(World world, int x, int y, int z) {
+   public void setBlockBoundsBasedOnState(IBlockAccess world, int x, int y, int z) {
       int side = getDirection(world.getBlockMetadata(x, y, z));
-      float w = 0.15F;
-      if(side == 0) {
-         this.setBlockBounds(0.0F, 0.0F, 0.85F, 1.0F, 1.0F, 1.0F);
-      } else if(side == 1) {
-         this.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 0.15F);
-      } else if(side == 2) {
-         this.setBlockBounds(0.85F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F);
-      } else if(side == 3) {
-         this.setBlockBounds(0.0F, 0.0F, 0.0F, 0.15F, 1.0F, 1.0F);
-      }
-
-      AxisAlignedBB bounds = super.getCollisionBoundingBoxFromPool(world, x, y, z);
-      this.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F);
-      return bounds;
-   }
-
-   @SideOnly(Side.CLIENT)
-   public AxisAlignedBB getSelectedBoundingBoxFromPool(World world, int x, int y, int z) {
-      int side = getDirection(world.getBlockMetadata(x, y, z));
-      float w = 0.32F;
       if(side == 0) {
          this.setBlockBounds(0.0F, 0.0F, 0.68F, 1.0F, 1.0F, 1.0F);
       } else if(side == 1) {
@@ -617,10 +595,33 @@ public class BlockMirror extends BlockBaseContainer {
       } else if(side == 3) {
          this.setBlockBounds(0.0F, 0.0F, 0.0F, 0.32F, 1.0F, 1.0F);
       }
+   }
 
-      AxisAlignedBB bounds = super.getSelectedBoundingBoxFromPool(world, x, y, z);
-      this.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F);
-      return bounds;
+   public AxisAlignedBB getCollisionBoundingBoxFromPool(World world, int x, int y, int z) {
+      int side = getDirection(world.getBlockMetadata(x, y, z));
+      float minX = 0.0F;
+      float minY = 0.0F;
+      float minZ = 0.0F;
+      float maxX = 1.0F;
+      float maxY = 1.0F;
+      float maxZ = 1.0F;
+      if(side == 0) {
+         minZ = 0.85F;
+      } else if(side == 1) {
+         maxZ = 0.15F;
+      } else if(side == 2) {
+         minX = 0.85F;
+      } else if(side == 3) {
+         maxX = 0.15F;
+      }
+
+      return AxisAlignedBB.getBoundingBox((double)((float)x + minX), (double)((float)y + minY), (double)((float)z + minZ), (double)((float)x + maxX), (double)((float)y + maxY), (double)((float)z + maxZ));
+   }
+
+   @SideOnly(Side.CLIENT)
+   public AxisAlignedBB getSelectedBoundingBoxFromPool(World world, int x, int y, int z) {
+      this.setBlockBoundsBasedOnState(world, x, y, z);
+      return super.getSelectedBoundingBoxFromPool(world, x, y, z);
    }
 
    public AxisAlignedBB getServerSelectedBoundingBoxFromPool(World world, int x, int y, int z) {

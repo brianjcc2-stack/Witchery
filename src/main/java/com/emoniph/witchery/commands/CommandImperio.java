@@ -160,7 +160,10 @@ public class CommandImperio extends CommandBase {
             ChatUtil.sendPlain(player, EnumChatFormatting.DARK_PURPLE + "╔════════════════════════════════════════════╗");
             ChatUtil.sendPlain(player, EnumChatFormatting.GOLD + "  ★ GUÍA DE LA MALDICIÓN IMPERIUS ★");
             ChatUtil.sendPlain(player, EnumChatFormatting.DARK_PURPLE + "╚════════════════════════════════════════════╝");
-            ChatUtil.sendPlain(player, EnumChatFormatting.YELLOW + "1. Dominar: " + EnumChatFormatting.WHITE + "Lanza el hechizo Imperio con la Rama Mística (↑ ↑ ↓ ← ←) o usa /imperio control mirando a una criatura.");
+            String imperioStrokes = com.emoniph.witchery.infusion.infusions.symbols.SymbolEffect.formatStrokesCompact(
+                    com.emoniph.witchery.infusion.infusions.symbols.EffectRegistry.Imperio.getDefaultStrokes()
+            );
+            ChatUtil.sendPlain(player, EnumChatFormatting.YELLOW + "1. Dominar: " + EnumChatFormatting.WHITE + "Lanza el hechizo Imperio con la Rama Mística (" + EnumChatFormatting.AQUA + imperioStrokes + EnumChatFormatting.WHITE + ") o usa /imperio control mirando a una criatura.");
             ChatUtil.sendPlain(player, EnumChatFormatting.YELLOW + "2. Órdenes Tácticas: " + EnumChatFormatting.WHITE + "Usa /imperio follow, /imperio stay, /imperio attack (mirando al rival) o /imperio coord <x> <y> <z>.");
             ChatUtil.sendPlain(player, EnumChatFormatting.YELLOW + "3. Equipamiento: " + EnumChatFormatting.WHITE + "Usa /imperio inventory para equipar armas o armaduras a tu siervo dominado.");
             return;

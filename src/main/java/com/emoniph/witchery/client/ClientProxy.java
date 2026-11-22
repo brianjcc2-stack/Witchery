@@ -1,6 +1,7 @@
 package com.emoniph.witchery.client;
 
 import com.emoniph.witchery.Witchery;
+import net.minecraft.item.ItemStack;
 import com.emoniph.witchery.blocks.BlockAlluringSkull;
 import com.emoniph.witchery.blocks.BlockAltar;
 import com.emoniph.witchery.blocks.BlockAltarGUI;
@@ -444,12 +445,26 @@ public class ClientProxy extends CommonProxy {
 
    public void postInit() {}
 
+   private ItemStack resolveBookStack(EntityPlayer player, World world, int x, int y, int z) {
+      ItemStack held = player != null ? player.getHeldItem() : null;
+      if (world != null) {
+         TileEntity te = world.getTileEntity(x, y, z);
+         if (te instanceof BlockGrimoireLectern.TileEntityGrimoireLectern) {
+            ItemStack lecternBook = ((BlockGrimoireLectern.TileEntityGrimoireLectern) te).getBook();
+            if (lecternBook != null) {
+               return lecternBook;
+            }
+         }
+      }
+      return held;
+   }
+
    public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
       switch(ID) {
       case 0:
          return new BlockAltarGUI((BlockAltar.TileEntityAltar)world.getTileEntity(x, y, z));
       case 1:
-         return new GuiScreenWitchcraftBook(player, player.getHeldItem());
+         return new GuiScreenWitchcraftBook(player, this.resolveBookStack(player, world, x, y, z));
       case 2:
          return new BlockWitchesOvenGUI(player.inventory, (BlockWitchesOven.TileEntityWitchesOven)world.getTileEntity(x, y, z));
       case 3:
@@ -459,9 +474,9 @@ public class ClientProxy extends CommonProxy {
       case 5:
          return new ItemBrewBagGUI(player.inventory, new ItemBrewBag.InventoryBrewBag(player));
       case 6:
-         return new GuiScreenBiomeBook(player, player.getHeldItem());
+         return new GuiScreenBiomeBook(player, this.resolveBookStack(player, world, x, y, z));
       case 7:
-         return new GuiScreenMarkupBook(player, player.getHeldItem());
+         return new GuiScreenMarkupBook(player, this.resolveBookStack(player, world, x, y, z));
       case 8:
          return new ItemLeonardsUrnGUI(player.inventory, new ItemLeonardsUrn.InventoryLeonardsUrn(player));
       case 9:

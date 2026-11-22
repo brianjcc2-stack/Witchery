@@ -1,0 +1,81 @@
+name: Build & Publish Witchery Auto-Update
+
+on:
+  push:
+    branches:
+      - witchery-expansion
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if release JAR was already compiled in this push
+        id: check_precompiled
+        run: |
+          if [ -f "release/witchery-1.7.10-0.24.1.jar" ] && [ -f "release/witchery.sha256" ]; then
+            if git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -q "^release/witchery.sha256$"; then
+              echo "precompiled=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+          echo "precompiled=false" >> "$GITHUB_OUTPUT"
+
+      - name: Set up JDK 8
+        if: steps.check_precompiled.outputs.precompiled != 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '8'
+
+      - name: Cache Gradle packages
+        if: steps.check_precompiled.outputs.precompiled != 'true'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Install Gradle 4.4.1 and Build Mod
+        if: steps.check_precompiled.outputs.precompiled != 'true'
+        run: |
+          if [ ! -f "$HOME/gradle-4.4.1/bin/gradle" ]; then
+            curl -sL https://services.gradle.org/distributions/gradle-4.4.1-bin.zip -o /tmp/gradle-4.4.1-bin.zip
+            unzip -q /tmp/gradle-4.4.1-bin.zip -d "$HOME"
+          fi
+          "$HOME/gradle-4.4.1/bin/gradle" build --no-daemon
+
+      - name: Publish or Update Latest GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="latest-update"
+          TITLE="Witchery Auto-Update Build ($(date -u +'%Y-%m-%d %H:%M UTC'))"
+          NOTES="Actualización automática generada desde el commit ${GITHUB_SHA}."
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" \
+              release/witchery-1.7.10-0.24.1.jar \
+              release/witchery.sha256 \
+              --clobber
+            gh release edit "$TAG" --title "$TITLE" --notes "$NOTES" --latest
+          else
+            gh release create "$TAG" \
+              release/witchery-1.7.10-0.24.1.jar \
+              release/witchery.sha256 \
+              --title "$TITLE" \
+              --notes "$NOTES" \
+              --latest
+          fi

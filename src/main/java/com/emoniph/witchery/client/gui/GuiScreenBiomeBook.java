@@ -113,7 +113,7 @@ public class GuiScreenBiomeBook extends GuiScreen {
    }
 
    private void sendBookToServer(boolean par1) {
-      if(this.player != null && this.pageIndex >= 0 && this.pageIndex < 1000 && this.player.inventory.currentItem >= 0 && this.player.inventory.getCurrentItem() != null) {
+      if(this.player != null && this.pageIndex >= 0 && this.pageIndex < 1000 && this.player.inventory.currentItem >= 0 && this.player.inventory.getCurrentItem() != null && this.player.inventory.getCurrentItem() == this.itemstack) {
          Witchery.packetPipeline.sendToServer(new PacketItemUpdate(this.player.inventory.currentItem, this.pageIndex, this.player.inventory.getCurrentItem()));
       }
 

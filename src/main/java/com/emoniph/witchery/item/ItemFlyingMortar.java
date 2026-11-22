@@ -64,6 +64,8 @@ public class ItemFlyingMortar extends Item {
 
          if (!world.isRemote) {
             EntityFlyingMortar mortar = new EntityFlyingMortar(world, (double)x + 0.5D, (double)y + 1.1D, (double)z + 0.5D);
+            mortar.setFromItemStack(stack);
+            mortar.setOwner(player);
             world.spawnEntityInWorld(mortar);
             world.playSoundAtEntity(mortar, "random.anvil_land", 0.6F, 1.4F);
          }

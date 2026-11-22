@@ -17,6 +17,7 @@ import net.minecraft.world.World;
 public class EntityFlyingMortar extends EntityBroom {
 
    private int mortarCooldown = 0;
+   private NBTTagCompound storedItemTag = null;
 
    public EntityFlyingMortar(World world) {
       super(world);
@@ -28,6 +29,44 @@ public class EntityFlyingMortar extends EntityBroom {
       this.setSize(1.4F, 0.9F);
    }
 
+   public void setFromItemStack(ItemStack stack) {
+      if (stack != null) {
+         if (stack.hasDisplayName()) {
+            this.setCustomNameTag(stack.getDisplayName());
+         }
+         if (stack.hasTagCompound()) {
+            this.storedItemTag = (NBTTagCompound) stack.getTagCompound().copy();
+         }
+      }
+   }
+
+   public ItemStack createDropStack() {
+      ItemStack stack = new ItemStack(Witchery.Items.FLYING_MORTAR);
+      if (this.storedItemTag != null) {
+         stack.setTagCompound((NBTTagCompound) this.storedItemTag.copy());
+      }
+      if (this.hasCustomNameTag()) {
+         stack.setStackDisplayName(this.getCustomNameTag());
+      }
+      return stack;
+   }
+
+   @Override
+   protected void writeEntityToNBT(NBTTagCompound nbt) {
+      super.writeEntityToNBT(nbt);
+      if (this.storedItemTag != null) {
+         nbt.setTag("MortarItemTag", this.storedItemTag);
+      }
+   }
+
+   @Override
+   protected void readEntityFromNBT(NBTTagCompound nbt) {
+      super.readEntityFromNBT(nbt);
+      if (nbt.hasKey("MortarItemTag")) {
+         this.storedItemTag = nbt.getCompoundTag("MortarItemTag");
+      }
+   }
+
    @Override
    public double getMountedYOffset() {
       return 0.4D;
@@ -37,8 +76,10 @@ public class EntityFlyingMortar extends EntityBroom {
    public boolean interactFirst(EntityPlayer player) {
       if (player.isSneaking()) {
          if (!this.worldObj.isRemote) {
-            ItemStack stack = new ItemStack(Witchery.Items.FLYING_MORTAR);
-            this.entityDropItem(stack, 0.0F);
+            ItemStack stack = this.createDropStack();
+            if (!player.inventory.addItemStackToInventory(stack)) {
+               this.entityDropItem(stack, 0.0F);
+            }
             this.setDead();
          }
          return true;
@@ -101,7 +142,7 @@ public class EntityFlyingMortar extends EntityBroom {
                this.riddenByEntity.mountEntity(this);
             }
             if (!creative) {
-               this.entityDropItem(new ItemStack(Witchery.Items.FLYING_MORTAR), 0.0F);
+               this.entityDropItem(this.createDropStack(), 0.0F);
             }
             this.setDead();
          }

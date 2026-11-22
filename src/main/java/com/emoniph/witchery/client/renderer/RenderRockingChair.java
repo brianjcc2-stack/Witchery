@@ -1,13 +1,19 @@
 package com.emoniph.witchery.client.renderer;
 
 import com.emoniph.witchery.client.model.ModelRockingChair;
+import com.emoniph.witchery.entity.EntitySeat;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
+
+import java.util.List;
 
 @SideOnly(Side.CLIENT)
 public class RenderRockingChair extends TileEntitySpecialRenderer {
@@ -29,7 +35,30 @@ public class RenderRockingChair extends TileEntitySpecialRenderer {
 
         GL11.glRotatef(angle, 0.0F, 1.0F, 0.0F);
         GL11.glRotatef(180.0F, 0.0F, 0.0F, 1.0F);
-        GL11.glTranslatef(0.0F, -1.0F, 0.0F);
+
+        boolean occupied = false;
+        if (tileEntity != null && tileEntity.getWorldObj() != null) {
+            List seats = tileEntity.getWorldObj().getEntitiesWithinAABB(EntitySeat.class,
+                    AxisAlignedBB.getBoundingBox(tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord,
+                            tileEntity.xCoord + 1, tileEntity.yCoord + 1, tileEntity.zCoord + 1));
+            for (int i = 0; i < seats.size(); ++i) {
+                EntitySeat s = (EntitySeat) seats.get(i);
+                if (s.riddenByEntity != null) {
+                    occupied = true;
+                    break;
+                }
+            }
+        }
+
+        if (occupied) {
+            float time = ((float)(Minecraft.getSystemTime() % 4000L) / 4000.0F) * (float)Math.PI * 2.0F;
+            float rockAngle = MathHelper.sin(time * 2.0F) * 6.5F;
+            GL11.glTranslatef(0.0F, 0.45F, 0.0F);
+            GL11.glRotatef(rockAngle, 1.0F, 0.0F, 0.0F);
+            GL11.glTranslatef(0.0F, -1.45F, 0.0F);
+        } else {
+            GL11.glTranslatef(0.0F, -1.0F, 0.0F);
+        }
 
         this.bindTexture(TEXTURE);
         this.model.render((Entity)null, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F);

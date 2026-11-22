@@ -594,6 +594,13 @@ public class BlockAltar extends BlockBaseContainer {
             BlockAltar.TileEntityAltar.PowerSource.createInMap(powerObjectTable, Witchery.Blocks.GRASSPER, 2, 10);
             BlockAltar.TileEntityAltar.PowerSource.createInMap(powerObjectTable, Witchery.Blocks.WISPY_COTTON, 3, 20);
             BlockAltar.TileEntityAltar.PowerSource.createInMap(powerObjectTable, Witchery.Blocks.INFINITY_EGG, 1000, 1);
+            BlockAltar.TileEntityAltar.PowerSource.createInMap(powerObjectTable, Witchery.Blocks.RITUAL_CANDLE, 2, 10);
+            BlockAltar.TileEntityAltar.PowerSource.createInMap(powerObjectTable, Witchery.Blocks.SKULL_CANDLE, 4, 8);
+            BlockAltar.TileEntityAltar.PowerSource.createInMap(powerObjectTable, Witchery.Blocks.APOTHECARY_JAR, 2, 12);
+            BlockAltar.TileEntityAltar.PowerSource.createInMap(powerObjectTable, Witchery.Blocks.GRIMOIRE_LECTERN, 5, 2);
+            BlockAltar.TileEntityAltar.PowerSource.createInMap(powerObjectTable, Witchery.Blocks.POTION_SHELF, 3, 4);
+            BlockAltar.TileEntityAltar.PowerSource.createInMap(powerObjectTable, Witchery.Blocks.HERBALIST_DESK, 4, 2);
+            BlockAltar.TileEntityAltar.PowerSource.createInMap(powerObjectTable, Witchery.Blocks.SPIRIT_CHIMES, 3, 4);
             for(Map.Entry<Block, int[]> entry : CUSTOM_POWER_SOURCES.entrySet()) {
                BlockAltar.TileEntityAltar.PowerSource.createInMap(powerObjectTable, entry.getKey(), entry.getValue()[0], entry.getValue()[1]);
             }
@@ -706,12 +713,26 @@ public class BlockAltar extends BlockBaseContainer {
                      headfound = true;
                   }
                }
+            } else if(!headfound && var20 == Witchery.Blocks.SKULL_CANDLE) {
+               newRechargeScale += 2;
+               newPowerScale += 2;
+               headfound = true;
+               if(!candlefound) {
+                  candlefound = true;
+                  ++newRechargeScale;
+               }
             } else if(!candlefound && var20 == Witchery.Blocks.CANDELABRA) {
+               candlefound = true;
+               newRechargeScale += 2;
+            } else if(!candlefound && var20 == Witchery.Blocks.RITUAL_CANDLE) {
                candlefound = true;
                newRechargeScale += 2;
             } else if(!candlefound && var20 == Blocks.torch) {
                candlefound = true;
                ++newRechargeScale;
+            } else if(var20 == Witchery.Blocks.GRIMOIRE_LECTERN) {
+               ++newEnhancementLevel;
+               ++newRangeScale;
             } else if(var20 == Witchery.Blocks.PLACED_ITEMSTACK) {
                var21 = coord.getBlockTileEntity(super.worldObj, 0, 1, 0);
                if(var21 != null && var21 instanceof BlockPlacedItem.TileEntityPlacedItem) {

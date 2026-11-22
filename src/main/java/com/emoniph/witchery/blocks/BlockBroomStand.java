@@ -5,15 +5,18 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
 import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.IIcon;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
@@ -47,6 +50,27 @@ public class BlockBroomStand extends BlockBaseContainer {
     @SideOnly(Side.CLIENT)
     public boolean shouldSideBeRendered(IBlockAccess world, int x, int y, int z, int side) {
         return false;
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void registerBlockIcons(IIconRegister iconRegister) {
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public IIcon getIcon(int side, int meta) {
+        return Blocks.planks.getBlockTextureFromSide(side);
+    }
+
+    @Override
+    public void setBlockBoundsBasedOnState(IBlockAccess world, int x, int y, int z) {
+        int meta = world.getBlockMetadata(x, y, z) & 3;
+        if (meta == 1 || meta == 3) {
+            this.setBlockBounds(0.3125F, 0.0F, 0.0625F, 0.6875F, 1.4F, 0.9375F);
+        } else {
+            this.setBlockBounds(0.0625F, 0.0F, 0.3125F, 0.9375F, 1.4F, 0.6875F);
+        }
     }
 
     @Override
@@ -93,9 +117,15 @@ public class BlockBroomStand extends BlockBaseContainer {
     }
 
     private boolean isBroomItem(ItemStack stack) {
-        if (stack == null) return false;
+        if (stack == null || stack.getItem() == null) return false;
+        if (Witchery.Items.GENERIC.itemBroom.isMatch(stack) || Witchery.Items.GENERIC.itemBroomEnchanted.isMatch(stack)) {
+            return true;
+        }
+        if (stack.getItem() == Witchery.Items.FLYING_MORTAR || stack.getItem() == Witchery.Items.MYSTIC_BRANCH || stack.getItem() == Witchery.Items.HUNTSMANS_SPEAR || stack.getItem() == Witchery.Items.CANE_SWORD || stack.getItem() == Witchery.Items.DUP_STAFF) {
+            return true;
+        }
         String name = stack.getUnlocalizedName().toLowerCase();
-        return name.contains("broom");
+        return name.contains("broom") || name.contains("staff");
     }
 
     @Override

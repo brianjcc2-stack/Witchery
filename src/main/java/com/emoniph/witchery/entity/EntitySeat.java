@@ -1,6 +1,7 @@
 package com.emoniph.witchery.entity;
 
 import com.emoniph.witchery.Witchery;
+import com.emoniph.witchery.infusion.Infusion;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
@@ -10,7 +11,7 @@ public class EntitySeat extends Entity {
 
     public EntitySeat(World world) {
         super(world);
-        this.setSize(0.0F, 0.0F);
+        this.setSize(0.01F, 0.01F);
         this.noClip = true;
     }
 
@@ -34,7 +35,7 @@ public class EntitySeat extends Entity {
 
     @Override
     public double getMountedYOffset() {
-        return 0.0D;
+        return 0.15D;
     }
 
     @Override
@@ -59,6 +60,15 @@ public class EntitySeat extends Entity {
                 int bz = (int) Math.floor(this.posZ);
                 if (this.worldObj.getBlock(bx, by, bz) != Witchery.Blocks.ROCKING_CHAIR) {
                     this.setDead();
+                } else if (this.ticksExisted % 60 == 0) {
+                    EntityPlayer rider = (EntityPlayer) this.riddenByEntity;
+                    if (Infusion.getInfusionID(rider) > 0) {
+                        int cur = Infusion.getCurrentEnergy(rider);
+                        int max = Infusion.getMaxEnergy(rider);
+                        if (cur < max) {
+                            Infusion.setCurrentEnergy(rider, Math.min(max, cur + 2));
+                        }
+                    }
                 }
             }
         }

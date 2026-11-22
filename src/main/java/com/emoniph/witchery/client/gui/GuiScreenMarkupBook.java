@@ -165,7 +165,7 @@ public class GuiScreenMarkupBook extends GuiScreen {
    }
 
    private void sendBookToServer() {
-      if(this.player != null) {
+      if(this.player != null && this.player.inventory.getCurrentItem() != null && this.player.inventory.getCurrentItem() == this.itemstack) {
          Witchery.packetPipeline.sendToServer(new PacketSyncMarkupBook(this.player.inventory.currentItem, this.pageStack));
       }
 

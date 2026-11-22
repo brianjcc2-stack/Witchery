@@ -51,83 +51,10 @@ public class ItemApothecaryPouch extends Item {
    @Override
    public ItemStack onItemRightClick(ItemStack stack, World world, EntityPlayer player) {
       if (!world.isRemote) {
-         tryAutoRestoreLostItems(stack, player);
          player.openGui(Witchery.instance, 9, world, 0, 0, 0);
          SoundEffect.WITCHERY_RANDOM_DRINK.playOnlyTo(player, 0.8F, 1.4F);
       }
       return stack;
-   }
-
-   private static void tryAutoRestoreLostItems(ItemStack pouchStack, EntityPlayer player) {
-      if (pouchStack == null || player == null) {
-         return;
-      }
-      if (player.getEntityData().getBoolean("WITCApothecaryRestoredV1")) {
-         return;
-      }
-      boolean isEmpty = !pouchStack.hasTagCompound()
-            || !pouchStack.getTagCompound().hasKey("PouchInventory")
-            || pouchStack.getTagCompound().getTagList("PouchInventory", 10).tagCount() == 0;
-      if (!isEmpty) {
-         return;
-      }
-
-      player.getEntityData().setBoolean("WITCApothecaryRestoredV1", true);
-
-      InventoryApothecary inv = new InventoryApothecary(pouchStack, player);
-
-      // 1. Arthana encantada (Filo II, Botín I) del backup 20:59
-      ItemStack arthana = new ItemStack(Witchery.Items.ARTHANA, 1, 0);
-      NBTTagCompound arthanaTag = new NBTTagCompound();
-      NBTTagList enchList = new NBTTagList();
-      NBTTagCompound enchSharp = new NBTTagCompound();
-      enchSharp.setShort("id", (short) 16);
-      enchSharp.setShort("lvl", (short) 2);
-      enchList.appendTag(enchSharp);
-      NBTTagCompound enchLoot = new NBTTagCompound();
-      enchLoot.setShort("id", (short) 21);
-      enchLoot.setShort("lvl", (short) 1);
-      enchList.appendTag(enchLoot);
-      arthanaTag.setTag("ench", enchList);
-      arthanaTag.setInteger("RepairCost", 4);
-      arthana.setTagCompound(arthanaTag);
-      inv.setInventorySlotContents(0, arthana);
-
-      // 2. Tiza Dorada (PseudoDamage: 2)
-      ItemStack chalkHeart = new ItemStack(Witchery.Items.CHALK_GOLDEN, 1, 0);
-      NBTTagCompound tagHeart = new NBTTagCompound();
-      tagHeart.setInteger("PseudoDamage", 2);
-      chalkHeart.setTagCompound(tagHeart);
-      inv.setInventorySlotContents(1, chalkHeart);
-
-      // 3. Tiza Ritual (PseudoDamage: 28)
-      ItemStack chalkRitual = new ItemStack(Witchery.Items.CHALK_RITUAL, 1, 0);
-      NBTTagCompound tagRitual = new NBTTagCompound();
-      tagRitual.setInteger("PseudoDamage", 28);
-      chalkRitual.setTagCompound(tagRitual);
-      inv.setInventorySlotContents(2, chalkRitual);
-
-      // 4. Tiza de Otro Lugar (PseudoDamage: 44)
-      ItemStack chalkOther1 = new ItemStack(Witchery.Items.CHALK_OTHERWHERE, 1, 0);
-      NBTTagCompound tagOther1 = new NBTTagCompound();
-      tagOther1.setInteger("PseudoDamage", 44);
-      chalkOther1.setTagCompound(tagOther1);
-      inv.setInventorySlotContents(3, chalkOther1);
-
-      // 5. Tiza de Otro Lugar (nueva)
-      ItemStack chalkOther2 = new ItemStack(Witchery.Items.CHALK_OTHERWHERE, 1, 0);
-      inv.setInventorySlotContents(4, chalkOther2);
-
-      // 6. 17x Vasijas de arcilla vacías (itemEmptyClayJar, dmg=27)
-      ItemStack clayJars = Witchery.Items.GENERIC.itemEmptyClayJar.createStack(17);
-      inv.setInventorySlotContents(5, clayJars);
-
-      // 7. 1x Mutandis (dmg=16, visto en el backup 21:29)
-      ItemStack mutandis = Witchery.Items.GENERIC.itemMutandis.createStack(1);
-      inv.setInventorySlotContents(6, mutandis);
-
-      inv.writeToNBT();
-      player.inventory.markDirty();
    }
 
    @SideOnly(Side.CLIENT)

@@ -69,6 +69,15 @@ public class FlooNetwork extends WorldSavedData {
       this.markDirty();
    }
 
+   public void removeFireplace(String name) {
+      if (name == null || name.trim().isEmpty()) {
+         return;
+      }
+      if (this.fireplaces.remove(name.trim().toLowerCase()) != null) {
+         this.markDirty();
+      }
+   }
+
    public FireplaceLocation findFireplace(String name) {
       if (name == null) {
          return null;
@@ -415,11 +424,26 @@ public class FlooNetwork extends WorldSavedData {
 
       FlooNetwork.FireplaceLocation target = network.findFireplace(destinationName);
       if (target != null) {
+         WorldServer destWorld = MinecraftServer.getServer() != null ? MinecraftServer.getServer().worldServerForDimension(target.dimension) : null;
+         World checkWorld = destWorld != null ? destWorld : world;
+         if (destWorld != null) {
+            destWorld.getChunkProvider().loadChunk(target.posX >> 4, target.posZ >> 4);
+         }
+
+         if (!isValidFireplace(checkWorld, target.posX, target.posY, target.posZ)) {
+            network.removeFireplace(target.name);
+            ParticleEffect.SMOKE.send(SoundEffect.RANDOM_FIZZ, world, (double)fireCoord.x + 0.5D, (double)fireCoord.y + 0.5D, (double)fireCoord.z + 0.5D, 0.5D, 1.0D, 16);
+            ChatUtil.sendTranslated(EnumChatFormatting.RED, player, "witchery.floo.notfound", new Object[]{destinationName});
+            String available = network.getFormattedDestinations();
+            if (available != null && !available.isEmpty()) {
+               ChatUtil.sendTranslated(EnumChatFormatting.YELLOW, player, "witchery.floo.available", new Object[]{available});
+            }
+            return false;
+         }
+
          world.setBlockToAir(fireCoord.x, fireCoord.y, fireCoord.z);
          ParticleEffect.FLAME.send(SoundEffect.FIRE_IGNITE, world, (double)fireCoord.x + 0.5D, (double)fireCoord.y + 0.5D, (double)fireCoord.z + 0.5D, 1.0D, 1.0D, 24);
 
-         WorldServer destWorld = MinecraftServer.getServer() != null ? MinecraftServer.getServer().worldServerForDimension(target.dimension) : null;
-         World checkWorld = destWorld != null ? destWorld : world;
          double[] arrival = findSafeFireplaceArrival(checkWorld, target, player.rotationYaw);
          if (arrival != null) {
             player.rotationYaw = (float)arrival[3];
