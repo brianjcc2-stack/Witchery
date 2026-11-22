@@ -272,14 +272,16 @@ public class ClientEvents {
       } else if(event.entity instanceof EntityPlayer) {
          EntityPlayer player1 = (EntityPlayer)event.entity;
          ExtendedPlayer playerEx = ExtendedPlayer.get(player1);
-         if (playerEx != null && playerEx.isAstralProjecting()) {
+         boolean isAstral = playerEx != null && playerEx.isAstralProjecting();
+         boolean isGhost = !isAstral && WorldProviderDreamWorld.getPlayerIsGhost(Infusion.getNBT(player1));
+         if (isAstral) {
             RenderUtil.blend(true);
             if (player1.isSneaking()) {
                GL11.glColor4f(1.0F, 1.0F, 1.0F, 0.12F);
             } else {
                GL11.glColor4f(1.0F, 1.0F, 1.0F, 0.45F);
             }
-         } else if(WorldProviderDreamWorld.getPlayerIsGhost(Infusion.getNBT(player1))) {
+         } else if(isGhost) {
             RenderUtil.blend(true);
             if (player1.isSneaking() && playerEx != null && playerEx.getEffectiveSpiritLevel() >= 6) {
                GL11.glColor4f(1.0F, 1.0F, 1.0F, 0.15F);
@@ -328,6 +330,11 @@ public class ClientEvents {
 
             if(pe != null) {
                GL11.glPopMatrix();
+            }
+
+            if(isAstral || isGhost) {
+               RenderUtil.blend(false);
+               GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
             }
          }
       }
@@ -460,8 +467,12 @@ public class ClientEvents {
             GL11.glPopMatrix();
          }
       } else if(event.entity instanceof EntityPlayer) {
-         RenderUtil.blend(false);
-         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+         EntityPlayer player = (EntityPlayer)event.entity;
+         ExtendedPlayer playerEx = ExtendedPlayer.get(player);
+         if((playerEx != null && playerEx.isAstralProjecting()) || WorldProviderDreamWorld.getPlayerIsGhost(Infusion.getNBT(player))) {
+            RenderUtil.blend(false);
+            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+         }
       }
 
    }

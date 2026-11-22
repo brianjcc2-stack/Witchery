@@ -110,9 +110,11 @@ public class ItemLeonardsUrn extends ItemBase {
 
       private int numRows = 1;
       private ItemStack bag;
+      private IInventory bagInventory;
 
 
       public ContainerLeonardsUrn(IInventory playerInventory, IInventory bagInventory, ItemStack bag) {
+         this.bagInventory = bagInventory;
          bagInventory.openInventory();
          int size = bagInventory.getSizeInventory();
          int slot = 0;
@@ -150,6 +152,40 @@ public class ItemLeonardsUrn extends ItemBase {
          }
 
          return itemStack != null && itemStack.getItem() == Witchery.Items.LEONARDS_URN;
+      }
+
+      @Override
+      public void onContainerClosed(EntityPlayer player) {
+         super.onContainerClosed(player);
+         if (this.bagInventory != null) {
+            this.bagInventory.closeInventory();
+         }
+         if (player != null && player.inventory != null) {
+            player.inventory.markDirty();
+            if (!player.worldObj.isRemote && player instanceof net.minecraft.entity.player.EntityPlayerMP) {
+               ((net.minecraft.entity.player.EntityPlayerMP) player).sendContainerToPlayer(player.inventoryContainer);
+            }
+         }
+      }
+
+      @Override
+      public ItemStack slotClick(int slotId, int clickedButton, int mode, EntityPlayer player) {
+         ItemStack held = player.getCurrentEquippedItem();
+         if (slotId >= 0 && slotId < this.inventorySlots.size()) {
+            Slot slot = (Slot) this.inventorySlots.get(slotId);
+            if (slot != null) {
+               if (slot.inventory == player.inventory && slot.getSlotIndex() == player.inventory.currentItem) {
+                  return null;
+               }
+               if (slot.getHasStack() && slot.getStack() == held) {
+                  return null;
+               }
+            }
+         }
+         if (mode == 2 && clickedButton == player.inventory.currentItem) {
+            return null;
+         }
+         return super.slotClick(slotId, clickedButton, mode, player);
       }
 
       public ItemStack transferStackInSlot(EntityPlayer player, int index) {

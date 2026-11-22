@@ -99,6 +99,6 @@ public class BlockHecatesTears extends BlockLilyPad {
       double px = (double)x + 0.3D + (double)(rand.nextFloat() * 0.4F);
       double py = (double)y + 0.3D + (double)(rand.nextFloat() * 0.2F);
       double pz = (double)z + 0.3D + (double)(rand.nextFloat() * 0.4F);
-      ParticleEffect.INSTANT_SPELL.send(SoundEffect.NONE, world, px, py, pz, 0.05D, 0.05D, 1);
+      world.spawnParticle(ParticleEffect.INSTANT_SPELL.toString(), px, py, pz, 0.0D, 0.05D, 0.0D);
    }
 }

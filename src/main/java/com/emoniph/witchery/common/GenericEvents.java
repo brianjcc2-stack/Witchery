@@ -250,9 +250,6 @@ public class GenericEvents {
       ExtendedPlayer newPlayerEx = ExtendedPlayer.get(event.entityPlayer);
       newPlayerEx.loadNBTData(oldPlayerNBT);
       newPlayerEx.restorePlayerInventoryFrom(oldPlayerEx);
-      if(oldPlayerEx != null && newPlayerEx != null) {
-         newPlayerEx.getPreservedDeathItems().addAll(oldPlayerEx.getPreservedDeathItems());
-      }
       if(event.wasDeath) {
          newPlayerEx.setAstralProjecting(false);
          NBTTagCompound nbt = com.emoniph.witchery.infusion.Infusion.getNBT(event.entityPlayer);
@@ -493,7 +490,7 @@ public class GenericEvents {
                      if(unlocName != null) {
                         unlocName = unlocName.toLowerCase();
                      }
-                     if(clsName.contains("atlas") || (unlocName != null && unlocName.contains("atlas"))) {
+                     if(stack.getItem() == Witchery.Items.VOID_LOCKET || clsName.contains("atlas") || (unlocName != null && unlocName.contains("atlas"))) {
                         playerEx.addPreservedDeathItem(stack.copy());
                         i$.remove();
                      }

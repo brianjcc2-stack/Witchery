@@ -234,7 +234,11 @@ public class WitcheryPotions {
             }
 
             if(potion instanceof IHandlePreRenderLiving) {
-               this.renderLivingPreEventHandlers.add((IHandlePreRenderLiving)potion);
+               if(potion instanceof PotionPolymorph) {
+                  this.renderLivingPreEventHandlers.add(0, (IHandlePreRenderLiving)potion);
+               } else {
+                  this.renderLivingPreEventHandlers.add((IHandlePreRenderLiving)potion);
+               }
             }
 
             if(potion instanceof IHandlePlayerDrops) {

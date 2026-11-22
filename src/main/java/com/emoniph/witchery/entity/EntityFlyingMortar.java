@@ -87,10 +87,25 @@ public class EntityFlyingMortar extends EntityBroom {
 
    @Override
    public boolean attackEntityFrom(DamageSource source, float amount) {
-      if (source.getEntity() instanceof EntityPlayer && ((EntityPlayer)source.getEntity()).capabilities.isCreativeMode) {
-         this.setDead();
-         return true;
+      if (this.isEntityInvulnerable()) {
+         return false;
       }
-      return super.attackEntityFrom(source, amount);
+      if (!this.worldObj.isRemote && !this.isDead) {
+         this.setForwardDirection(-this.getForwardDirection());
+         this.setTimeSinceHit(10);
+         this.setDamageTaken(this.getDamageTaken() + amount * 10.0F);
+         this.setBeenAttacked();
+         boolean creative = source.getEntity() instanceof EntityPlayer && ((EntityPlayer)source.getEntity()).capabilities.isCreativeMode;
+         if (creative || this.getDamageTaken() > 60.0F) {
+            if (this.riddenByEntity != null) {
+               this.riddenByEntity.mountEntity(this);
+            }
+            if (!creative) {
+               this.entityDropItem(new ItemStack(Witchery.Items.FLYING_MORTAR), 0.0F);
+            }
+            this.setDead();
+         }
+      }
+      return true;
    }
 }

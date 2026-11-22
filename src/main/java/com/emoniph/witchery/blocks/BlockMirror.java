@@ -639,7 +639,7 @@ public class BlockMirror extends BlockBaseContainer {
       } else if(side == 2) {
          minX = 0.68F;
       } else if(side == 3) {
-         maxZ = 0.32F;
+         maxX = 0.32F;
       }
 
       AxisAlignedBB bounds = AxisAlignedBB.getBoundingBox((double)((float)x + minX), (double)((float)y + minY), (double)((float)z + minZ), (double)((float)x + maxX), (double)((float)y + maxY), (double)((float)z + maxZ));

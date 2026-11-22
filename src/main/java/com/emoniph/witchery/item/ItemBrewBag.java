@@ -210,9 +210,11 @@ public class ItemBrewBag extends ItemBase {
 
       private int numRows;
       private ItemStack bag;
+      private IInventory bagInventory;
 
 
       public ContainerBrewBag(IInventory playerInventory, IInventory bagInventory, ItemStack bag) {
+         this.bagInventory = bagInventory;
          this.numRows = bagInventory.getSizeInventory() / 8;
          bagInventory.openInventory();
          int offset = (this.numRows - 4) * 18;
@@ -248,12 +250,31 @@ public class ItemBrewBag extends ItemBase {
       }
 
       @Override
+      public void onContainerClosed(EntityPlayer player) {
+         super.onContainerClosed(player);
+         if (this.bagInventory != null) {
+            this.bagInventory.closeInventory();
+         }
+         if (player != null && player.inventory != null) {
+            player.inventory.markDirty();
+            if (!player.worldObj.isRemote && player instanceof net.minecraft.entity.player.EntityPlayerMP) {
+               ((net.minecraft.entity.player.EntityPlayerMP) player).sendContainerToPlayer(player.inventoryContainer);
+            }
+         }
+      }
+
+      @Override
       public ItemStack slotClick(int slotId, int clickedButton, int mode, EntityPlayer player) {
          ItemStack held = player.getCurrentEquippedItem();
          if (slotId >= 0 && slotId < this.inventorySlots.size()) {
             Slot slot = (Slot) this.inventorySlots.get(slotId);
-            if (slot != null && slot.getHasStack() && slot.getStack() == held) {
-               return null;
+            if (slot != null) {
+               if (slot.inventory == player.inventory && slot.getSlotIndex() == player.inventory.currentItem) {
+                  return null;
+               }
+               if (slot.getHasStack() && slot.getStack() == held) {
+                  return null;
+               }
             }
          }
          if (mode == 2 && clickedButton == player.inventory.currentItem) {

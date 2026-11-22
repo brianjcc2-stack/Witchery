@@ -50,7 +50,7 @@ public class BlockSunRose extends BlockBaseBush {
          double px = (double)x + 0.3D + (double)(rand.nextFloat() * 0.4F);
          double py = (double)y + 0.5D + (double)(rand.nextFloat() * 0.3F);
          double pz = (double)z + 0.3D + (double)(rand.nextFloat() * 0.4F);
-         ParticleEffect.FLAME.send(SoundEffect.NONE, world, px, py, pz, 0.05D, 0.05D, 1);
+         world.spawnParticle(ParticleEffect.FLAME.toString(), px, py, pz, 0.0D, 0.02D, 0.0D);
       }
    }
 

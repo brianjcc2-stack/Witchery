@@ -2185,7 +2185,7 @@ public class ItemGeneral extends ItemBase {
          int newZ = tag.getInteger("PosZ") - radius + world.rand.nextInt(radius * 2 + 1);
          int newD = tag.getInteger("PosD");
          if(!this.isRestrictedTeleportTarget(entity.dimension, newD)) {
-            teleportToLocation(world, (double)target1, (double)newY, (double)newZ, newD, entity, presetPosition);
+            teleportToLocation(world, (double)target1 + 0.5D, (double)newY, (double)newZ + 0.5D, newD, entity, presetPosition);
             return true;
          }
       } else if(tag != null) {
@@ -2208,13 +2208,13 @@ public class ItemGeneral extends ItemBase {
       for(int i = 0; i < 16; ++i) {
          int dy = y + i;
          if(dy < 250 && !BlockUtil.isReplaceableBlock(targetWorld, x, dy, z) && BlockUtil.isReplaceableBlock(targetWorld, x, dy + 1, z) && BlockUtil.isReplaceableBlock(targetWorld, x, dy + 2, z)) {
-            teleportToLocation(world, (double)x, (double)(dy + 1), (double)z, dimension, entity, presetPosition);
+            teleportToLocation(world, (double)x + 0.5D, (double)(dy + 1), (double)z + 0.5D, dimension, entity, presetPosition);
             return true;
          }
 
          dy = y - i;
          if(i > 0 && dy > 1 && !BlockUtil.isReplaceableBlock(targetWorld, x, dy, z) && BlockUtil.isReplaceableBlock(targetWorld, x, dy + 1, z) && BlockUtil.isReplaceableBlock(targetWorld, x, dy + 2, z)) {
-            teleportToLocation(world, (double)x, (double)(dy + 1), (double)z, dimension, entity, presetPosition);
+            teleportToLocation(world, (double)x + 0.5D, (double)(dy + 1), (double)z + 0.5D, dimension, entity, presetPosition);
             return true;
          }
       }

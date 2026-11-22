@@ -465,9 +465,15 @@ public class ClientProxy extends CommonProxy {
       case 8:
          return new ItemLeonardsUrnGUI(player.inventory, new ItemLeonardsUrn.InventoryLeonardsUrn(player));
       case 9:
-         return new GuiChest(player.inventory, new ItemApothecaryPouch.InventoryApothecary(player.getHeldItem(), player));
+         ItemApothecaryPouch.InventoryApothecary apothecaryInv = new ItemApothecaryPouch.InventoryApothecary(player.getHeldItem(), player);
+         GuiChest apothecaryGui = new GuiChest(player.inventory, apothecaryInv);
+         apothecaryGui.inventorySlots = new ItemApothecaryPouch.ContainerApothecary(player.inventory, apothecaryInv, player.getHeldItem());
+         return apothecaryGui;
       case 10:
-         return new GuiChest(player.inventory, new ItemBottomlessSatchel.InventorySatchel(player.getHeldItem(), player));
+         ItemBottomlessSatchel.InventorySatchel satchelInv = new ItemBottomlessSatchel.InventorySatchel(player.getHeldItem(), player);
+         GuiChest satchelGui = new GuiChest(player.inventory, satchelInv);
+         satchelGui.inventorySlots = new ItemBottomlessSatchel.ContainerSatchel(player.inventory, satchelInv, player.getHeldItem());
+         return satchelGui;
       case 11:
          return new GuiHerbalistDesk(player.inventory, world, x, y, z);
       default:

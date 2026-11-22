@@ -169,7 +169,10 @@ public class ItemQuicksilverMirror extends Item {
                double targetZ = (double) roomZ + 0.5D;
 
                ParticleEffect.SPLASH.send(SoundEffect.RANDOM_SPLASH, player, 0.5D, 2.0D, 16);
-               ItemGeneral.travelToDimension(player, Config.instance().dimensionMirrorID);
+               player.setPositionAndRotation(targetX, targetY, targetZ, 270.0F, player.rotationPitch);
+               if (player.dimension != Config.instance().dimensionMirrorID) {
+                  ItemGeneral.travelToDimension(player, Config.instance().dimensionMirrorID);
+               }
                player.setPositionAndUpdate(targetX, targetY, targetZ);
                player.rotationYaw = 270.0F;
                ParticleEffect.SPLASH.send(SoundEffect.RANDOM_SPLASH, player, 0.5D, 2.0D, 16);
@@ -225,7 +228,10 @@ public class ItemQuicksilverMirror extends Item {
                }
 
                ParticleEffect.SPLASH.send(SoundEffect.RANDOM_SPLASH, player, 0.5D, 2.0D, 16);
-               ItemGeneral.travelToDimension(player, destDim);
+               player.setPositionAndRotation(destX, destY, destZ, destYaw, destPitch);
+               if (player.dimension != destDim) {
+                  ItemGeneral.travelToDimension(player, destDim);
+               }
                player.setPositionAndUpdate(destX, destY, destZ);
                player.rotationYaw = destYaw;
                player.rotationPitch = destPitch;
