@@ -467,11 +467,29 @@ public class WitcheryPotions {
       public void onLivingUpdate(LivingUpdateEvent event) {
          if(event.entityLiving instanceof EntityPlayer) {
             EntityPlayer player = (EntityPlayer)event.entityLiving;
-            if(!player.isPotionActive(Witchery.Potions.POLYMORPH) && player.getEntityData().getBoolean("WITCPolymorphEye")) {
-               player.getEntityData().removeTag("WITCPolymorphEye");
-               ExtendedPlayer playerEx = ExtendedPlayer.get(player);
-               if(playerEx == null || playerEx.getCreatureType() == TransformCreature.NONE || playerEx.getCreatureType() == TransformCreature.PLAYER) {
-                  player.eyeHeight = player.getDefaultEyeHeight();
+            if(!player.isPotionActive(Witchery.Potions.POLYMORPH)) {
+               if(player.getEntityData().getBoolean("WITCPolymorphEye")) {
+                  player.getEntityData().removeTag("WITCPolymorphEye");
+                  ExtendedPlayer playerEx = ExtendedPlayer.get(player);
+                  if(playerEx == null || playerEx.getCreatureType() == TransformCreature.NONE || playerEx.getCreatureType() == TransformCreature.PLAYER) {
+                     player.eyeHeight = player.getDefaultEyeHeight();
+                  }
+               }
+               if(player.getEntityData().getBoolean("WITCPolymorphFlight")) {
+                  player.getEntityData().removeTag("WITCPolymorphFlight");
+                  ExtendedPlayer playerEx = ExtendedPlayer.get(player);
+                  boolean keepFlight = player.capabilities.isCreativeMode || (playerEx != null && (playerEx.getCreatureType() == TransformCreature.BAT || playerEx.getCreatureType() == TransformCreature.SPIRIT || playerEx.getCreatureType() == TransformCreature.SUBDUED_SPIRIT || playerEx.isAstralProjecting()));
+                  if(!keepFlight) {
+                     player.capabilities.allowFlying = false;
+                     player.capabilities.isFlying = false;
+                     if(!player.worldObj.isRemote) {
+                        player.sendPlayerAbilities();
+                     }
+                  }
+               }
+               net.minecraft.entity.ai.attributes.IAttributeInstance moveSpeedAttr = player.getEntityAttribute(net.minecraft.entity.SharedMonsterAttributes.movementSpeed);
+               if(moveSpeedAttr != null && moveSpeedAttr.getModifier(PotionPolymorph.CAT_SPEED_UUID) != null) {
+                  moveSpeedAttr.removeModifier(PotionPolymorph.CAT_SPEED_MODIFIER);
                }
             }
          }
