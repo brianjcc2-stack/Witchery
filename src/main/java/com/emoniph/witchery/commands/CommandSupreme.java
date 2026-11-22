@@ -412,6 +412,12 @@ public class CommandSupreme extends CommandBase {
             int not = playerEx.getWitchNotoriety();
             EnumChatFormatting col = not >= 75 ? EnumChatFormatting.DARK_RED : (not >= 50 ? EnumChatFormatting.RED : (not >= 25 ? EnumChatFormatting.GOLD : EnumChatFormatting.GREEN));
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "Notoriedad ante la Inquisición: " + col + not + "/100" + (not >= 50 ? EnumChatFormatting.RED + " [¡AMENAZA DE ASALTO!]" : EnumChatFormatting.GRAY + " [Vigilancia normal]")));
+            String raidTier = (isSupreme || b.getNetScore() >= com.emoniph.witchery.common.CovenRaidManager.MIN_MASTERY_FOR_FULL_RAID)
+                    ? EnumChatFormatting.RED + "Asedio Completo (Matriarca + Acólitas)"
+                    : (b.getNetScore() >= com.emoniph.witchery.common.CovenRaidManager.MIN_MASTERY_FOR_SCOUT_RAID)
+                    ? EnumChatFormatting.GOLD + "Exploradoras Rivales (Sin Matriarca)"
+                    : EnumChatFormatting.GREEN + "Oculta / Sin riesgo (Requiere " + com.emoniph.witchery.common.CovenRaidManager.MIN_MASTERY_FOR_SCOUT_RAID + "+ pts)";
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE + "Amenaza de Aquelarres Rivales: " + raidTier));
             return;
         }
 

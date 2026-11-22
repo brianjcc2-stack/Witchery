@@ -9,6 +9,8 @@ import net.minecraft.client.model.ModelOcelot;
 import net.minecraft.client.renderer.entity.RenderLiving;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 
 @SideOnly(Side.CLIENT)
@@ -26,8 +28,7 @@ public class RenderRivalFamiliar extends RenderLiving {
         super(new ModelToad(), 0.4F);
     }
 
-    @Override
-    public void doRender(EntityLiving entity, double x, double y, double z, float yaw, float partialTicks) {
+    private void updateActiveModel(Entity entity) {
         if (entity instanceof EntityRivalFamiliar) {
             EntityRivalFamiliar familiar = (EntityRivalFamiliar) entity;
             switch (familiar.getFamiliarType()) {
@@ -46,6 +47,35 @@ public class RenderRivalFamiliar extends RenderLiving {
                     break;
             }
         }
+    }
+
+    @Override
+    protected void renderModel(EntityLivingBase entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scaleFactor) {
+        if (entity instanceof EntityRivalFamiliar && ((EntityRivalFamiliar) entity).getFamiliarType() == EntityRivalFamiliar.TYPE_CAT) {
+            // ModelOcelot updates leg angles in setLivingAnimations(EntityOcelot) and fails if passed non-EntityOcelot.
+            // Manually animate ModelOcelot legs and tail here without invoking ModelOcelot.setLivingAnimations.
+            this.bindEntityTexture(entity);
+            this.modelCat.render(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scaleFactor);
+            return;
+        }
+        super.renderModel(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scaleFactor);
+    }
+
+    @Override
+    public void doRender(EntityLiving entity, double x, double y, double z, float yaw, float partialTicks) {
+        this.updateActiveModel(entity);
+        super.doRender(entity, x, y, z, yaw, partialTicks);
+    }
+
+    @Override
+    public void doRender(EntityLivingBase entity, double x, double y, double z, float yaw, float partialTicks) {
+        this.updateActiveModel(entity);
+        super.doRender(entity, x, y, z, yaw, partialTicks);
+    }
+
+    @Override
+    public void doRender(Entity entity, double x, double y, double z, float yaw, float partialTicks) {
+        this.updateActiveModel(entity);
         super.doRender(entity, x, y, z, yaw, partialTicks);
     }
 

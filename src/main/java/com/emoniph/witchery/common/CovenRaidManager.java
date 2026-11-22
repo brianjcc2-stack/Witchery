@@ -26,7 +26,9 @@ import java.util.Random;
 public class CovenRaidManager {
 
     private static final String RAID_COOLDOWN_KEY = "WITCLastRaidTime";
-    private static final long RAID_MIN_COOLDOWN_TICKS = 48000L; // 2 días de Minecraft
+    private static final long RAID_MIN_COOLDOWN_TICKS = 72000L; // 3 días de Minecraft (1 hora real) entre asedios automáticos
+    public static final int MIN_MASTERY_FOR_SCOUT_RAID = 450;   // Nivel Intermedio-Alto: Exploradoras rivales (sin Boss Matriarca)
+    public static final int MIN_MASTERY_FOR_FULL_RAID = 750;    // Nivel Avanzado / Aspirante Suprema: Asedio completo con Matriarca
     private static long lastGlobalCheckTime = 0L;
 
     /**
@@ -62,11 +64,11 @@ public class CovenRaidManager {
             if (player.capabilities.isCreativeMode) continue;
             if (player.dimension != 0) continue; // Sólo en el Overworld
 
-            // Condición: Es la Bruja Suprema o tiene alta maestría en Witchery
+            // Condición: Es la Bruja Suprema o tiene alta maestría en Witchery (450+ pts)
             boolean isSupreme = SupremeWitchData.isPlayerSupreme(player);
             int score = SupremeWitchData.calculateWitcheryMasteryScore(player);
 
-            if (!isSupreme && score < 160) {
+            if (!isSupreme && score < MIN_MASTERY_FOR_SCOUT_RAID) {
                 continue;
             }
 
@@ -85,7 +87,7 @@ public class CovenRaidManager {
             }
 
             // Probabilidad: Más alta para la Bruja Suprema y durante Luna Llena/Nueva
-            float chance = isSupreme ? (isPowerfulMoon ? 0.35F : 0.15F) : (isPowerfulMoon ? 0.15F : 0.05F);
+            float chance = isSupreme ? (isPowerfulMoon ? 0.30F : 0.12F) : (isPowerfulMoon ? 0.12F : 0.04F);
             if (world.rand.nextFloat() < chance) {
                 triggerRaid(player, false);
                 break; // Máximo 1 raid disparada por tick global
@@ -95,12 +97,19 @@ public class CovenRaidManager {
 
     /**
      * Inicia una incursión de aquelarre rival contra el jugador especificado.
+     * Escala según el poder del jugador:
+     * - Si es forzado (/coven raid), es Bruja Suprema o tiene >= 750 pts de Maestría: Asedio completo con Matriarca (Boss).
+     * - Si tiene entre 450 y 749 pts de Maestría: Emboscada menor de exploradoras rivales (2 acólitas y 1 familiar, sin Boss).
      */
     public static boolean triggerRaid(EntityPlayer player, boolean isForced) {
         if (player == null || player.worldObj.isRemote) return false;
 
         World world = player.worldObj;
         Random rand = world.rand;
+
+        boolean isSupreme = SupremeWitchData.isPlayerSupreme(player);
+        int score = SupremeWitchData.calculateWitcheryMasteryScore(player);
+        boolean fullMatriarchSiege = isForced || isSupreme || score >= MIN_MASTERY_FOR_FULL_RAID;
 
         // Buscar una posición adecuada en tierra a 14-20 bloques
         double angle = rand.nextDouble() * Math.PI * 2.0D;
@@ -117,55 +126,69 @@ public class CovenRaidManager {
         world.addWeatherEffect(new EntityLightningBolt(world, spawnX, spawnY, spawnZ));
         ParticleEffect.PORTAL.send(SoundEffect.WITCHERY_RANDOM_THEYCOME, world, spawnX + 0.5D, spawnY + 1.0D, spawnZ + 0.5D, 4.0D, 4.0D, 80);
 
-        // 1. Spawner de la Matriarca (Líder del Aquelarre Rival / Boss)
-        EntityRivalWitch matriarch = new EntityRivalWitch(world, EntityRivalWitch.ARCHETYPE_MATRIARCH);
-        matriarch.setLocationAndAngles(spawnX + 0.5D, spawnY, spawnZ + 0.5D, rand.nextFloat() * 360.0F, 0.0F);
-        matriarch.setAttackTarget(player);
-        world.spawnEntityInWorld(matriarch);
-
-        // 2. Acólita Herbolaria
+        // 1. Acólita Herbolaria
         EntityRivalWitch herbologist = new EntityRivalWitch(world, EntityRivalWitch.ARCHETYPE_HERBOLOGIST);
         herbologist.setLocationAndAngles(spawnX + 2.0D, spawnY, spawnZ - 1.0D, rand.nextFloat() * 360.0F, 0.0F);
         herbologist.setAttackTarget(player);
         world.spawnEntityInWorld(herbologist);
 
-        // 3. Acólita Alquimista
+        // 2. Acólita Alquimista
         EntityRivalWitch alchemist = new EntityRivalWitch(world, EntityRivalWitch.ARCHETYPE_ALCHEMIST);
         alchemist.setLocationAndAngles(spawnX - 2.0D, spawnY, spawnZ + 1.0D, rand.nextFloat() * 360.0F, 0.0F);
         alchemist.setAttackTarget(player);
         world.spawnEntityInWorld(alchemist);
 
-        // 4. Familiares de Combate Hostiles
+        // 3. Familiar de Combate Hostil Base (Sapo)
         EntityRivalFamiliar toad = new EntityRivalFamiliar(world, EntityRivalFamiliar.TYPE_TOAD);
         toad.setLocationAndAngles(spawnX + 1.5D, spawnY, spawnZ + 1.5D, 0.0F, 0.0F);
         toad.setAttackTarget(player);
         world.spawnEntityInWorld(toad);
 
-        EntityRivalFamiliar owl = new EntityRivalFamiliar(world, EntityRivalFamiliar.TYPE_OWL);
-        owl.setLocationAndAngles(spawnX, spawnY + 2.5D, spawnZ, 0.0F, 0.0F);
-        owl.setAttackTarget(player);
-        world.spawnEntityInWorld(owl);
+        if (fullMatriarchSiege) {
+            // Spawner de la Matriarca (Líder del Aquelarre Rival / Boss)
+            EntityRivalWitch matriarch = new EntityRivalWitch(world, EntityRivalWitch.ARCHETYPE_MATRIARCH);
+            matriarch.setLocationAndAngles(spawnX + 0.5D, spawnY, spawnZ + 0.5D, rand.nextFloat() * 360.0F, 0.0F);
+            matriarch.setAttackTarget(player);
+            world.spawnEntityInWorld(matriarch);
 
-        EntityRivalFamiliar cat = new EntityRivalFamiliar(world, EntityRivalFamiliar.TYPE_CAT);
-        cat.setLocationAndAngles(spawnX - 1.5D, spawnY, spawnZ - 1.5D, 0.0F, 0.0F);
-        cat.setAttackTarget(player);
-        world.spawnEntityInWorld(cat);
+            // Acólita Nigromante adicional en asedio mayor
+            EntityRivalWitch necromancer = new EntityRivalWitch(world, EntityRivalWitch.ARCHETYPE_NECROMANCER);
+            necromancer.setLocationAndAngles(spawnX, spawnY, spawnZ - 2.0D, rand.nextFloat() * 360.0F, 0.0F);
+            necromancer.setAttackTarget(player);
+            world.spawnEntityInWorld(necromancer);
 
-        // Anuncios místicos en el chat
-        String matriarchName = matriarch.getMatriarchName();
-        player.addChatMessage(new ChatComponentText(
-                EnumChatFormatting.DARK_PURPLE + "" + EnumChatFormatting.BOLD + "[Aquelarre Sombrío] " +
-                EnumChatFormatting.RED + "¡Las ramas del bosque susurran traición! " +
-                EnumChatFormatting.LIGHT_PURPLE + "La " + EnumChatFormatting.GOLD + matriarchName +
-                EnumChatFormatting.LIGHT_PURPLE + " y sus acólitas han descendido para destronarte."));
+            EntityRivalFamiliar owl = new EntityRivalFamiliar(world, EntityRivalFamiliar.TYPE_OWL);
+            owl.setLocationAndAngles(spawnX, spawnY + 2.5D, spawnZ, 0.0F, 0.0F);
+            owl.setAttackTarget(player);
+            world.spawnEntityInWorld(owl);
 
-        MinecraftServer server = MinecraftServer.getServer();
-        if (server != null && server.getConfigurationManager() != null) {
-            server.getConfigurationManager().sendChatMsg(new ChatComponentText(
-                    EnumChatFormatting.DARK_PURPLE + "" + EnumChatFormatting.BOLD + "⚡ [Witchery] " +
-                    EnumChatFormatting.LIGHT_PURPLE + "¡Un aquelarre hostil liderado por la " +
-                    EnumChatFormatting.GOLD + matriarchName +
-                    EnumChatFormatting.LIGHT_PURPLE + " ha desafiado a " + EnumChatFormatting.YELLOW + player.getCommandSenderName() + "!"));
+            EntityRivalFamiliar cat = new EntityRivalFamiliar(world, EntityRivalFamiliar.TYPE_CAT);
+            cat.setLocationAndAngles(spawnX - 1.5D, spawnY, spawnZ - 1.5D, 0.0F, 0.0F);
+            cat.setAttackTarget(player);
+            world.spawnEntityInWorld(cat);
+
+            // Anuncios místicos en el chat
+            String matriarchName = matriarch.getMatriarchName();
+            player.addChatMessage(new ChatComponentText(
+                    EnumChatFormatting.DARK_PURPLE + "" + EnumChatFormatting.BOLD + "[Aquelarre Sombrío] " +
+                    EnumChatFormatting.RED + "¡Las ramas del bosque susurran traición! " +
+                    EnumChatFormatting.LIGHT_PURPLE + "La " + EnumChatFormatting.GOLD + matriarchName +
+                    EnumChatFormatting.LIGHT_PURPLE + " y sus acólitas han descendido para destronarte."));
+
+            MinecraftServer server = MinecraftServer.getServer();
+            if (server != null && server.getConfigurationManager() != null) {
+                server.getConfigurationManager().sendChatMsg(new ChatComponentText(
+                        EnumChatFormatting.DARK_PURPLE + "" + EnumChatFormatting.BOLD + "⚡ [Witchery] " +
+                        EnumChatFormatting.LIGHT_PURPLE + "¡Un aquelarre hostil liderado por la " +
+                        EnumChatFormatting.GOLD + matriarchName +
+                        EnumChatFormatting.LIGHT_PURPLE + " ha desafiado a " + EnumChatFormatting.YELLOW + player.getCommandSenderName() + "!"));
+            }
+        } else {
+            // Emboscada menor de exploradoras (450-749 pts de Maestría)
+            player.addChatMessage(new ChatComponentText(
+                    EnumChatFormatting.DARK_PURPLE + "" + EnumChatFormatting.BOLD + "[Aquelarre Rival] " +
+                    EnumChatFormatting.LIGHT_PURPLE + "¡Tu creciente poder arcano (" + EnumChatFormatting.GOLD + score + " pts" +
+                    EnumChatFormatting.LIGHT_PURPLE + ") ha llamado la atención de exploradoras rivales en la noche!"));
         }
 
         player.getEntityData().setLong(RAID_COOLDOWN_KEY, world.getTotalWorldTime());

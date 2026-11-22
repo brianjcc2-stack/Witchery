@@ -81,7 +81,7 @@ public class ModelOwl extends ModelBase {
 
    public void render(Entity entity, float f, float f1, float f2, float f3, float f4, float f5) {
       this.setRotationAngles(f, f1, f2, f3, f4, f5, entity);
-      EntityOwl entitybat = (EntityOwl)entity;
+      boolean sitting = (entity instanceof EntityOwl) && ((EntityOwl)entity).isSitting();
       if(entity.motionY == 0.0D && entity.motionX == 0.0D && entity.motionZ == 0.0D && isLanded(entity)) {
          this.body.rotateAngleX = 0.0F;
          this.leftarm.rotateAngleZ = 0.0F;
@@ -98,7 +98,7 @@ public class ModelOwl extends ModelBase {
          this.leftarm.rotateAngleZ = -this.rightarm.rotateAngleZ;
       }
 
-      if(entitybat.isSitting()) {
+      if(sitting) {
          this.rightleg.rotateAngleY = 0.5F;
          this.leftleg.rotateAngleY = -this.rightleg.rotateAngleY;
       } else {

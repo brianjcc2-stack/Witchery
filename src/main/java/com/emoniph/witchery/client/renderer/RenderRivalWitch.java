@@ -36,6 +36,16 @@ public class RenderRivalWitch extends RenderLiving {
     }
 
     @Override
+    public void doRender(EntityLivingBase entity, double x, double y, double z, float yaw, float partialTicks) {
+        this.doRender((EntityLiving) entity, x, y, z, yaw, partialTicks);
+    }
+
+    @Override
+    public void doRender(Entity entity, double x, double y, double z, float yaw, float partialTicks) {
+        this.doRender((EntityLiving) entity, x, y, z, yaw, partialTicks);
+    }
+
+    @Override
     protected void preRenderCallback(EntityLivingBase entity, float partialTicks) {
         super.preRenderCallback(entity, partialTicks);
         if (entity instanceof EntityRivalWitch) {

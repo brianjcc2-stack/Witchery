@@ -113,8 +113,8 @@ public class ModelToad extends ModelBase {
    }
 
    public void setLivingAnimations(EntityLivingBase par1EntityLivingBase, float par2, float par3, float par4) {
-      EntityToad toad = (EntityToad)par1EntityLivingBase;
-      if(toad.isSitting()) {
+      boolean sitting = (par1EntityLivingBase instanceof EntityToad) && ((EntityToad)par1EntityLivingBase).isSitting();
+      if(sitting) {
          this.legLeft.rotateAngleX = -0.3926991F;
          this.legRight.rotateAngleX = this.legLeft.rotateAngleX;
       } else {

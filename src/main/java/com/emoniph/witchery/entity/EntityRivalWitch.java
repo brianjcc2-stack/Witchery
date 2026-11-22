@@ -235,6 +235,9 @@ public class EntityRivalWitch extends EntityMob implements IRangedAttackMob, IBo
                         spider.setLocationAndAngles(this.posX + (rand.nextDouble() - 0.5D) * 2.0D, this.posY, this.posZ + (rand.nextDouble() - 0.5D) * 2.0D, 0.0F, 0.0F);
                         spider.setAttackTarget(target);
                         this.worldObj.spawnEntityInWorld(spider);
+                        if (spider.isPotionActive(Potion.invisibility)) {
+                            spider.removePotionEffect(Potion.invisibility.id);
+                        }
                         ParticleEffect.PORTAL.send(SoundEffect.MOB_ZOMBIE_SAY, spider, 0.8D, 1.0D, 16);
                     }
 
