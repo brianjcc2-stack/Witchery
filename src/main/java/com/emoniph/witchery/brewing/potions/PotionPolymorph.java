@@ -155,6 +155,7 @@ public class PotionPolymorph extends PotionBase implements IHandlePreRenderLivin
         // Adjust eye height for players
         if (entity instanceof EntityPlayer) {
             EntityPlayer player = (EntityPlayer) entity;
+            player.getEntityData().setBoolean("WITCPolymorphEye", true);
             switch (form) {
                 case FORM_PIG:
                 case FORM_CAT:

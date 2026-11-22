@@ -465,6 +465,17 @@ public class WitcheryPotions {
 
       @SubscribeEvent
       public void onLivingUpdate(LivingUpdateEvent event) {
+         if(event.entityLiving instanceof EntityPlayer) {
+            EntityPlayer player = (EntityPlayer)event.entityLiving;
+            if(!player.isPotionActive(Witchery.Potions.POLYMORPH) && player.getEntityData().getBoolean("WITCPolymorphEye")) {
+               player.getEntityData().removeTag("WITCPolymorphEye");
+               ExtendedPlayer playerEx = ExtendedPlayer.get(player);
+               if(playerEx == null || playerEx.getCreatureType() == TransformCreature.NONE || playerEx.getCreatureType() == TransformCreature.PLAYER) {
+                  player.eyeHeight = player.getDefaultEyeHeight();
+               }
+            }
+         }
+
          Iterator i$ = Witchery.Potions.livingUpdateEventHandlers.iterator();
 
          while(i$.hasNext()) {

@@ -2092,6 +2092,19 @@ public class EffectRegistry {
         for (Integer pid : toRemove) {
             target.removePotionEffect(pid);
         }
+        if (target instanceof EntityPlayer) {
+            EntityPlayer player = (EntityPlayer) target;
+            com.emoniph.witchery.common.ExtendedPlayer playerEx = com.emoniph.witchery.common.ExtendedPlayer.get(player);
+            if (playerEx != null && (playerEx.getCreatureType() == com.emoniph.witchery.util.TransformCreature.TOAD || playerEx.getCreatureType() == com.emoniph.witchery.util.TransformCreature.PLAYER)) {
+                com.emoniph.witchery.common.Shapeshift.INSTANCE.shiftTo(player, com.emoniph.witchery.util.TransformCreature.NONE);
+            }
+            if (!player.isPotionActive(Witchery.Potions.POLYMORPH)) {
+                player.getEntityData().removeTag("WITCPolymorphEye");
+                if (playerEx == null || playerEx.getCreatureType() == com.emoniph.witchery.util.TransformCreature.NONE) {
+                    player.eyeHeight = player.getDefaultEyeHeight();
+                }
+            }
+        }
         target.extinguish();
     }
 
