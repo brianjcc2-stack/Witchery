@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 public class ModHookManager {
@@ -131,5 +132,49 @@ public class ModHookManager {
          }
       }
 
+   }
+
+   public ItemStack getOffhandItem(EntityPlayer player) {
+      if(player == null) {
+         return null;
+      } else {
+         Iterator i$ = this.hooks.iterator();
+
+         while(i$.hasNext()) {
+            ModHook hook = (ModHook)i$.next();
+
+            try {
+               ItemStack stack = hook.getOffhandItem(player);
+               if(stack != null) {
+                  return stack;
+               }
+            } catch (Throwable var5) {
+               Log.instance().warning(var5, String.format("unhandled exception getting offhand item for hook %s", new Object[]{hook.getModID()}));
+            }
+         }
+
+         return null;
+      }
+   }
+
+   public ItemStack getHeldOrOffhandItem(EntityPlayer player, Item item) {
+      if(player != null && item != null) {
+         if(player.isUsingItem()) {
+            ItemStack inUse = player.getItemInUse();
+            if(inUse != null && inUse.getItem() == item) {
+               return inUse;
+            }
+         }
+
+         ItemStack held = player.getHeldItem();
+         if(held != null && held.getItem() == item) {
+            return held;
+         } else {
+            ItemStack offhand = this.getOffhandItem(player);
+            return offhand != null && offhand.getItem() == item ? offhand : null;
+         }
+      } else {
+         return null;
+      }
    }
 }

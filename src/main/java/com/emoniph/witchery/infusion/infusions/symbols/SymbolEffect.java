@@ -7,6 +7,7 @@ import com.emoniph.witchery.util.Const;
 import com.emoniph.witchery.util.TimeUtil;
 import java.util.Iterator;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
@@ -672,10 +673,9 @@ public abstract class SymbolEffect {
             if(com.emoniph.witchery.familiar.Familiar.hasActiveBroomMasteryFamiliar(player)) {
                effectiveCooldown = Math.max(1L, (long)(effectiveCooldown * 0.75D));
             }
-            if(player.getHeldItem() != null && player.getHeldItem().getItem() == Witchery.Items.MYSTIC_BRANCH) {
-               if(com.emoniph.witchery.item.ItemMysticBranch.getWoodType(player.getHeldItem()) == 2) {
-                  effectiveCooldown = Math.max(1L, (long)(effectiveCooldown * 0.65D));
-               }
+            ItemStack branchStack = Witchery.modHooks.getHeldOrOffhandItem(player, Witchery.Items.MYSTIC_BRANCH);
+            if(branchStack != null && com.emoniph.witchery.item.ItemMysticBranch.getWoodType(branchStack) == 2) {
+               effectiveCooldown = Math.max(1L, (long)(effectiveCooldown * 0.65D));
             }
          }
          if(timeNow < lastUseTime + effectiveCooldown) {

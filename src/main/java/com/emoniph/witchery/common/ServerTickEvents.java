@@ -106,7 +106,7 @@ public class ServerTickEvents {
 
             int leviosaTicks = event.player.getEntityData().getInteger("WITCLeviosaTicks");
             if (leviosaTicks > 0) {
-               if (event.player.getHeldItem() == null || event.player.getHeldItem().getItem() != Witchery.Items.MYSTIC_BRANCH) {
+               if (Witchery.modHooks.getHeldOrOffhandItem(event.player, Witchery.Items.MYSTIC_BRANCH) == null) {
                   event.player.getEntityData().setInteger("WITCLeviosaTicks", 0);
                } else {
                   if (leviosaTicks != Integer.MAX_VALUE) {

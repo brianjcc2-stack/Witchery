@@ -11,8 +11,15 @@ import com.emoniph.witchery.util.ChatUtil;
 import com.emoniph.witchery.util.ParticleEffect;
 import com.emoniph.witchery.util.SoundEffect;
 import com.emoniph.witchery.util.TimeUtil;
+import cpw.mods.fml.common.Optional;
+import cpw.mods.fml.common.eventhandler.Event;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import mods.battlegear2.api.IAllowItem;
+import mods.battlegear2.api.IOffhandListener;
+import mods.battlegear2.api.IOffhandWield;
+import mods.battlegear2.api.IUsableItem;
+import mods.battlegear2.api.PlayerEventChild;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
@@ -28,8 +35,15 @@ import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.world.World;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 
-public class ItemMysticBranch extends ItemBase {
+@Optional.InterfaceList({
+   @Optional.Interface(iface = "mods.battlegear2.api.IUsableItem", modid = "battlegear2", striprefs = true),
+   @Optional.Interface(iface = "mods.battlegear2.api.IOffhandWield", modid = "battlegear2", striprefs = true),
+   @Optional.Interface(iface = "mods.battlegear2.api.IAllowItem", modid = "battlegear2", striprefs = true),
+   @Optional.Interface(iface = "mods.battlegear2.api.IOffhandListener", modid = "battlegear2", striprefs = true)
+})
+public class ItemMysticBranch extends ItemBase implements IUsableItem, IOffhandWield, IAllowItem, IOffhandListener {
 
    private static final float THRESHOLD_ORTHOGONAL = 7.0F;
    private static final int MAX_STROKES = 15;
@@ -399,5 +413,45 @@ public class ItemMysticBranch extends ItemBase {
 
    private void announceCastSpell(EntityPlayer player, SymbolEffect effect) {
       // Chat broadcast disabled per request
+   }
+
+   @Optional.Method(modid = "battlegear2")
+   @Override
+   public boolean isUsedOverAttack(ItemStack itemStack) {
+      return true;
+   }
+
+   @Optional.Method(modid = "battlegear2")
+   @Override
+   public boolean isOffhandWieldable(ItemStack offhandStack, EntityPlayer wielder) {
+      return true;
+   }
+
+   @Optional.Method(modid = "battlegear2")
+   @Override
+   public boolean allowOffhand(ItemStack mainhand, ItemStack offhand) {
+      return true;
+   }
+
+   @Optional.Method(modid = "battlegear2")
+   @Override
+   public Event.Result onClickBlock(PlayerInteractEvent event, ItemStack mainhandStack, ItemStack offhandStack, boolean isOffhand) {
+      return isOffhand ? Event.Result.ALLOW : Event.Result.DEFAULT;
+   }
+
+   @Optional.Method(modid = "battlegear2")
+   @Override
+   public Event.Result onClickAir(EntityPlayer player, ItemStack mainhandStack, ItemStack offhandStack) {
+      return Event.Result.ALLOW;
+   }
+
+   @Optional.Method(modid = "battlegear2")
+   @Override
+   public void onAttackEntity(PlayerEventChild.OffhandAttackEvent event, boolean isOffhand) {
+      if (isOffhand) {
+         event.swingOffhand = false;
+         event.shouldAttack = false;
+         event.cancelParent = false;
+      }
    }
 }

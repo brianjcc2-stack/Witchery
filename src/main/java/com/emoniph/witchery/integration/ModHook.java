@@ -52,6 +52,10 @@ public abstract class ModHook {
       return false;
    }
 
+   public ItemStack getOffhandItem(EntityPlayer player) {
+      return null;
+   }
+
    public void tryMakeItemModProof(ItemStack stack) {
       if(this.initialized) {
          this.makeItemModProof(stack);

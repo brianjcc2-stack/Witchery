@@ -302,7 +302,7 @@ public class EntitySpellEffect extends Entity {
             
             if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY && mop.entityHit instanceof EntityPlayer) {
                EntityPlayer hitPlayer = (EntityPlayer) mop.entityHit;
-               if (hitPlayer.isUsingItem() && hitPlayer.getHeldItem() != null && hitPlayer.getHeldItem().getItem() == Witchery.Items.MYSTIC_BRANCH) {
+               if (hitPlayer.isUsingItem() && ((hitPlayer.getItemInUse() != null && hitPlayer.getItemInUse().getItem() == Witchery.Items.MYSTIC_BRANCH) || (hitPlayer.getHeldItem() != null && hitPlayer.getHeldItem().getItem() == Witchery.Items.MYSTIC_BRANCH))) {
                   if (this.isSpellBlockable(this.getEffectID())) {
                      NBTTagCompound nbtPerm = Infusion.getNBT(hitPlayer);
                      if (nbtPerm != null && nbtPerm.hasKey("witcheryInfusionID") && nbtPerm.hasKey("witcheryInfusionCharges")) {
@@ -387,7 +387,7 @@ public class EntitySpellEffect extends Entity {
       } else {
          this.setBeenAttacked();
          Entity entity = par1DamageSource.getEntity();
-         boolean canDeflect = entity != null && this.getEffectID() != 5 && entity instanceof EntityPlayer && ((EntityPlayer)entity).getHeldItem() != null && ((EntityPlayer)entity).getHeldItem().getItem() == Witchery.Items.MYSTIC_BRANCH;
+         boolean canDeflect = entity != null && this.getEffectID() != 5 && entity instanceof EntityPlayer && Witchery.modHooks.getHeldOrOffhandItem((EntityPlayer)entity, Witchery.Items.MYSTIC_BRANCH) != null;
          if(canDeflect) {
             Vec3 vec3 = par1DamageSource.getEntity().getLookVec();
             if(vec3 != null) {

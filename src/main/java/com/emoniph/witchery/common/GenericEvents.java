@@ -507,7 +507,7 @@ public class GenericEvents {
    )
    public void onEntityInteract(EntityInteractEvent event) {
       if (!event.entityPlayer.worldObj.isRemote && event.entityPlayer.getEntityData().getInteger("WITCLeviosaTicks") > 0) {
-         if (event.entityPlayer.getHeldItem() != null && event.entityPlayer.getHeldItem().getItem() == Witchery.Items.MYSTIC_BRANCH) {
+         if (Witchery.modHooks.getHeldOrOffhandItem(event.entityPlayer, Witchery.Items.MYSTIC_BRANCH) != null) {
             float currentDist = event.entityPlayer.getEntityData().hasKey("WITCLeviosaDistance") ? event.entityPlayer.getEntityData().getFloat("WITCLeviosaDistance") : 5.0f;
             if (event.entityPlayer.isSneaking()) {
                currentDist = Math.min(30.0f, currentDist + 2.0f);
@@ -1313,8 +1313,8 @@ public class GenericEvents {
          // Rowan Arthana: 15% reduction to magic damage
          if (event.entityLiving instanceof EntityPlayer && event.source.isMagicDamage()) {
             EntityPlayer player = (EntityPlayer) event.entityLiving;
-            ItemStack held = player.getHeldItem();
-            if (held != null && held.getItem() == Witchery.Items.ARTHANA && com.emoniph.witchery.item.ItemArthana.getHiltType(held) == 1) {
+            ItemStack held = Witchery.modHooks.getHeldOrOffhandItem(player, Witchery.Items.ARTHANA);
+            if (held != null && com.emoniph.witchery.item.ItemArthana.getHiltType(held) == 1) {
                event.ammount *= 0.85F;
                ParticleEffect.SPELL_COLORED.send(SoundEffect.RANDOM_ORB, player.worldObj, player.posX, player.posY + 1.0D, player.posZ, 0.3D, 0.3D, 4, 0x00FF88);
             }
@@ -1378,7 +1378,7 @@ public class GenericEvents {
                 }
             }
             
-            if (player.isUsingItem() && player.getHeldItem() != null && player.getHeldItem().getItem() == Witchery.Items.MYSTIC_BRANCH) {
+            if (player.isUsingItem() && ((player.getItemInUse() != null && player.getItemInUse().getItem() == Witchery.Items.MYSTIC_BRANCH) || (player.getHeldItem() != null && player.getHeldItem().getItem() == Witchery.Items.MYSTIC_BRANCH))) {
                 boolean blockable = event.source.isProjectile() || event.source.isMagicDamage() || event.source.damageType.equals("mob") || event.source.damageType.equals("player");
                 if (blockable && !event.source.isUnblockable() && !event.source.isFireDamage() && !event.source.isExplosion() && event.source.getEntity() != player) {
                     net.minecraft.nbt.NBTTagCompound nbtPerm = com.emoniph.witchery.infusion.Infusion.getNBT(player);
@@ -2013,7 +2013,7 @@ public class GenericEvents {
          if(entitySource2 != null && entitySource2 instanceof EntityPlayer) {
             EntityPlayer player1 = (EntityPlayer)entitySource2;
             ExtendedPlayer playerEx1 = ExtendedPlayer.get(player1);
-            boolean hasArthana1 = player1.inventory.getCurrentItem() != null && player1.inventory.getCurrentItem().getItem() == Witchery.Items.ARTHANA;
+            boolean hasArthana1 = Witchery.modHooks.getHeldOrOffhandItem(player1, Witchery.Items.ARTHANA) != null;
             boolean var10000;
             if(player1.inventory.getCurrentItem() != null && player1.inventory.getCurrentItem().getItem() == Witchery.Items.CANE_SWORD && Witchery.Items.CANE_SWORD.isDrawn((EntityLivingBase)player1) && playerEx1.isVampire()) {
                var10000 = true;

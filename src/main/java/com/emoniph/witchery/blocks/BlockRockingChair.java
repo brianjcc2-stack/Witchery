@@ -95,7 +95,7 @@ public class BlockRockingChair extends BlockBaseContainer {
                 return true;
             }
 
-            EntitySeat newSeat = new EntitySeat(world, (double)x + 0.5D, (double)y + 0.35D, (double)z + 0.5D);
+            EntitySeat newSeat = new EntitySeat(world, (double)x + 0.5D, (double)y + 0.25D, (double)z + 0.5D);
             newSeat.rotationYaw = this.getSeatYaw(world.getBlockMetadata(x, y, z));
             newSeat.setPendingRider(player);
             world.spawnEntityInWorld(newSeat);

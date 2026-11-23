@@ -41,7 +41,7 @@ public class EntitySeat extends Entity {
 
     @Override
     public double getMountedYOffset() {
-        return 0.15D;
+        return 0.125D;
     }
 
     @Override

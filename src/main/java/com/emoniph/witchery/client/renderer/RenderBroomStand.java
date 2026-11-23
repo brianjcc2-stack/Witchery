@@ -18,7 +18,7 @@ public class RenderBroomStand extends TileEntitySpecialRenderer {
     private final ModelBroomStand model = new ModelBroomStand();
     private final ModelBroom modelBroom = new ModelBroom();
     private static final ResourceLocation TEXTURE_STAND = new ResourceLocation("witchery", "textures/blocks/broom_stand.png");
-    private static final ResourceLocation TEXTURE_BROOM = new ResourceLocation("witchery", "textures/entities/broom.png");
+    private static final ResourceLocation TEXTURE_BROOM = new ResourceLocation("witchery", "textures/entities/Broom.png");
 
     @Override
     public void renderTileEntityAt(TileEntity tileEntity, double x, double y, double z, float partialTicks) {

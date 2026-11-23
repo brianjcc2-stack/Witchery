@@ -15,8 +15,13 @@ import com.emoniph.witchery.util.CreatureUtil;
 import com.emoniph.witchery.util.ItemUtil;
 import com.emoniph.witchery.util.ParticleEffect;
 import com.emoniph.witchery.util.SoundEffect;
+import cpw.mods.fml.common.Optional;
+import cpw.mods.fml.common.eventhandler.Event;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import mods.battlegear2.api.IOffhandWield;
+import mods.battlegear2.api.PlayerEventChild;
+import mods.battlegear2.api.weapons.IBattlegearWeapon;
 import java.util.Collection;
 import java.util.List;
 import net.minecraft.entity.Entity;
@@ -42,8 +47,13 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 
-public class ItemArthana extends ItemSword {
+@Optional.InterfaceList({
+   @Optional.Interface(iface = "mods.battlegear2.api.weapons.IBattlegearWeapon", modid = "battlegear2", striprefs = true),
+   @Optional.Interface(iface = "mods.battlegear2.api.IOffhandWield", modid = "battlegear2", striprefs = true)
+})
+public class ItemArthana extends ItemSword implements IBattlegearWeapon, IOffhandWield {
 
    public ItemArthana() {
       super(ToolMaterial.GOLD);
@@ -233,5 +243,59 @@ public class ItemArthana extends ItemSword {
       }
 
       return super.onItemUseFirst(stack, player, world, x, y, z, side, hitX, hitY, hitZ);
+   }
+
+   @Optional.Method(modid = "battlegear2")
+   @Override
+   public boolean sheatheOnBack(ItemStack item) {
+      return false;
+   }
+
+   @Optional.Method(modid = "battlegear2")
+   @Override
+   public boolean allowOffhand(ItemStack mainhand, ItemStack offhand) {
+      return true;
+   }
+
+   @Optional.Method(modid = "battlegear2")
+   @Override
+   public boolean isOffhandWieldable(ItemStack offhandStack, EntityPlayer wielder) {
+      return true;
+   }
+
+   @Optional.Method(modid = "battlegear2")
+   @Override
+   public boolean isOffhandHandDual(ItemStack off) {
+      return true;
+   }
+
+   @Optional.Method(modid = "battlegear2")
+   @Override
+   public boolean offhandAttackEntity(PlayerEventChild.OffhandAttackEvent event, ItemStack mainhandItem, ItemStack offhandItem) {
+      return true;
+   }
+
+   @Optional.Method(modid = "battlegear2")
+   @Override
+   public boolean offhandClickAir(PlayerInteractEvent event, ItemStack mainhandItem, ItemStack offhandItem) {
+      return false;
+   }
+
+   @Optional.Method(modid = "battlegear2")
+   @Override
+   public boolean offhandClickBlock(PlayerInteractEvent event, ItemStack mainhandItem, ItemStack offhandItem) {
+      if (event.entityPlayer.isSneaking()
+            && event.face == 1
+            && event.world.getBlock(event.x, event.y, event.z) == Witchery.Blocks.ALTAR
+            && event.world.isAirBlock(event.x, event.y + 1, event.z)) {
+         event.useItem = Event.Result.ALLOW;
+         return true;
+      }
+      return false;
+   }
+
+   @Optional.Method(modid = "battlegear2")
+   @Override
+   public void performPassiveEffects(Side effectiveSide, ItemStack mainhandItem, ItemStack offhandItem) {
    }
 }

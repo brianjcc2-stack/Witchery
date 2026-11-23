@@ -468,7 +468,7 @@ public class PlayerRender {
                }
             }
 
-            if(player.getHeldItem() != null && player.getHeldItem().getItem() != null && e && (player.getHeldItem().getItem() == Witchery.Items.MYSTIC_BRANCH || player.getHeldItem().getItem() == Witchery.Items.BREW_BAG) && player.isUsingItem()) {
+            if(e && player.isUsingItem() && ((player.getItemInUse() != null && (player.getItemInUse().getItem() == Witchery.Items.MYSTIC_BRANCH || player.getItemInUse().getItem() == Witchery.Items.BREW_BAG)) || (player.getHeldItem() != null && player.getHeldItem().getItem() != null && (player.getHeldItem().getItem() == Witchery.Items.MYSTIC_BRANCH || player.getHeldItem().getItem() == Witchery.Items.BREW_BAG)))) {
                boolean var17 = Math.abs(player.motionX) <= 0.1D && Math.abs(player.motionZ) <= 0.1D;
                if(player.worldObj.getBlock(MathHelper.floor_double(player.posX), MathHelper.floor_double(player.posY) - 2, MathHelper.floor_double(player.posZ)) != Blocks.ice) {
                   if(player.onGround) {

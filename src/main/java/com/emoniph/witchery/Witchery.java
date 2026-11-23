@@ -20,6 +20,7 @@ import com.emoniph.witchery.dimension.WorldProviderDreamWorld;
 import com.emoniph.witchery.dimension.WorldProviderMirror;
 import com.emoniph.witchery.dimension.WorldProviderTorment;
 import com.emoniph.witchery.integration.ModHookArsMagica2;
+import com.emoniph.witchery.integration.ModHookBattlegear2;
 import com.emoniph.witchery.integration.ModHookBaubles;
 import com.emoniph.witchery.integration.ModHookBloodMagic;
 import com.emoniph.witchery.integration.ModHookForestry;
@@ -250,6 +251,7 @@ public class Witchery {
       modHooks.register(ModHookWaila.class);
       modHooks.register(ModHookMorph.class);
       modHooks.register(ModHookBaubles.class);
+      modHooks.register(ModHookBattlegear2.class);
       modHooks.register(com.emoniph.witchery.integration.ModHookMCA.class);
       modHooks.register(com.emoniph.witchery.integration.ModHookTwilightForest.class);
       modHooks.init();

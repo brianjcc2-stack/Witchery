@@ -21,9 +21,16 @@ import com.emoniph.witchery.Witchery;
 import com.emoniph.witchery.entity.EntityCovenWitch;
 import com.emoniph.witchery.infusion.Infusion;
 import com.emoniph.witchery.item.ItemBase;
+import cpw.mods.fml.common.Optional;
+import cpw.mods.fml.common.eventhandler.Event;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import mods.battlegear2.api.IAllowItem;
+import mods.battlegear2.api.IOffhandListener;
+import mods.battlegear2.api.IOffhandWield;
+import mods.battlegear2.api.IUsableItem;
+import mods.battlegear2.api.PlayerEventChild;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
@@ -33,9 +40,16 @@ import net.minecraft.item.EnumRarity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 
+@Optional.InterfaceList({
+    @Optional.Interface(iface = "mods.battlegear2.api.IUsableItem", modid = "battlegear2", striprefs = true),
+    @Optional.Interface(iface = "mods.battlegear2.api.IOffhandWield", modid = "battlegear2", striprefs = true),
+    @Optional.Interface(iface = "mods.battlegear2.api.IAllowItem", modid = "battlegear2", striprefs = true),
+    @Optional.Interface(iface = "mods.battlegear2.api.IOffhandListener", modid = "battlegear2", striprefs = true)
+})
 public class ItemWitchHand
-extends ItemBase {
+extends ItemBase implements IUsableItem, IOffhandWield, IAllowItem, IOffhandListener {
     public ItemWitchHand() {
         this.setMaxStackSize(1);
         this.setFull3D();
@@ -76,13 +90,53 @@ extends ItemBase {
         }
     }
 
+    @Optional.Method(modid = "battlegear2")
+    @Override
+    public boolean isUsedOverAttack(ItemStack itemStack) {
+        return true;
+    }
+
+    @Optional.Method(modid = "battlegear2")
+    @Override
+    public boolean isOffhandWieldable(ItemStack offhandStack, EntityPlayer wielder) {
+        return true;
+    }
+
+    @Optional.Method(modid = "battlegear2")
+    @Override
+    public boolean allowOffhand(ItemStack mainhand, ItemStack offhand) {
+        return true;
+    }
+
+    @Optional.Method(modid = "battlegear2")
+    @Override
+    public Event.Result onClickBlock(PlayerInteractEvent event, ItemStack mainhandStack, ItemStack offhandStack, boolean isOffhand) {
+        return isOffhand ? Event.Result.ALLOW : Event.Result.DEFAULT;
+    }
+
+    @Optional.Method(modid = "battlegear2")
+    @Override
+    public Event.Result onClickAir(EntityPlayer player, ItemStack mainhandStack, ItemStack offhandStack) {
+        return Event.Result.ALLOW;
+    }
+
+    @Optional.Method(modid = "battlegear2")
+    @Override
+    public void onAttackEntity(PlayerEventChild.OffhandAttackEvent event, boolean isOffhand) {
+        if (isOffhand) {
+            event.swingOffhand = false;
+            event.shouldAttack = false;
+            event.cancelParent = false;
+        }
+    }
+
     public static class EventHooks {
         @SubscribeEvent
         public void onLivingDeath(LivingDeathEvent event) {
             Entity entitySource;
             if (!event.entityLiving.worldObj.isRemote && (event.entityLiving instanceof EntityWitch || event.entityLiving instanceof EntityCovenWitch) && (entitySource = event.source.getSourceOfDamage()) != null && entitySource instanceof EntityPlayer) {
                 EntityPlayer player = (EntityPlayer)entitySource;
-                boolean hasArthana = player.getHeldItem() != null && (player.getHeldItem().getItem() == Witchery.Items.ARTHANA || player.getHeldItem().getItem() == Witchery.Items.WITCH_HAND);
+                boolean hasArthana = Witchery.modHooks.getHeldOrOffhandItem(player, Witchery.Items.ARTHANA) != null || Witchery.modHooks.getHeldOrOffhandItem(player, Witchery.Items.WITCH_HAND) != null;
                 double d = player.worldObj.rand.nextDouble();
                 double d2 = hasArthana ? 0.5 : 0.33;
                 if (d < d2) {
