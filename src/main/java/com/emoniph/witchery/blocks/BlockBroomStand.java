@@ -92,9 +92,11 @@ public class BlockBroomStand extends BlockBaseContainer {
                         ItemStack placed = held.copy();
                         placed.stackSize = 1;
                         stand.setBroom(placed);
-                        --held.stackSize;
-                        if (held.stackSize <= 0) {
-                            player.inventory.setInventorySlotContents(player.inventory.currentItem, null);
+                        if (!player.capabilities.isCreativeMode) {
+                            --held.stackSize;
+                            if (held.stackSize <= 0) {
+                                player.inventory.setInventorySlotContents(player.inventory.currentItem, null);
+                            }
                         }
                         world.markBlockForUpdate(x, y, z);
                     }

@@ -62,9 +62,24 @@ public class BlockRockingChair extends BlockBaseContainer {
     }
 
     @Override
+    public AxisAlignedBB getCollisionBoundingBoxFromPool(World world, int x, int y, int z) {
+        return AxisAlignedBB.getBoundingBox((double)x + 0.125D, (double)y, (double)z + 0.125D, (double)x + 0.875D, (double)y + 0.55D, (double)z + 0.875D);
+    }
+
+    @Override
     public void onBlockPlacedBy(World world, int x, int y, int z, EntityLivingBase player, ItemStack stack) {
         int l = MathHelper.floor_double((double)(player.rotationYaw * 4.0F / 360.0F) + 0.5D) & 3;
         world.setBlockMetadataWithNotify(x, y, z, l, 2);
+    }
+
+    private float getSeatYaw(int meta) {
+        switch (meta & 3) {
+            case 0: return 180.0F;
+            case 1: return 270.0F;
+            case 2: return 0.0F;
+            case 3: return 90.0F;
+            default: return 0.0F;
+        }
     }
 
     @Override
@@ -74,16 +89,32 @@ public class BlockRockingChair extends BlockBaseContainer {
             if (!seats.isEmpty()) {
                 EntitySeat seat = seats.get(0);
                 if (seat.riddenByEntity == null) {
+                    seat.rotationYaw = this.getSeatYaw(world.getBlockMetadata(x, y, z));
                     player.mountEntity(seat);
                 }
                 return true;
             }
 
             EntitySeat newSeat = new EntitySeat(world, (double)x + 0.5D, (double)y + 0.35D, (double)z + 0.5D);
+            newSeat.rotationYaw = this.getSeatYaw(world.getBlockMetadata(x, y, z));
+            newSeat.setPendingRider(player);
             world.spawnEntityInWorld(newSeat);
-            player.mountEntity(newSeat);
         }
         return true;
+    }
+
+    @Override
+    public void breakBlock(World world, int x, int y, int z, Block block, int meta) {
+        if (!world.isRemote) {
+            List<EntitySeat> seats = world.getEntitiesWithinAABB(EntitySeat.class, AxisAlignedBB.getBoundingBox(x, y, z, x + 1, y + 1, z + 1));
+            for (EntitySeat seat : seats) {
+                if (seat.riddenByEntity != null) {
+                    seat.riddenByEntity.mountEntity((net.minecraft.entity.Entity)null);
+                }
+                seat.setDead();
+            }
+        }
+        super.breakBlock(world, x, y, z, block, meta);
     }
 
     public static class TileEntityRockingChair extends TileEntity {

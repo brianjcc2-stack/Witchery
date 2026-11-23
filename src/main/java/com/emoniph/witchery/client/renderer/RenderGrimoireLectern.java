@@ -18,7 +18,7 @@ import org.lwjgl.opengl.GL11;
 public class RenderGrimoireLectern extends TileEntitySpecialRenderer {
 
     private final ModelGrimoireLectern model = new ModelGrimoireLectern();
-    private static final ResourceLocation TEXTURE = new ResourceLocation("witchery", "textures/blocks/poppetShelf.png");
+    private static final ResourceLocation TEXTURE = new ResourceLocation("witchery", "textures/blocks/grimoire_lectern.png");
     private final RenderItem renderItems = new RenderItem() {
         public byte getMiniItemCountForItemStack(ItemStack stack) {
             return (byte)1;
@@ -57,6 +57,7 @@ public class RenderGrimoireLectern extends TileEntitySpecialRenderer {
         GL11.glPushMatrix();
         GL11.glRotatef(180.0F, 0.0F, 0.0F, 1.0F);
         GL11.glTranslatef(0.0F, -1.0F, 0.0F);
+        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
         this.bindTexture(TEXTURE);
         this.model.render((Entity)null, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F);
         GL11.glPopMatrix();

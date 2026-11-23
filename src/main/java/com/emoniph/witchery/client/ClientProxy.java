@@ -278,6 +278,7 @@ public class ClientProxy extends CommonProxy {
       MinecraftForgeClient.registerItemRenderer(Witchery.Items.HUNTSMANS_SPEAR, new RenderHuntsmanSpear());
       MinecraftForgeClient.registerItemRenderer(Witchery.Items.MYSTIC_BRANCH, new RenderMysticBranch());
       MinecraftForgeClient.registerItemRenderer(Witchery.Items.CROSSBOW_PISTOL, new RenderHandBow());
+      MinecraftForgeClient.registerItemRenderer(Witchery.Items.INQUISITOR_CROSSBOW, new RenderHandBow());
       MinecraftForgeClient.registerItemRenderer(Witchery.Items.CANE_SWORD, new RenderCaneSword());
       RenderingRegistry.registerEntityRenderingHandler(EntityDemon.class, new RenderDemon(new ModelDemon(), 0.5F));
       RenderingRegistry.registerEntityRenderingHandler(EntityBroom.class, new RenderBroom());

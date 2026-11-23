@@ -17,7 +17,7 @@ public class RenderBroomStand extends TileEntitySpecialRenderer {
 
     private final ModelBroomStand model = new ModelBroomStand();
     private final ModelBroom modelBroom = new ModelBroom();
-    private static final ResourceLocation TEXTURE_STAND = new ResourceLocation("witchery", "textures/blocks/poppetShelf.png");
+    private static final ResourceLocation TEXTURE_STAND = new ResourceLocation("witchery", "textures/blocks/broom_stand.png");
     private static final ResourceLocation TEXTURE_BROOM = new ResourceLocation("witchery", "textures/entities/broom.png");
 
     @Override
@@ -36,6 +36,7 @@ public class RenderBroomStand extends TileEntitySpecialRenderer {
         GL11.glRotatef(180.0F, 0.0F, 0.0F, 1.0F);
         GL11.glTranslatef(0.0F, -1.0F, 0.0F);
 
+        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
         this.bindTexture(TEXTURE_STAND);
         this.model.render((Entity)null, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F);
 
@@ -44,8 +45,9 @@ public class RenderBroomStand extends TileEntitySpecialRenderer {
             ItemStack broomStack = stand.getBroom();
             if (broomStack != null) {
                 GL11.glPushMatrix();
+                GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
                 this.bindTexture(TEXTURE_BROOM);
-                GL11.glTranslatef(0.0F, 0.45F, 0.15F);
+                GL11.glTranslatef(0.0F, -0.18F, 0.12F);
                 GL11.glRotatef(90.0F, 0.0F, 1.0F, 0.0F);
                 GL11.glRotatef(-15.0F, 0.0F, 0.0F, 1.0F);
                 GL11.glScalef(0.8F, 0.8F, 0.8F);

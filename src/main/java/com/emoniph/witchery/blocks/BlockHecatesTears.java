@@ -1,6 +1,7 @@
 package com.emoniph.witchery.blocks;
 
 import com.emoniph.witchery.WitcheryCreativeTab;
+import com.emoniph.witchery.item.ItemHecatesTears;
 import com.emoniph.witchery.util.BlockUtil;
 import com.emoniph.witchery.util.ParticleEffect;
 import com.emoniph.witchery.util.SoundEffect;
@@ -16,6 +17,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
 public class BlockHecatesTears extends BlockLilyPad {
@@ -36,8 +38,26 @@ public class BlockHecatesTears extends BlockLilyPad {
 
    @Override
    public Block setBlockName(String blockName) {
-      BlockUtil.registerBlock(this, blockName);
+      BlockUtil.registerBlock(this, ItemHecatesTears.class, blockName);
       return super.setBlockName(blockName);
+   }
+
+   @SideOnly(Side.CLIENT)
+   @Override
+   public int getBlockColor() {
+      return 16777215;
+   }
+
+   @SideOnly(Side.CLIENT)
+   @Override
+   public int getRenderColor(int meta) {
+      return 16777215;
+   }
+
+   @SideOnly(Side.CLIENT)
+   @Override
+   public int colorMultiplier(IBlockAccess world, int x, int y, int z) {
+      return 16777215;
    }
 
    @Override

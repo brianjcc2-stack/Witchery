@@ -9,6 +9,8 @@ import net.minecraft.world.World;
 
 public class EntitySeat extends Entity {
 
+    private int pendingRiderId = -1;
+
     public EntitySeat(World world) {
         super(world);
         this.setSize(0.01F, 0.01F);
@@ -18,6 +20,10 @@ public class EntitySeat extends Entity {
     public EntitySeat(World world, double x, double y, double z) {
         this(world);
         this.setPosition(x, y, z);
+    }
+
+    public void setPendingRider(EntityPlayer player) {
+        this.pendingRiderId = player != null ? player.getEntityId() : -1;
     }
 
     @Override
@@ -52,13 +58,28 @@ public class EntitySeat extends Entity {
     public void onUpdate() {
         super.onUpdate();
         if (!this.worldObj.isRemote) {
-            if (this.riddenByEntity == null || !(this.riddenByEntity instanceof EntityPlayer)) {
+            if (this.pendingRiderId != -1) {
+                Entity riderEntity = this.worldObj.getEntityByID(this.pendingRiderId);
+                this.pendingRiderId = -1;
+                if (riderEntity instanceof EntityPlayer && riderEntity.isEntityAlive()) {
+                    EntityPlayer rider = (EntityPlayer) riderEntity;
+                    rider.rotationYaw = this.rotationYaw;
+                    rider.renderYawOffset = this.rotationYaw;
+                    rider.mountEntity(this);
+                } else {
+                    this.setDead();
+                }
+                return;
+            }
+
+            if (this.riddenByEntity == null || !(this.riddenByEntity instanceof EntityPlayer) || !this.riddenByEntity.isEntityAlive()) {
                 this.setDead();
             } else {
                 int bx = (int) Math.floor(this.posX);
                 int by = (int) Math.floor(this.posY);
                 int bz = (int) Math.floor(this.posZ);
                 if (this.worldObj.getBlock(bx, by, bz) != Witchery.Blocks.ROCKING_CHAIR) {
+                    this.riddenByEntity.mountEntity((Entity)null);
                     this.setDead();
                 } else if (this.ticksExisted % 60 == 0) {
                     EntityPlayer rider = (EntityPlayer) this.riddenByEntity;

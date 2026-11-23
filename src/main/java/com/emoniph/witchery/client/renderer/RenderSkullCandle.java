@@ -13,7 +13,7 @@ import org.lwjgl.opengl.GL11;
 public class RenderSkullCandle extends TileEntitySpecialRenderer {
 
     private final ModelSkullCandle model = new ModelSkullCandle();
-    private static final ResourceLocation TEXTURE = new ResourceLocation("witchery", "textures/blocks/alluringSkull.png");
+    private static final ResourceLocation TEXTURE = new ResourceLocation("witchery", "textures/blocks/skull_candle.png");
 
     @Override
     public void renderTileEntityAt(TileEntity tileEntity, double x, double y, double z, float partialTicks) {
@@ -31,6 +31,7 @@ public class RenderSkullCandle extends TileEntitySpecialRenderer {
         GL11.glRotatef(180.0F, 0.0F, 0.0F, 1.0F);
         GL11.glTranslatef(0.0F, -1.0F, 0.0F);
 
+        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
         this.bindTexture(TEXTURE);
         this.model.render((Entity)null, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F);
 
